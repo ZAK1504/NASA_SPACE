@@ -215,3 +215,38 @@ HORIZON supports deep links to any specific section or sub-tab. When a user navi
 - **Frontend Production Build:** `tsc -b && vite build` built successfully in 6.94 seconds with zero TypeScript or packaging errors.
 - **Backend Scientific Test Suite:** 43 passed, 0 failed in 31.61 seconds (100% pass rate).
 - **Automated Headless Journey:** 10 full-resolution screenshots captured across all sections verifying clean typography, correct sticky bottom bar behaviors, active top nav tracking, and smooth transitions.
+
+---
+
+## 7. Cinematic Scroll Choreography & Seamless Layout Repairs
+
+### 7.1 Root Causes Identified & Fixed
+
+| Issue Observed | Technical Root Cause | Architectural Correction |
+| :--- | :--- | :--- |
+| **Problem A: Abrupt Horizon Cutoff** | `.hero` had `min-height: 100svh; overflow: hidden;`. The circular 170vw horizon was clipped at the bottom container edge, causing a razor-sharp cut across the screen. | Changed `.hero` to `overflow-x: clip; overflow-y: visible;`. Added soft vertical gradient mask on `.horizon` and `.hero-atmosphere` layer (`height: 42vh`) that seamlessly blends the planetary glow into the persistent galaxy environment. |
+| **Problem B: Giant Empty Areas** | `.amazing` had `min-height: 112vh; padding: 16vh var(--pad) 0;`. `.facts` had `padding: 14vh 0 8vh;`. `.doors` had `padding: 8vh 0 10vh;`. Empty spaces exceeded 1,000 vertical pixels. | Replaced `.amazing` with cohesive `.mission-intro` (`padding: 10vh 0 4vh; height: 678px; max-w-6xl mx-auto`). Normalized `.facts` (`6vh`) and `.doors` (`4vh`), reducing page height by 453px while eliminating all dead space. |
+| **Problem C: Disconnected Ribbon** | Animated `<Ribbon />` sat in an isolated 140px container positioned at `top: 50%` across the empty 112vh section, floating alone in the void. | Integrated `<Ribbon className="mission-ribbon my-6" amp={22} />` directly between the mission headline and the scientific HUD grid, serving as an organic visual connector. |
+| **Problem D: Poor Statistics Composition** | `.am-r` and `.am-cards` were forced into extreme bottom-left and bottom-right corners (`position: absolute; bottom: 9vh`), leaving an enormous hollow middle. | Replaced with centered, unified 4-card HUD grid (`grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-6`): ClockCard (real-time UTC), ChannelsCard (102 bands), StatCard (Wavelength range), and StatCard (All-sky surveys). |
+| **Problem E: Entire Blank Viewport (Invisible Content)** | `.rv` CSS rule was set to `opacity: 0; transform: translateY(30px); filter: blur(6px);`. `useReveal()` was never called in `Home.tsx`, so elements remained at `opacity: 0` permanently. | Refactored `.rv` to safe progressive enhancement (default `opacity: 1`). Only fades in when `.js-reveal` is active. Immediate viewport check on mount. Called `useReveal()` in `Home.tsx` and `ContinuousHorizonApp.tsx`. Supports `prefers-reduced-motion`. |
+
+### 7.2 Choreographed Scroll Timeline
+
+1. **Scene 1 — The Arrival (Hero):**
+   - Left: Tag, headline, description, primary CTAs ("Explore the Sky ↓", "Time Machine ↓"), scroll hint.
+   - Right: Interactive 3D SPHEREx satellite (`Satellite3D`).
+   - Bottom: Planetary horizon with soft atmospheric glow.
+   - Scroll Parallax: As user scrolls down, headline gently fades (`calc(var(--hero-opacity, 1))`), satellite ascends gracefully (`calc(var(--py) - var(--hero-scroll) * 70px)`), and planetary glow softly expands downward. Full reverse restoration on upward scroll.
+2. **Scene 2 — Meet the Mission ("This is our amazing sky"):**
+   - Centered headline and lead explanation card.
+   - Flowing animated ribbon.
+   - Cohesive 4-card HUD grid centered in the viewport.
+3. **Scene 3 — By the Numbers:**
+   - 4 count-up metrics (102 channels, 5.0 µm, 4× passes, 2 yrs) with reliable intersection observers.
+4. **Scene 4 — Explore the Possibilities:**
+   - 4 destination doors (01 Explore the sky, 02 Travel in time, 03 Make a discovery, 04 Join the mission).
+5. **Scene 5 — Gateway into Explorer:**
+   - Vertical trajectory line with celestial badge and direct CTA button smoothly flowing into `#explorer`.
+6. **Time Warp Bridge:**
+   - Tightened from 45vh to 26vh (`py-8 my-2`). Relativistic star acceleration and amber continuum glow seamlessly bridging Explorer into Time Machine.
+

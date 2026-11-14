@@ -12,7 +12,7 @@ import MissionSection from "../components/sections/MissionSection";
 import { CommandPalette } from "../components/navigation/CommandPalette";
 import { CosmicCopilot } from "../components/assistant/CosmicCopilot";
 import { useGuidedTour } from "../hooks/useGuidedTour";
-import { useSmoothScroll } from "../lib/hooks";
+import { useSmoothScroll, useReveal } from "../lib/hooks";
 
 const SECTION_IDS = ["home", "explorer", "time-machine", "labs", "mission"];
 
@@ -21,8 +21,9 @@ export const ContinuousHorizonApp: React.FC = () => {
   const navigate = useNavigate();
   const params = useParams();
 
-  // Initialize Lenis smooth scroll
+  // Initialize Lenis smooth scroll and global reveal observer
   useSmoothScroll();
+  useReveal();
 
   const [activeSection, setActiveSection] = useState<string>("home");
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -160,7 +161,7 @@ export const ContinuousHorizonApp: React.FC = () => {
   return (
     <div className="continuous-app min-h-screen bg-black text-[#f3efe8] relative flex flex-col selection:bg-[#f4a272] selection:text-black">
       {/* 1. Persistent Cosmic Background (Backdrop & Parallax Starfield with Warp) */}
-      <Backdrop />
+      <Backdrop activeSection={activeSection} />
       <Starfield />
 
       {/* 2. Persistent Top Navigation Header (Exact 5 Destinations) */}

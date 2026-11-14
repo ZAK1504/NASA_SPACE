@@ -3,8 +3,9 @@ import Satellite3D from "../components/ui/Satellite3D";
 import Ribbon from "../components/ui/Ribbon";
 import Pic from "../components/ui/Pic";
 import { ClockCard, ChannelsCard, StatCard } from "../components/ui/Glass";
-import { useScrollVars, useCountUp } from "../lib/hooks";
+import { useScrollVars, useCountUp, useReveal } from "../lib/hooks";
 import Icon from "../components/ui/Icon";
+import { ArrowDown, Sparkles } from "lucide-react";
 
 interface HomeProps {
   onNavigateSection?: (sectionId: string) => void;
@@ -45,6 +46,7 @@ function Fact({
 
 export const Home: React.FC<HomeProps> = ({ onNavigateSection }) => {
   useScrollVars("home");
+  useReveal("home");
 
   const scrollTo = (id: string) => {
     if (onNavigateSection) {
@@ -62,20 +64,23 @@ export const Home: React.FC<HomeProps> = ({ onNavigateSection }) => {
   };
 
   return (
-    <div className="home-container">
-      {/* 1 — Cinematic Hero */}
+    <div className="home-container w-full relative">
+      {/* 1 — Cinematic Hero (The Arrival) */}
       <section className="hero" data-tour="home-hero">
         <div className="horizon" aria-hidden="true">
           <i />
           <i />
         </div>
 
+        {/* Atmospheric soft blending gradient between hero and persistent cosmos */}
+        <div className="hero-atmosphere" aria-hidden="true" />
+
         <div className="sat" data-par="0.12">
           <Satellite3D yaw={0.4} />
         </div>
 
         <div className="hero-copy">
-          <p className="mono tag">[SPHEREx · DR1 & QR3 · NASA / IPAC IRSA]</p>
+          <p className="mono tag">[SPHEREx · DR1 & QR3 · NASA Space Apps Challenge 2026]</p>
           <Headline
             parts={[
               "the beginning of a story between you and",
@@ -89,13 +94,13 @@ export const Home: React.FC<HomeProps> = ({ onNavigateSection }) => {
           </p>
           <div className="flex items-center gap-3 mt-4">
             <button
-              className="btn white cursor-pointer"
+              className="btn white cursor-pointer shadow-lg hover:shadow-white/20"
               onClick={() => scrollTo("explorer")}
             >
               Explore the Sky <span>↓</span>
             </button>
             <button
-              className="btn orange cursor-pointer"
+              className="btn orange cursor-pointer shadow-lg hover:shadow-orange-500/20"
               onClick={() => scrollTo("time-machine")}
             >
               Time Machine <span>↓</span>
@@ -110,44 +115,51 @@ export const Home: React.FC<HomeProps> = ({ onNavigateSection }) => {
         </div>
       </section>
 
-      {/* 2 — "This is our amazing sky" */}
-      <section className="amazing" data-tour="home-amazing">
-        <div className="amazing-in">
-          <div className="am-l rv">
-            <p className="mono tag">[What is SPHEREx]</p>
-            <h2>
-              This is our <b>amazing sky</b>,
-              <br />
-              seen in every colour.
-            </h2>
-            <div className="blurb">
-              <span className="ic">
-                <Icon name="object" />
-              </span>
-              <p>
-                SPHEREx is a NASA observatory that maps the whole sky in 102 infrared colours — four
-                times over two years. Every pixel of the sky becomes a 0.75–5.0 µm spectrum.
-              </p>
-            </div>
-          </div>
-
-          <div className="am-r">
-            <ClockCard />
-            <ChannelsCard />
+      {/* 2 — Meet the Mission ("This is our amazing sky" — Cohesive Centered Scene) */}
+      <section className="mission-intro w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10" data-tour="home-amazing">
+        <div className="text-center max-w-3xl mx-auto mb-8 rv">
+          <p className="mono tag inline-block mb-3">[What is SPHEREx]</p>
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-light text-[var(--ink)] tracking-tight leading-tight">
+            This is our <b className="text-[var(--accent)] font-semibold">amazing sky</b>,
+            <br />
+            seen in every colour.
+          </h2>
+          <div className="blurb mt-5 flex items-start gap-4 text-left max-w-2xl mx-auto bg-black/40 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
+            <span className="ic flex-shrink-0">
+              <Icon name="object" />
+            </span>
+            <p className="text-sm md:text-base text-[var(--mut)] leading-relaxed">
+              SPHEREx is a NASA observatory that maps the whole sky in 102 infrared colours — four
+              times over two years. Every pixel of the sky becomes a calibrated 0.75–5.0 µm spectrum.
+            </p>
           </div>
         </div>
 
-        <Ribbon className="amazing-ribbon" amp={34} />
+        {/* Visual Connector: The "LET'S EXPLORE" Animated Ribbon flowing through the scene */}
+        <div className="mission-ribbon-wrap w-full my-6 overflow-hidden">
+          <Ribbon className="mission-ribbon" amp={22} />
+        </div>
 
-        <div className="am-cards">
-          <StatCard label="Wavelength range" value="0.75–5.0" unit=" µm" />
-          <StatCard label="All-sky surveys" value="4" unit=" in 2 yrs" />
+        {/* Cohesive Centered Mission HUD Grid (Zero Empty Space) */}
+        <div className="mission-hud-grid grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-6 rv">
+          <div className="flex justify-center">
+            <ClockCard />
+          </div>
+          <div className="flex justify-center">
+            <ChannelsCard />
+          </div>
+          <div className="flex justify-center">
+            <StatCard label="Wavelength range" value="0.75–5.0" unit=" µm" />
+          </div>
+          <div className="flex justify-center">
+            <StatCard label="All-sky surveys" value="4" unit=" in 2 yrs" />
+          </div>
         </div>
       </section>
 
-      {/* 3 — By the numbers */}
-      <section className="facts" data-tour="home-facts">
-        <p className="mono tag rv">[By the numbers]</p>
+      {/* 3 — By the Numbers */}
+      <section className="facts max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10" data-tour="home-facts">
+        <p className="mono tag rv mb-4">[By the numbers]</p>
         <div className="facts-row">
           <Fact to={102} unit="" label="colour channels" />
           <Fact to={5} unit=" µm" label="reddest wavelength" dec={1} />
@@ -156,9 +168,9 @@ export const Home: React.FC<HomeProps> = ({ onNavigateSection }) => {
         </div>
       </section>
 
-      {/* 4 — Four Doors */}
-      <section className="doors" data-tour="home-doors">
-        <p className="mono tag rv">[Pick a door]</p>
+      {/* 4 — Four Doors (Pick a Door) */}
+      <section className="doors max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10" data-tour="home-doors">
+        <p className="mono tag rv mb-6">[Pick a door · Choose your destination]</p>
         <div className="doors-grid">
           {[
             {
@@ -215,16 +227,25 @@ export const Home: React.FC<HomeProps> = ({ onNavigateSection }) => {
         </div>
       </section>
 
-      {/* 5 — Transition bridge into Explorer */}
-      <div className="py-14 text-center flex flex-col items-center justify-center">
-        <p className="mono tag mb-2">[Continue scrolling]</p>
-        <p className="text-sm text-[var(--mut)] mb-3">Next: All-Sky Survey & 102 Spectral Bands</p>
+      {/* 5 — Concise Cinematic Gateway into Explorer */}
+      <div className="home-gateway max-w-3xl mx-auto text-center py-12 px-4 relative z-10">
+        <div className="w-[1px] h-12 bg-gradient-to-b from-transparent via-[var(--accent)] to-transparent mx-auto mb-4" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/60 border border-[var(--accent)]/30 text-[var(--accent)] text-xs font-mono mb-3">
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>ENTERING ALL-SKY SURVEY</span>
+        </div>
+        <h3 className="text-xl md:text-3xl font-light text-white mb-2">
+          Ready to explore the <b className="text-[var(--accent)] font-semibold">whole sky</b> in 102 colours?
+        </h3>
+        <p className="text-xs md:text-sm text-[var(--mut)] mb-5 max-w-md mx-auto">
+          Scroll down or click below to launch the interactive celestial sphere.
+        </p>
         <button
           onClick={() => scrollTo("explorer")}
-          className="text-xs font-mono text-[var(--accent)] hover:text-white flex items-center gap-1 cursor-pointer"
+          className="btn orange cursor-pointer inline-flex items-center gap-2 shadow-lg"
         >
-          <span>Jump to Explorer</span>
-          <span>↓</span>
+          <span>Dive into Explorer</span>
+          <ArrowDown className="w-4 h-4" />
         </button>
       </div>
     </div>

@@ -53,8 +53,8 @@ export const TimeWarpTransition: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="time-warp-zone w-full py-20 my-10 relative overflow-hidden flex flex-col items-center justify-center pointer-events-none select-none"
-      style={{ minHeight: "45vh" }}
+      className="time-warp-zone w-full py-8 my-2 relative overflow-hidden flex flex-col items-center justify-center pointer-events-none select-none"
+      style={{ minHeight: "26vh" }}
       aria-hidden="true"
     >
       {/* Dynamic atmospheric warp tunnel rings */}

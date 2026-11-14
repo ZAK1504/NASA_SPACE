@@ -15,9 +15,9 @@ export const TimeMachineSection: React.FC<TimeMachineSectionProps> = ({
   isSectionActive = true,
 }) => {
   return (
-    <section id="time-machine" className="w-full relative py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <section id="time-machine" className="w-full relative py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* Section Header */}
-      <header className="stage-head mb-8">
+      <header className="stage-head mb-6">
         <div className="sh-l">
           <p className="mono tag">[02 · VARIABLE SKY / TIME MACHINE]</p>
           <h2 className="text-3xl md:text-5xl font-light text-[var(--ink)] tracking-tight mt-1">
@@ -50,7 +50,7 @@ export const TimeMachineSection: React.FC<TimeMachineSectionProps> = ({
       </div>
 
       {/* Subtle section-end action: Continue to Labs */}
-      <div className="mt-12 text-center flex flex-col items-center justify-center pt-8 border-t border-white/5">
+      <div className="mt-8 text-center flex flex-col items-center justify-center pt-6 border-t border-white/5">
         <p className="mono tag mb-2">[Journey Continues]</p>
         <p className="text-sm text-[var(--mut)] mb-3">Next: DAOStarFinder Discovery Lab & Light Curves</p>
         <button

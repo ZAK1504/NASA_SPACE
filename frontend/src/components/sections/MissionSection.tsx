@@ -175,9 +175,9 @@ export const MissionSection: React.FC<MissionSectionProps> = ({
   const [activeTab, setActiveTab] = useState<"overview" | "guided">("overview");
 
   return (
-    <section id="mission" className="w-full relative py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <section id="mission" className="w-full relative py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* Section Header */}
-      <header className="stage-head mb-8">
+      <header className="stage-head mb-6">
         <div className="sh-l">
           <p className="mono tag">[04 · OBSERVATORY & MISSIONS]</p>
           <h2 className="text-3xl md:text-5xl font-light text-[var(--ink)] tracking-tight mt-1">

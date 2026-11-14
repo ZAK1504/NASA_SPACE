@@ -10,22 +10,49 @@ export function useNow(ms = 1000): Date {
   return now;
 }
 
-/** Adds .in to every .rv element when it scrolls into view. */
-export function useReveal(dep?: any, delay = 260) {
+/** Adds .in to every .rv element when it scrolls into view, with instant progressive-enhancement fallbacks. */
+export function useReveal(dep?: any, delay = 60) {
   useEffect(() => {
+    // Flag that JS reveal system is active
+    document.documentElement.classList.add("js-reveal");
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Immediately reveal all elements if reduced motion is requested
+    if (prefersReducedMotion) {
+      document.querySelectorAll(".rv").forEach((el) => el.classList.add("in"));
+      return;
+    }
+
+    // Immediate check on mount for any element currently or near in viewport
+    const checkImmediate = () => {
+      const vh = window.innerHeight;
+      document.querySelectorAll(".rv:not(.in)").forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.top < vh + 100 && r.bottom > -50) {
+          el.classList.add("in");
+        }
+      });
+    };
+
+    checkImmediate();
+
     let io: IntersectionObserver | undefined;
     const t = setTimeout(() => {
+      checkImmediate();
       io = new IntersectionObserver(
-        (es) => es.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add("in");
-            io?.unobserve(e.target);
-          }
-        }),
-        { threshold: 0.1, rootMargin: "0px 0px -4% 0px" }
+        (es) =>
+          es.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add("in");
+              io?.unobserve(e.target);
+            }
+          }),
+        { threshold: 0.05, rootMargin: "0px 0px 100px 0px" }
       );
       document.querySelectorAll(".rv:not(.in)").forEach((el) => io?.observe(el));
     }, delay);
+
     return () => {
       clearTimeout(t);
       if (io) io.disconnect();
@@ -44,6 +71,13 @@ export function useCountUp(
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
+    // If reduced motion is requested, display target immediately
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setV(to);
+      return;
+    }
+
     let raf = 0;
     const io = new IntersectionObserver(
       ([e]) => {
@@ -57,7 +91,7 @@ export function useCountUp(
         };
         raf = requestAnimationFrame(step);
       },
-      { threshold: 0.4 }
+      { threshold: 0.1, rootMargin: "0px 0px 50px 0px" }
     );
     io.observe(el);
     return () => {
@@ -69,15 +103,22 @@ export function useCountUp(
   return [ref, v.toFixed(decimals)];
 }
 
-/** Scroll progress 0..1 written to --p on <html>; elements with [data-par] get --py for parallax. */
+/** Scroll progress 0..1 written to --p on <html>; elements with [data-par] get --py for parallax; --hero-scroll for hero choreography. */
 export function useScrollVars(dep?: any) {
   useEffect(() => {
     let raf = 0;
     const run = () => {
       raf = 0;
-      const y = window.scrollY, h = window.innerHeight;
+      const y = window.scrollY,
+        h = window.innerHeight;
       const max = Math.max(1, document.documentElement.scrollHeight - h);
       document.documentElement.style.setProperty("--p", (y / max).toFixed(4));
+
+      // Local hero scroll progress [0..1] over the first viewport height
+      const heroP = Math.min(1, Math.max(0, y / Math.max(1, h * 0.85)));
+      document.documentElement.style.setProperty("--hero-scroll", heroP.toFixed(3));
+      document.documentElement.style.setProperty("--hero-opacity", Math.max(0, 1 - heroP * 1.35).toFixed(3));
+
       document.querySelectorAll<HTMLElement>("[data-par]").forEach((el) => {
         const r = el.getBoundingClientRect();
         const c = r.top + r.height / 2 - h / 2;
