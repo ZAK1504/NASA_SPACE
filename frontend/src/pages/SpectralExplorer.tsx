@@ -17,8 +17,8 @@ const DETECTORS = [
   { id: 'ALL', name: 'All Arrays', range: '0.75 – 5.00 μm', chRange: [1, 102] },
   { id: 'D1', name: 'Array 1 (D1)', range: '0.75 – 1.11 μm', chRange: [1, 17] },
   { id: 'D2', name: 'Array 2 (D2)', range: '1.11 – 1.64 μm', chRange: [18, 34] },
-  { id: 'D3', name: 'Array 3 (D3)', range: '1.64 – 2.42 μm', chRange: [35, 51] },
-  { id: 'D4', name: 'Array 4 (D4)', range: '2.42 – 3.82 μm', chRange: [52, 68] },
+  { id: 'D3', name: 'Array 3 (D3)', range: '1.64 – 2.42 μm', chRange: [35, 50] },
+  { id: 'D4', name: 'Array 4 (D4)', range: '2.42 – 3.82 μm', chRange: [53, 68] },
   { id: 'D5', name: 'Array 5 (D5)', range: '3.82 – 4.42 μm', chRange: [69, 85] },
   { id: 'D6', name: 'Array 6 (D6)', range: '4.42 – 5.00 μm', chRange: [86, 102] },
 ];
@@ -45,11 +45,15 @@ export const SpectralExplorer: React.FC = () => {
   const objectSlug = searchParams.get('object') || 'barnards-star';
   const selectedObject = FEATURED_OBJECTS.find((o) => o.slug === objectSlug) || FEATURED_OBJECTS[0];
 
-  // Spectral Channel Selection (1 to 102)
-  const [currentChannel, setCurrentChannel] = useState<number>(24); // Channel 24 in D2 (1.35 μm)
-  const isGap = currentChannel === 51 || currentChannel === 52;
+  // Spectral Channel Selection & Synchronization Architecture (1 to 102)
+  // renderedChannel is the strict source of truth for the displayed image and all wavelength labels
+  const [currentChannel, setCurrentChannel] = useState<number>(24);
+  const [renderedChannel, setRenderedChannel] = useState<number>(24);
+  const [viewerMode, setViewerMode] = useState<'scan' | 'aladin'>('scan');
+  const [loopPlayback, setLoopPlayback] = useState<boolean>(true);
+  const isGap = renderedChannel === 51 || renderedChannel === 52;
   const [isScanning, setIsScanning] = useState<boolean>(false);
-  const [scanSpeedMs, setScanSpeedMs] = useState<number>(600); // 600ms smooth scan cadence
+  const [scanSpeedMs, setScanSpeedMs] = useState<number>(500); // 500ms smooth scan cadence
 
   // Active detector filter
   const [activeDetector, setActiveDetector] = useState<string>('ALL');
@@ -72,40 +76,60 @@ export const SpectralExplorer: React.FC = () => {
   const [preparedCount, setPreparedCount] = useState<number>(0);
   const [totalPreloadPlanes, setTotalPreloadPlanes] = useState<number>(100);
   const isUpdatingLayerRef = useRef<boolean>(false);
-  const lastSurveyChannelRef = useRef<number>(currentChannel);
+  const lastSurveyChannelRef = useRef<number>(renderedChannel);
   const lastSurveyTimeRef = useRef<number>(0);
 
-  // Preload and cache HiPS tiles for the current viewport before playback
+  // Preload and cache all 100 valid science planes into browser cache before playback
   useEffect(() => {
     let isCancelled = false;
     setPreloading(true);
     setIsPreloaded(false);
 
     const host = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1';
-    fetch(`http://${host}:8000/api/spectra/hips/preload?mode=${scanMode}`)
+
+    // 1. Audit backend cache status
+    fetch(`http://${host}:8000/api/spectra/hips/preload/status?mode=${scanMode}`)
       .then((r) => r.json())
       .then((data) => {
         if (!isCancelled) {
-          setPreparedCount(data.prepared_channels ?? 100);
           setTotalPreloadPlanes(data.total_channels ?? 100);
-          setIsPreloaded(Boolean(data.is_ready));
         }
       })
-      .catch((err) => {
-        console.warn('Preload fetch notice:', err);
+      .catch((err) => console.warn('Preload status check:', err));
+
+    // 2. Pre-decode all 100 valid spectral frames into browser image cache
+    const validChannels = Array.from({ length: 102 }, (_, i) => i + 1).filter((c) => c !== 51 && c !== 52);
+    let loaded = 0;
+
+    validChannels.forEach((ch) => {
+      const img = new Image();
+      img.src = `http://${host}:8000/api/spectra/frame/${ch}`;
+      img.onload = () => {
         if (!isCancelled) {
-          setIsPreloaded(true);
-          setPreparedCount(100);
+          loaded++;
+          setPreparedCount(loaded);
+          if (loaded >= validChannels.length) {
+            setIsPreloaded(true);
+            setPreloading(false);
+          }
         }
-      })
-      .finally(() => {
-        if (!isCancelled) setPreloading(false);
-      });
+      };
+      img.onerror = () => {
+        if (!isCancelled) {
+          loaded++;
+          setPreparedCount(loaded);
+          if (loaded >= validChannels.length) {
+            setIsPreloaded(true);
+            setPreloading(false);
+          }
+        }
+      };
+    });
 
     return () => {
       isCancelled = true;
     };
-  }, [scanMode, selectedObject]);
+  }, [scanMode]);
 
   // Initialize Aladin Lite v3 with authentic SPHEREx DR1 HiPS channel stream
   useEffect(() => {
@@ -204,22 +228,22 @@ export const SpectralExplorer: React.FC = () => {
       clearTimeout(timer);
       isUpdatingLayerRef.current = false;
     };
-  }, [currentChannel, aladinReady, activeSurvey, isGap, isScanning]);
+  }, [renderedChannel, aladinReady, activeSurvey, isGap, isScanning, viewerMode]);
 
-  // When scan finishes or is paused, synchronize viewer to the exact final currentChannel
+  // When scan finishes or is paused, synchronize Aladin Lite instance to the exact final renderedChannel
   useEffect(() => {
     if (!isScanning && aladinInstanceRef.current && aladinReady && activeSurvey === 'spherex' && !isGap) {
-      if (lastSurveyChannelRef.current !== currentChannel) {
+      if (lastSurveyChannelRef.current !== renderedChannel) {
         try {
           const hipsBase = getHipsApiBase();
-          aladinInstanceRef.current.setImageSurvey(`${hipsBase}/${currentChannel}`);
-          lastSurveyChannelRef.current = currentChannel;
+          aladinInstanceRef.current.setImageSurvey(`${hipsBase}/${renderedChannel}`);
+          lastSurveyChannelRef.current = renderedChannel;
         } catch (e) {
           console.warn('Sync final channel error:', e);
         }
       }
     }
-  }, [isScanning, currentChannel, aladinReady, activeSurvey, isGap]);
+  }, [isScanning, renderedChannel, aladinReady, activeSurvey, isGap]);
 
   // Update position when selectedObject changes
   useEffect(() => {
@@ -239,7 +263,7 @@ export const SpectralExplorer: React.FC = () => {
     try {
       const hipsBase = getHipsApiBase();
       if (surveyKey === 'spherex') {
-        aladinInstanceRef.current.setImageSurvey(`${hipsBase}/${currentChannel}`);
+        aladinInstanceRef.current.setImageSurvey(`${hipsBase}/${renderedChannel}`);
       } else if (surveyKey === 'allwise') {
         aladinInstanceRef.current.setImageSurvey('https://irsa.ipac.caltech.edu/data/hips/CDS/AllWISE/RGB-W4-W2-W1');
       } else if (surveyKey === '2mass') {
@@ -259,31 +283,40 @@ export const SpectralExplorer: React.FC = () => {
       .finally(() => setLoadingSpectrum(false));
   }, [selectedObject]);
 
-  // Wavelength scan playback (smoothly skips unobserved 2.42 μm optical dichroic gap channels 51-52)
+  // Wavelength scan playback: renderedChannel is advanced and guarantees zero desync
   useEffect(() => {
     if (!isScanning) return;
     const interval = setInterval(() => {
-      setCurrentChannel((prev) => {
-        if (prev >= 102) return 1;
+      setRenderedChannel((prev) => {
+        let next = prev + 1;
         // Seamlessly jump optical dichroic gap during scan (channels 51 and 52 are unobserved physical boundary)
-        if (prev === 50) return 53;
-        return prev + 1;
+        if (next === 51 || next === 52) next = 53;
+        if (next > 102) {
+          if (loopPlayback) {
+            next = 1;
+          } else {
+            setIsScanning(false);
+            return prev;
+          }
+        }
+        setCurrentChannel(next);
+        return next;
       });
     }, scanSpeedMs);
     return () => clearInterval(interval);
-  }, [isScanning, scanSpeedMs]);
+  }, [isScanning, scanSpeedMs, loopPlayback]);
 
   // Compute current wavelength from channel index (0.75 - 5.00 μm)
   const getWavelengthForChannel = (ch: number): number => {
-    let d = 'D1';
     let base = 0.75;
     let max = 1.11;
     let localIndex = ch - 1;
 
     if (ch >= 1 && ch <= 17) { base = 0.75; max = 1.11; localIndex = ch - 1; }
     else if (ch >= 18 && ch <= 34) { base = 1.11; max = 1.64; localIndex = ch - 18; }
-    else if (ch >= 35 && ch <= 51) { base = 1.64; max = 2.42; localIndex = ch - 35; }
-    else if (ch >= 52 && ch <= 68) { base = 2.42; max = 3.82; localIndex = ch - 52; }
+    else if (ch >= 35 && ch <= 50) { base = 1.64; max = 2.42; localIndex = ch - 35; }
+    else if (ch === 51 || ch === 52) { return 2.42; }
+    else if (ch >= 53 && ch <= 68) { base = 2.42; max = 3.82; localIndex = ch - 53; }
     else if (ch >= 69 && ch <= 85) { base = 3.82; max = 4.42; localIndex = ch - 69; }
     else { base = 4.42; max = 5.00; localIndex = ch - 86; }
 
@@ -291,28 +324,64 @@ export const SpectralExplorer: React.FC = () => {
     return Math.round((base + localIndex * step) * 1000) / 1000;
   };
 
-  const currentWavelengthUm = getWavelengthForChannel(currentChannel);
+  const currentWavelengthUm = getWavelengthForChannel(renderedChannel);
 
   // Find which detector owns current channel
-  const getCurrentDetectorId = (): string => {
-    if (currentChannel <= 17) return 'D1';
-    if (currentChannel <= 34) return 'D2';
-    if (currentChannel <= 51) return 'D3';
-    if (currentChannel <= 68) return 'D4';
-    if (currentChannel <= 85) return 'D5';
+  const getCurrentDetectorId = (ch: number): string => {
+    if (ch <= 17) return 'D1';
+    if (ch <= 34) return 'D2';
+    if (ch <= 50) return 'D3';
+    if (ch === 51 || ch === 52) return 'Gap';
+    if (ch <= 68) return 'D4';
+    if (ch <= 85) return 'D5';
     return 'D6';
   };
 
-  const currentDetector = getCurrentDetectorId();
+  const currentDetector = getCurrentDetectorId(renderedChannel);
 
   // Handle detector filter tab click: syncs table/chart AND jumps channel scanner
   const handleSelectDetector = (detId: string) => {
     setActiveDetector(detId);
     if (detId !== 'ALL') {
       const det = DETECTORS.find((d) => d.id === detId);
-      if (det && (currentChannel < det.chRange[0] || currentChannel > det.chRange[1])) {
+      if (det && (renderedChannel < det.chRange[0] || renderedChannel > det.chRange[1])) {
         setCurrentChannel(det.chRange[0]);
+        setRenderedChannel(det.chRange[0]);
       }
+    }
+  };
+
+  const handlePrevChannel = () => {
+    let prev = renderedChannel - 1;
+    if (prev === 52 || prev === 51) prev = 50;
+    if (prev < 1) prev = 102;
+    setCurrentChannel(prev);
+    setRenderedChannel(prev);
+  };
+
+  const handleNextChannel = () => {
+    let next = renderedChannel + 1;
+    if (next === 51 || next === 52) next = 53;
+    if (next > 102) next = 1;
+    setCurrentChannel(next);
+    setRenderedChannel(next);
+  };
+
+  const handleSliderChange = (val: number) => {
+    setCurrentChannel(val);
+    setRenderedChannel(val);
+  };
+
+  const handleToggleScan = () => {
+    if (!isScanning) {
+      if (isGap) {
+        setCurrentChannel(53);
+        setRenderedChannel(53);
+      }
+      setViewerMode('scan');
+      setIsScanning(true);
+    } else {
+      setIsScanning(false);
     }
   };
 
@@ -374,7 +443,7 @@ export const SpectralExplorer: React.FC = () => {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <Globe className="w-4 h-4 text-[#6EA8FE]" />
-              <span className="font-semibold text-[#E8EDF5]">Official SPHEREx DR1 HiPS Cube</span>
+              <span className="font-semibold text-[#E8EDF5]">Official SPHEREx DR1 Spectral Cube</span>
             </div>
             <div className="flex items-center gap-1.5 bg-[#0B1020] border border-[#263247] rounded px-2 py-0.5 text-[11px]">
               <span className="text-[#94A3B8]">Survey:</span>
@@ -383,16 +452,42 @@ export const SpectralExplorer: React.FC = () => {
                 onChange={(e) => handleSurveyChange(e.target.value)}
                 className="bg-transparent text-[#6EA8FE] font-mono focus:outline-none cursor-pointer"
               >
-                <option value="spherex">SPHEREx DR1 HiPS Cube (102 Bands)</option>
+                <option value="spherex">SPHEREx DR1 All-Sky Cube (102 Bands)</option>
                 <option value="allwise">AllWISE Mid-IR (NASA IRSA)</option>
                 <option value="2mass">2MASS Near-IR (NASA IRSA)</option>
               </select>
             </div>
+
+            {/* View Mode Switcher */}
+            <div className="flex items-center gap-1 bg-[#0B1020] border border-[#263247] rounded p-0.5">
+              <button
+                onClick={() => setViewerMode('scan')}
+                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                  viewerMode === 'scan' ? 'bg-[#2563EB] text-white' : 'text-[#94A3B8] hover:text-[#E8EDF5]'
+                }`}
+                title="Synchronized spectral playback view across all 100 bands"
+              >
+                Scan View (100 Bands)
+              </button>
+              <button
+                onClick={() => {
+                  setIsScanning(false);
+                  setViewerMode('aladin');
+                }}
+                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                  viewerMode === 'aladin' ? 'bg-[#2563EB] text-white' : 'text-[#94A3B8] hover:text-[#E8EDF5]'
+                }`}
+                title="Interactive Aladin Lite pan & zoom sky atlas"
+              >
+                Aladin Lite View
+              </button>
+            </div>
           </div>
+
           <div className="flex items-center gap-3 font-mono text-[11px]">
-            <span className="text-[#6EA8FE]">Channel {currentChannel} / 102</span>
+            <span className="text-[#6EA8FE] font-bold">Channel {renderedChannel} / 102</span>
             <span className="text-[#94A3B8]">·</span>
-            <span className="text-[#F3B85B]">λ = {currentWavelengthUm} μm</span>
+            <span className="text-[#F3B85B] font-bold">λ = {currentWavelengthUm} μm</span>
             <span className="text-[#94A3B8]">·</span>
             <span className="text-[#94A3B8]">Band: Array {currentDetector}</span>
           </div>
@@ -400,8 +495,30 @@ export const SpectralExplorer: React.FC = () => {
 
         {/* Interactive Sky Canvas */}
         <div data-tour="spectral-viewer" className="relative aspect-[21/9] sm:aspect-[16/7] bg-[#070B14] flex items-center justify-center overflow-hidden">
+          {/* Synchronized Spectral Scan View (Prepared 100-plane Image Player) */}
+          {(viewerMode === 'scan' || isScanning) && !isGap && (
+            <div className="relative w-full h-full flex items-center justify-center bg-[#070B14]">
+              <img
+                src={`http://${typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1'}:8000/api/spectra/frame/${renderedChannel}`}
+                alt={`SPHEREx DR1 Channel ${renderedChannel}`}
+                className="max-w-full max-h-full object-contain select-none"
+              />
+              <div className="absolute top-3 left-3 bg-[#0B1020]/90 border border-[#263247] rounded px-2.5 py-1 text-xs font-mono text-[#E8EDF5] flex items-center gap-2 shadow-lg backdrop-blur-sm">
+                <span className={`w-2 h-2 rounded-full ${isScanning ? 'bg-green-400 animate-pulse' : 'bg-[#6EA8FE]'}`} />
+                <span>SPHEREx DR1 HiPS Cube: Ch {renderedChannel} ({currentWavelengthUm} μm · Array {currentDetector})</span>
+              </div>
+            </div>
+          )}
+
           {/* Always-mounted Aladin Lite v3 WebGL Canvas */}
-          <div ref={aladinContainerRef} className="w-full h-full" style={{ backgroundColor: '#070B14' }} />
+          <div
+            ref={aladinContainerRef}
+            className="w-full h-full"
+            style={{
+              backgroundColor: '#070B14',
+              display: (viewerMode === 'aladin' && !isScanning) ? 'block' : 'none'
+            }}
+          />
 
           {/* Dichroic Gap Banner when Ch 51 or 52 is selected (Overlay, never destroys canvas) */}
           {isGap && (
@@ -417,7 +534,10 @@ export const SpectralExplorer: React.FC = () => {
               <Button
                 size="sm"
                 variant="secondary"
-                onClick={() => setCurrentChannel(53)}
+                onClick={() => {
+                  setCurrentChannel(53);
+                  setRenderedChannel(53);
+                }}
               >
                 Jump to Array 4 (Channel 53 · 2.50 μm) →
               </Button>
@@ -425,15 +545,24 @@ export const SpectralExplorer: React.FC = () => {
           )}
 
           {/* Loading state indicator */}
-          {!aladinReady && !isGap && (
+          {!isPreloaded && preloading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#070B14]/90 backdrop-blur-sm p-6 text-center z-10">
               <RefreshCw className="w-8 h-8 text-[#6EA8FE] animate-spin mb-3" />
               <h4 className="text-sm font-semibold text-[#E8EDF5] mb-1">
-                Connecting to Official NASA SPHEREx DR1 HiPS Stream…
+                Preparing Authentic NASA SPHEREx DR1 Infrared Stream…
               </h4>
-              <p className="text-xs text-[#94A3B8] max-w-sm">
-                Streaming calibrated 102-band all-sky spectral observations from NASA/IPAC IRSA (Aitoff projection)
+              <p className="text-xs text-[#94A3B8] max-w-sm mb-3">
+                Pre-decoding all 100 valid infrared spectral channels for jitter-free synchronized playback.
               </p>
+              <div className="w-48 bg-[#151E30] rounded-full h-2 overflow-hidden border border-[#263247]">
+                <div
+                  className="bg-[#6EA8FE] h-full transition-all duration-300"
+                  style={{ width: `${Math.round((preparedCount / totalPreloadPlanes) * 100)}%` }}
+                />
+              </div>
+              <span className="text-[11px] font-mono text-[#94A3B8] mt-1.5">
+                {preparedCount} / {totalPreloadPlanes} Planes Ready ({Math.round((preparedCount / totalPreloadPlanes) * 100)}%)
+              </span>
             </div>
           )}
         </div>
@@ -463,7 +592,7 @@ export const SpectralExplorer: React.FC = () => {
                 <Button
                   size="sm"
                   variant={isScanning ? 'secondary' : 'primary'}
-                  onClick={() => setIsScanning(!isScanning)}
+                  onClick={handleToggleScan}
                   disabled={preloading || !isPreloaded}
                   leftIcon={isScanning ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
                 >
@@ -483,15 +612,26 @@ export const SpectralExplorer: React.FC = () => {
                   <option value="D5">Array D5 (3.82–4.42 μm)</option>
                   <option value="D6">Array D6 (4.42–5.00 μm)</option>
                 </select>
+                <select
+                  value={scanSpeedMs}
+                  onChange={(e) => setScanSpeedMs(Number(e.target.value))}
+                  className="bg-[#151E30] border border-[#263247] text-[#E8EDF5] text-xs rounded px-2 py-1.5 focus:outline-none focus:border-[#6EA8FE]"
+                  title="Scan Speed"
+                >
+                  <option value={800}>0.8s / band</option>
+                  <option value={500}>0.5s / band</option>
+                  <option value={300}>0.3s / band</option>
+                  <option value={150}>0.15s / band</option>
+                </select>
                 <button
-                  onClick={() => setCurrentChannel((prev) => Math.max(1, prev - 1))}
+                  onClick={handlePrevChannel}
                   className="p-1.5 rounded bg-[#151E30] border border-[#263247] text-[#94A3B8] hover:text-[#E8EDF5]"
                   title="Previous Channel"
                 >
                   <SkipBack className="w-3.5 h-3.5" />
                 </button>
                 <button
-                  onClick={() => setCurrentChannel((prev) => Math.min(102, prev + 1))}
+                  onClick={handleNextChannel}
                   className="p-1.5 rounded bg-[#151E30] border border-[#263247] text-[#94A3B8] hover:text-[#E8EDF5]"
                   title="Next Channel"
                 >
@@ -499,8 +639,8 @@ export const SpectralExplorer: React.FC = () => {
                 </button>
               </div>
 
-              <span className="text-xs text-[#94A3B8] hidden sm:inline">
-                Channel {currentChannel} of 102
+              <span className="text-xs text-[#94A3B8] hidden sm:inline font-mono">
+                Channel {renderedChannel} of 102
               </span>
             </div>
 
@@ -511,7 +651,7 @@ export const SpectralExplorer: React.FC = () => {
                 return (
                   <button
                     key={det.id}
-                    onClick={() => setCurrentChannel(det.chRange[0])}
+                    onClick={() => handleSelectDetector(det.id)}
                     className={`px-2 py-1 rounded text-[11px] font-mono border transition-all ${
                       isActive
                         ? 'bg-[#2563EB] text-white border-[#3B82F6]'
@@ -531,8 +671,8 @@ export const SpectralExplorer: React.FC = () => {
               type="range"
               min="1"
               max="102"
-              value={currentChannel}
-              onChange={(e) => setCurrentChannel(Number(e.target.value))}
+              value={renderedChannel}
+              onChange={(e) => handleSliderChange(Number(e.target.value))}
               className="w-full accent-[#6EA8FE] cursor-pointer"
             />
             <div className="flex justify-between text-[10px] font-mono text-[#94A3B8]">
@@ -668,12 +808,15 @@ export const SpectralExplorer: React.FC = () => {
               }
             }
 
-            const isCurrent = ch.channel === currentChannel;
+            const isCurrent = ch.channel === renderedChannel;
 
             return (
               <div
                 key={ch.channel}
-                onClick={() => setCurrentChannel(ch.channel)}
+                onClick={() => {
+                  setCurrentChannel(ch.channel);
+                  setRenderedChannel(ch.channel);
+                }}
                 onMouseEnter={() => setHoveredChannel(ch)}
                 onMouseLeave={() => setHoveredChannel(null)}
                 className={`flex-1 h-full flex flex-col justify-end group cursor-pointer relative ${

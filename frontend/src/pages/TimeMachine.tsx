@@ -41,9 +41,9 @@ export const TimeMachine: React.FC = () => {
 
       const targetObsPairs: Record<string, { obs1: string; obs2: string }> = {
         'barnards-star': { obs1: '2025W35_1A_0444_3', obs2: '2026W34_2A_0249_1' },
-        'wise-0855': { obs1: '2025W46_2A_0214_1', obs2: '2025W50_2A_0254_1' },
+        'wise-0855': { obs1: '2025W46_2A_0214_1', obs2: '2026W20_1A_0728_1' },
         'epsilon-indi-b': { obs1: '2025W40_1A_0675_1', obs2: '2026W40_1A_0692_1' },
-        'rw-aurigae': { obs1: '2026W37_2A_0581_1', obs2: '2026W38_1A_0565_1' },
+        'rw-aurigae': { obs1: '2026W11_1A_0645_1', obs2: '2026W38_1A_0565_1' },
         'r-draconis': { obs1: '2026W28_2A_0376_3', obs2: '2026W29_1A_0430_1' },
       };
       const pair = targetObsPairs[selectedObject.slug] || targetObsPairs['barnards-star'];

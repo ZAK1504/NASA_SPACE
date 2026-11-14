@@ -62,8 +62,8 @@ def get_all_channels():
 def _get_channel_properties_text(channel: int) -> str:
     """Generate authentic HiPS 2D image properties for an individual SPHEREx spectral channel."""
     channels = spectral_service.get_all_102_channels()
-    ch_info = next((c for c in channels if c.get("channel") == channel), None)
-    wavelength = ch_info.get("wavelength_um", 1.0) if ch_info else 1.0
+    ch_info = next((c for c in channels if c.get("channel_number") == channel), None)
+    wavelength = ch_info.get("wavelength_center_um", 1.0) if ch_info else 1.0
     det = ch_info.get("detector", "D1") if ch_info else "D1"
 
     return (
@@ -97,11 +97,16 @@ def _fetch_and_stream_tile(channel: Optional[int], order: int, dir_val: str, fil
     cache_path = HIPS_CACHE_DIR / cache_key
 
     if cache_path.exists() and cache_path.stat().st_size > 100:
-        return FileResponse(cache_path, media_type="image/png")
+        return FileResponse(
+            cache_path,
+            media_type="image/png",
+            headers={"Cache-Control": "public, max-age=604800, immutable"}
+        )
 
     candidate_urls = []
     if channel is not None:
-        candidate_urls.append(f"{IPAC_HIPS_ROOT}/Norder{order}/{dir_str}/Npix{pix_str}_{channel}.png")
+        tile_ch = 101 if channel == 102 else channel
+        candidate_urls.append(f"{IPAC_HIPS_ROOT}/Norder{order}/{dir_str}/Npix{pix_str}_{tile_ch}.png")
         candidate_urls.append(f"{IPAC_HIPS_ROOT}/{channel}/Norder{order}/{dir_str}/Npix{pix_str}.png")
     candidate_urls.append(f"{IPAC_HIPS_ROOT}/Norder{order}/{dir_str}/Npix{pix_str}.png")
     candidate_urls.append(f"{IPAC_HIPS_ROOT}/Norder{order}/{dir_str}/{filename}")
@@ -112,7 +117,7 @@ def _fetch_and_stream_tile(channel: Optional[int], order: int, dir_val: str, fil
                 ipac_url,
                 headers={"User-Agent": "SPHEREx-Horizon/1.0 (NASA-SpaceApps-2026; Team-Meteor-Rizzlers)"}
             )
-            with urllib.request.urlopen(req, timeout=2.0) as resp:
+            with urllib.request.urlopen(req, timeout=2.5) as resp:
                 if resp.status == 200:
                     content = resp.read()
                     if content and len(content) > 100:
@@ -121,7 +126,11 @@ def _fetch_and_stream_tile(channel: Optional[int], order: int, dir_val: str, fil
                                 f.write(content)
                         except Exception:
                             pass
-                        return Response(content=content, media_type="image/png")
+                        return Response(
+                            content=content,
+                            media_type="image/png",
+                            headers={"Cache-Control": "public, max-age=604800, immutable"}
+                        )
         except Exception:
             continue
 
@@ -129,29 +138,10 @@ def _fetch_and_stream_tile(channel: Optional[int], order: int, dir_val: str, fil
 
 
 # Preloader Endpoints for Spectral Viewport Smooth Playback
-PRELOAD_STATUS: Dict[str, Any] = {
-    "total_channels": 100,
-    "prepared_channels": 100,
-    "is_ready": True,
-    "mode": "all",
-    "status_message": "All 100 valid infrared spectral planes prepared for smooth playback."
-}
+VALID_SCIENCE_CHANNELS = [c for c in range(1, 103) if c not in (51, 52)]
 
-@router.get("/hips/preload/status")
-def get_preload_status():
-    """Get current status of preloaded spectral visualization frames."""
-    return PRELOAD_STATUS
-
-@router.api_route("/hips/preload", methods=["GET", "POST"])
-def preload_spectral_frames(
-    mode: str = Query("all", description="all, D1, D2, D3, D4, D5, D6"),
-    order: int = Query(0, description="HiPS resolution order")
-):
-    """
-    Preload and cache HiPS visualization tiles for the requested detector band or full spectrum
-    to enable instant, smooth playback without visible buffering.
-    """
-    valid_channels = [c for c in range(1, 103) if c not in [51, 52]]
+def _audit_preload_state(mode: str = "all") -> Dict[str, Any]:
+    """Audit actual on-disk cache for genuine SPHEREx DR1 spectral planes."""
     det_map = {
         "D1": [c for c in range(1, 18)],
         "D2": [c for c in range(18, 35)],
@@ -160,30 +150,134 @@ def preload_spectral_frames(
         "D5": [c for c in range(69, 86)],
         "D6": [c for c in range(86, 103)],
     }
-    
-    target_channels = det_map.get(mode.upper(), valid_channels)
-    
+    target_channels = det_map.get(mode.upper(), VALID_SCIENCE_CHANNELS)
     prepared = 0
+    total_bytes = 0
+
     for ch in target_channels:
-        prop_path = HIPS_CACHE_DIR / f"ch{ch}_properties.txt"
-        if not prop_path.exists():
-            prop_path.write_text(_get_channel_properties_text(ch), encoding="utf-8")
-        prepared += 1
+        tile_path = HIPS_CACHE_DIR / f"ch{ch}_order0_Dir0_pix0.png"
+        if tile_path.exists() and tile_path.stat().st_size > 1000:
+            prepared += 1
+            total_bytes += tile_path.stat().st_size
 
-    PRELOAD_STATUS["total_channels"] = len(target_channels)
-    PRELOAD_STATUS["prepared_channels"] = prepared
-    PRELOAD_STATUS["is_ready"] = True
-    PRELOAD_STATUS["mode"] = mode
-    PRELOAD_STATUS["status_message"] = f"Prepared {prepared} of {len(target_channels)} valid wavelength planes for {mode.upper()} scan."
-
+    is_ready = (prepared >= len(target_channels))
     return {
-        "success": True,
         "mode": mode,
         "total_channels": len(target_channels),
         "prepared_channels": prepared,
-        "is_ready": True,
-        "status_message": PRELOAD_STATUS["status_message"]
+        "failed_channels": len(target_channels) - prepared if not is_ready else 0,
+        "is_ready": is_ready,
+        "cache_bytes": total_bytes,
+        "status_message": (
+            f"All {prepared} valid infrared spectral planes prepared for smooth synchronized playback."
+            if is_ready else
+            f"Preparing authentic infrared planes: {prepared} of {len(target_channels)} downloaded."
+        )
     }
+
+@router.get("/hips/preload/status")
+def get_preload_status(mode: str = Query("all")):
+    """Get audited status of preloaded genuine spectral visualization frames."""
+    return _audit_preload_state(mode)
+
+@router.api_route("/hips/preload", methods=["GET", "POST"])
+def preload_spectral_frames(
+    mode: str = Query("all", description="all, D1, D2, D3, D4, D5, D6"),
+    order: int = Query(0, description="HiPS resolution order")
+):
+    """
+    Preload and cache genuine HiPS visualization tiles for the requested detector band or full spectrum
+    to enable instant, smooth synchronized playback without visible buffering.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    det_map = {
+        "D1": [c for c in range(1, 18)],
+        "D2": [c for c in range(18, 35)],
+        "D3": [c for c in range(35, 51)],
+        "D4": [c for c in range(53, 69)],
+        "D5": [c for c in range(69, 86)],
+        "D6": [c for c in range(86, 103)],
+    }
+    target_channels = det_map.get(mode.upper(), VALID_SCIENCE_CHANNELS)
+
+    def _ensure_channel_cached(ch: int):
+        prop_path = HIPS_CACHE_DIR / f"ch{ch}_properties.txt"
+        if not prop_path.exists():
+            try:
+                prop_path.write_text(_get_channel_properties_text(ch), encoding="utf-8")
+            except Exception:
+                pass
+
+        tile_path = HIPS_CACHE_DIR / f"ch{ch}_order0_Dir0_pix0.png"
+        if not tile_path.exists() or tile_path.stat().st_size < 1000:
+            tile_idx = 101 if ch == 102 else ch
+            url = f"{IPAC_HIPS_ROOT}/Norder0/Dir0/Npix0_{tile_idx}.png"
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": "SPHEREx-Horizon/1.0"})
+                with urllib.request.urlopen(req, timeout=4.0) as resp:
+                    if resp.status == 200:
+                        content = resp.read()
+                        if len(content) > 1000:
+                            tile_path.write_bytes(content)
+            except Exception:
+                pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        list(executor.map(_ensure_channel_cached, target_channels))
+
+    audit = _audit_preload_state(mode)
+    return {
+        "success": True,
+        **audit
+    }
+
+@router.api_route("/frame/{channel}", methods=["GET", "HEAD"])
+def get_prepared_spectral_frame(channel: int):
+    """
+    Serve the authentic SPHEREx DR1 all-sky spectral image frame for the given channel.
+    Synchronously consumed by the Spectral Explorer playback engine.
+    """
+    if channel in (51, 52):
+        raise HTTPException(
+            status_code=404,
+            detail="2.42 μm Optical Dichroic Gap (Channels 51 & 52 are an unobserved physical beam-splitter transition)"
+        )
+    if channel < 1 or channel > 102:
+        raise HTTPException(status_code=404, detail=f"Channel {channel} outside SPHEREx range [1, 102]")
+
+    tile_path = HIPS_CACHE_DIR / f"ch{channel}_order0_Dir0_pix0.png"
+    if not tile_path.exists() or tile_path.stat().st_size < 1000:
+        tile_idx = 101 if channel == 102 else channel
+        url = f"{IPAC_HIPS_ROOT}/Norder0/Dir0/Npix0_{tile_idx}.png"
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "SPHEREx-Horizon/1.0"})
+            with urllib.request.urlopen(req, timeout=3.0) as resp:
+                if resp.status == 200:
+                    data = resp.read()
+                    if len(data) > 1000:
+                        tile_path.write_bytes(data)
+        except Exception as e:
+            raise HTTPException(status_code=502, detail=f"Could not retrieve spectral plane {channel} from IPAC: {e}")
+
+    if not tile_path.exists():
+        raise HTTPException(status_code=404, detail=f"Spectral plane for channel {channel} not ready")
+
+    channels_spec = spectral_service.get_all_102_channels()
+    ch_info = next((c for c in channels_spec if c.get("channel_number") == channel), {})
+    wavelength = ch_info.get("wavelength_center_um", 1.0)
+    det = ch_info.get("detector", "D1")
+
+    return FileResponse(
+        tile_path,
+        media_type="image/png",
+        headers={
+            "Cache-Control": "public, max-age=604800, immutable",
+            "X-SPHEREx-Channel": str(channel),
+            "X-SPHEREx-Wavelength": f"{wavelength:.3f}",
+            "X-SPHEREx-Detector": det,
+        }
+    )
 
 
 # Official HiPS Cube Endpoints for Aladin Lite v3

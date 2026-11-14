@@ -40,22 +40,28 @@ def _resolve_fits_file_for_obs(
     cache_dir = settings.FITS_CACHE_DIR
     cached_fits = sorted(list(cache_dir.glob("*.fits")), key=lambda p: p.stat().st_size, reverse=True)
 
-    # 1. Match by obs_id in filename
-    for f in cached_fits:
-        if obs_id in f.name:
-            if target_ra is not None and target_dec is not None:
+    # 1. Match by obs_id in filename, prioritizing closest detector center to target
+    matching_obs = [f for f in cached_fits if obs_id in f.name]
+    if matching_obs:
+        if target_ra is not None and target_dec is not None:
+            best_f = None
+            min_sep = 999.0
+            target_c = SkyCoord(ra=target_ra * u.deg, dec=target_dec * u.deg, frame="icrs")
+            for f in matching_obs:
                 try:
                     h = fits.getheader(f, 1)
                     w = WCS(h)
                     if w.is_celestial:
                         c_center = w.pixel_to_world(1020, 1020)
-                        target_c = SkyCoord(ra=target_ra * u.deg, dec=target_dec * u.deg, frame="icrs")
-                        if target_c.separation(c_center).deg <= 1.8:
-                            return f
+                        sep = target_c.separation(c_center).deg
+                        if sep < min_sep and sep <= 1.8:
+                            min_sep = sep
+                            best_f = f
                 except Exception:
-                    pass
-            else:
-                return f
+                    continue
+            if best_f is not None:
+                return best_f
+        return matching_obs[0]
 
     # 2. Match by inspecting primary/image header without reading entire data
     for f in cached_fits:

@@ -219,3 +219,145 @@ def test_r_draconis_real_fits_preview():
     assert data["image_base64"].startswith("data:image/png;base64,")
     assert "2026W29_1A" in data["scientific_metadata"]["obs_id"]
 
+def test_authoritative_coordinates_consistency():
+    """Verify canonical coordinate consistency across target registry and object definitions."""
+    from app.services.target_service import TARGET_REGISTRY
+    from app.services.object_service import object_service
+
+    # Authoritative reference coordinates
+    expected = {
+        "barnards-star": (269.448503, 4.739420, "Gaia DR3"),
+        "wise-0855": (133.795129, -7.245147, "Luhman"),
+        "epsilon-indi-b": (331.044147, -56.782844, "Scholz"),
+        "rw-aurigae": (76.956067, 30.401326, "Gaia DR3"),
+        "r-draconis": (248.167611, 66.754979, "Gaia DR3"),
+    }
+
+    for tid, (exp_ra, exp_dec, cat_sub) in expected.items():
+        assert tid in TARGET_REGISTRY
+        tgt = TARGET_REGISTRY[tid]
+        assert abs(tgt.ref_ra_deg - exp_ra) < 0.001
+        assert abs(tgt.ref_dec_deg - exp_dec) < 0.001
+        assert cat_sub in tgt.catalog_source
+
+        # Also check object service
+        obj = object_service.get_object_by_id(tid)
+        assert obj is not None
+        # J2026 propagated position must be consistent
+        assert abs(obj["ra"] - tgt.ref_ra_deg) < 0.1 or tgt.pm_ra_cosdec_mas_yr != 0
+
+    # Ensure incorrect coordinates (77.4642, 248.3304) never appear
+    assert abs(TARGET_REGISTRY["rw-aurigae"].ref_ra_deg - 77.4642) > 0.4
+    assert abs(TARGET_REGISTRY["r-draconis"].ref_ra_deg - 248.3304) > 0.1
+
+def test_actual_fits_target_footprint_and_science_pixels():
+    """Verify actual FITS files cover target celestial coordinates within 2040x2040 detector science arrays."""
+    from astropy.io import fits
+    from astropy.wcs import WCS
+    from astropy.coordinates import SkyCoord
+    import astropy.units as u
+    from app.config import settings
+
+    fits_cache = settings.FITS_CACHE_DIR
+    assert fits_cache.exists()
+
+    checks = [
+        ("wise-0855", 133.76, -7.242, "level2_2026W20_1A_0728_1"),
+        ("rw-aurigae", 76.9561, 30.4013, "level2_2026W11_1A_0645_1"),
+        ("barnards-star", 269.4463, 4.7682, "level2_2026W34_2A_0249_1"),
+        ("epsilon-indi-b", 331.096, -56.801, "level2_2026W40_1A_0692_1"),
+        ("r-draconis", 248.1675, 66.755, "level2_2026W29_1A_0430_1"),
+    ]
+
+    for tid, ra, dec, filename_prefix in checks:
+        matching = list(fits_cache.glob(f"*{filename_prefix}*.fits"))
+        assert len(matching) > 0, f"Missing required FITS file for {tid} ({filename_prefix})"
+        fpath = matching[0]
+
+        with fits.open(fpath) as hdul:
+            hdr = hdul[1].header
+            w = WCS(hdr)
+            assert w.is_celestial
+
+            coord = SkyCoord(ra=ra * u.deg, dec=dec * u.deg, frame="icrs")
+            px, py = w.world_to_pixel(coord)
+            px_val = float(px)
+            py_val = float(py)
+
+            # Assert target lies within native detector science array
+            naxis1 = int(hdr.get("NAXIS1", 2040))
+            naxis2 = int(hdr.get("NAXIS2", 2040))
+            assert 0 <= px_val < naxis1, f"{tid} px={px_val} out of range [0, {naxis1}] in {fpath.name}"
+            assert 0 <= py_val < naxis2, f"{tid} py={py_val} out of range [0, {naxis2}] in {fpath.name}"
+
+            # Verify image pixel is accessible
+            data = hdul[1].data
+            val = float(data[int(round(py_val)), int(round(px_val))])
+            # val is either finite or NaN (for saturated central cores like Barnard's Star)
+            import math
+            assert not math.isinf(val)
+
+def test_extended_multi_epoch_baselines():
+    """Verify genuine recovered baselines for challenge targets."""
+    from astropy.io import fits
+    from datetime import datetime
+    from app.config import settings
+
+    fits_cache = settings.FITS_CACHE_DIR
+
+    def get_date_obs(prefix):
+        matches = list(fits_cache.glob(f"*{prefix}*.fits"))
+        assert len(matches) > 0, f"Cannot find {prefix}"
+        h = fits.getheader(matches[0], 1)
+        d_str = h.get("DATE-OBS", h.get("DATE", ""))
+        return datetime.fromisoformat(d_str.replace("Z", ""))
+
+    # WISE 0855: Nov 2025 to May 2026
+    d_wise1 = get_date_obs("2025W46_2A_0214_1")
+    d_wise2 = get_date_obs("2026W20_1A_0728_1")
+    baseline_wise = (d_wise2 - d_wise1).total_seconds() / 86400.0
+    assert baseline_wise >= 179.0, f"WISE baseline was {baseline_wise} days, expected >= 179"
+
+    # RW Aurigae: March 2026 to Sept 2026
+    d_rw1 = get_date_obs("2026W11_1A_0645_1")
+    d_rw2 = get_date_obs("2026W38_1A_0565_1")
+    baseline_rw = (d_rw2 - d_rw1).total_seconds() / 86400.0
+    assert baseline_rw >= 188.0, f"RW Aurigae baseline was {baseline_rw} days, expected >= 188"
+
+    # Barnard's Star: Aug 2025 to Aug 2026
+    d_bs1 = get_date_obs("2025W35_1A_0444_3")
+    d_bs2 = get_date_obs("2026W34_2A_0249_1")
+    baseline_bs = (d_bs2 - d_bs1).total_seconds() / 86400.0
+    assert baseline_bs >= 358.0, f"Barnards Star baseline was {baseline_bs} days, expected >= 358"
+
+    # Epsilon Indi B: Oct 2025 to Oct 2026
+    d_eps1 = get_date_obs("2025W40_1A_0675_1")
+    d_eps2 = get_date_obs("2026W40_1A_0692_1")
+    baseline_eps = (d_eps2 - d_eps1).total_seconds() / 86400.0
+    assert baseline_eps >= 363.0, f"Eps Indi baseline was {baseline_eps} days, expected >= 363"
+
+def test_spectral_preload_and_frame_api():
+    """Verify genuine spectral preparation and synchronous frame serving."""
+    # 1. Audit status
+    resp = client.get("/api/spectra/hips/preload/status?mode=all")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total_channels"] == 100
+    assert data["prepared_channels"] == 100
+    assert data["is_ready"] is True
+    assert data["failed_channels"] == 0
+
+    # 2. Check valid frame
+    resp_frame = client.get("/api/spectra/frame/24")
+    assert resp_frame.status_code == 200
+    assert resp_frame.headers["content-type"] == "image/png"
+    assert resp_frame.headers["x-spherex-channel"] == "24"
+    assert resp_frame.headers["x-spherex-detector"] == "D2"
+    assert len(resp_frame.content) > 1000
+
+    # 3. Check optical dichroic gap channels 51 and 52 return honest 404
+    for ch in (51, 52):
+        resp_gap = client.get(f"/api/spectra/frame/{ch}")
+        assert resp_gap.status_code == 404
+        assert "Optical Dichroic Gap" in resp_gap.json()["detail"]
+

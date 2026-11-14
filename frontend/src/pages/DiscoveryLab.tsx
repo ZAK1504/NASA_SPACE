@@ -57,9 +57,9 @@ export const DiscoveryLab: React.FC = () => {
     // Target-specific authentic SPHEREx observation pairs
     const targetObsPairs: Record<string, { obs1: string; obs2?: string }> = {
       'barnards-star': { obs1: '2025W35_1A_0444_3', obs2: '2026W34_2A_0249_1' },
-      'wise-0855': { obs1: '2025W46_2A_0214_1', obs2: '2025W50_2A_0254_1' },
+      'wise-0855': { obs1: '2025W46_2A_0214_1', obs2: '2026W20_1A_0728_1' },
       'epsilon-indi-b': { obs1: '2025W40_1A_0675_1', obs2: '2026W40_1A_0692_1' },
-      'rw-aurigae': { obs1: '2026W37_2A_0581_1', obs2: '2026W38_1A_0565_1' },
+      'rw-aurigae': { obs1: '2026W11_1A_0645_1', obs2: '2026W38_1A_0565_1' },
       'r-draconis': { obs1: '2026W28_2A_0376_3', obs2: '2026W29_1A_0430_1' },
     };
     const pair = targetObsPairs[selectedObject.slug] || targetObsPairs['barnards-star'];
@@ -211,8 +211,10 @@ export const DiscoveryLab: React.FC = () => {
         >
           <Layers className="w-4 h-4" />
           <span>Image Stacking Engine (Noise Suppression)</span>
-          <Badge variant="amber">
-            ×{stackResult?.theoretical_snr_gain ?? Math.sqrt(numExposures).toFixed(2)} Theoretical S/N (Idealized √{numExposures})
+          <Badge variant={stackResult ? "blue" : "amber"}>
+            {stackResult
+              ? `×${stackResult.theoretical_snr_gain} Theoretical S/N (Actual N=${stackResult.num_exposures_combined})`
+              : `Planned Idealized S/N Gain: ×${Math.sqrt(numExposures).toFixed(2)} (√${numExposures} Planned)`}
           </Badge>
         </button>
       </div>
