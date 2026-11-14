@@ -1,0 +1,191 @@
+{
+  "audit_metadata": {
+    "project_name": "SPHEREx HORIZON",
+    "team_name": "Meteor Rizzlers",
+    "competition": "NASA Space Apps Challenge 2026",
+    "challenge": "Planet X and SPHEREx",
+    "audit_date": "2026-11-14T17:50:00Z",
+    "auditor": "Independent Senior Reviewer & Architect",
+    "readiness_score": 61,
+    "max_score": 100,
+    "verdict": "NEEDS CRITICAL FIXES BEFORE DEMONSTRATION"
+  },
+  "score_breakdown": {
+    "nasa_challenge_core_functionality": {
+      "score": 14,
+      "max": 25,
+      "deductions": "Viewer endpoints display synthetic Gaussian PSFs rather than genuine SPHEREx FITS cutouts (-11)"
+    },
+    "genuine_data_ingestion_and_provenance": {
+      "score": 12,
+      "max": 15,
+      "deductions": "Schema validation failure on /api/archive/search (-2); no spectral cube ingestion (-1)"
+    },
+    "scientific_processing_correctness": {
+      "score": 9,
+      "max": 15,
+      "deductions": "Astropy WCS/cutout pipeline is functional but decoupled from API presentation layer (-6)"
+    },
+    "time_domain_observation_viewer": {
+      "score": 7,
+      "max": 15,
+      "deductions": "Blink/slider compares synthetic images (-5); no multi-epoch time-lapse scrubbing N>2 (-3)"
+    },
+    "spectral_and_discovery_functionality": {
+      "score": 4,
+      "max": 10,
+      "deductions": "Spectral chart uses synthetic math formula (-3); light curves are hardcoded static dictionaries (-3)"
+    },
+    "user_experience_and_design": {
+      "score": 9,
+      "max": 10,
+      "deductions": "Complex comparison controls require touch optimization on small viewports (-1)"
+    },
+    "deployment_reliability_and_documentation": {
+      "score": 6,
+      "max": 10,
+      "deductions": "Startup blocked by uninstalled dependencies (-2); missing coordinate range validation (-2)"
+    }
+  },
+  "verified_archive_evidence": {
+    "service": "NASA/IPAC Infrared Science Archive (IRSA)",
+    "tap_url": "https://irsa.ipac.caltech.edu/TAP",
+    "table": "spherex.obscore",
+    "tested_target": "Barnard's Star",
+    "coordinates": {
+      "ra": 269.4521,
+      "dec": 4.6933
+    },
+    "representative_observation": {
+      "obs_id": "2026W34_2A_0249_1",
+      "collection": "spherex_qr3",
+      "bandpass": "SPHEREx-D2",
+      "mjd": 61273.719685,
+      "date_obs": "2026-08-21 17:16:20",
+      "datalink_url": "https://irsa.ipac.caltech.edu/datalink/links/spherex?ID=ivo://irsa.ipac/spherex_qr3?2026W34_2A_0249_1/D2",
+      "resolved_fits_url": "https://irsa.ipac.caltech.edu/ibe/data/spherex/qr3/level2/2026W34_2A/l2b-v27-2026-243/2/level2_2026W34_2A_0249_1D2_spx_l2b-v27-2026-243.fits",
+      "downloaded_bytes": 60120000
+    }
+  },
+  "fits_scientific_verification": {
+    "filename": "level2_2026W34_2A_0249_1D2_spx_l2b-v27-2026-243.fits",
+    "hdus": [
+      {"index": 0, "name": "PRIMARY", "type": "PrimaryHDU", "shape": null},
+      {"index": 1, "name": "IMAGE", "type": "ImageHDU", "shape": [2040, 2040], "dtype": "float32"},
+      {"index": 2, "name": "FLAGS", "type": "CompImageHDU", "shape": [2040, 2040], "dtype": "int32"},
+      {"index": 3, "name": "VARIANCE", "type": "ImageHDU", "shape": [2040, 2040], "dtype": "float32"},
+      {"index": 4, "name": "ZODI", "type": "ImageHDU", "shape": [2040, 2040], "dtype": "float32"},
+      {"index": 5, "name": "EPSF", "type": "BinTableHDU", "shape": [441, 11]},
+      {"index": 6, "name": "WCS-WAVE", "type": "BinTableHDU", "shape": [1, 3]}
+    ],
+    "scientific_units": "MJy / sr",
+    "native_pixel_scale_arcsec": 6.1375,
+    "target_pixel_position": {"x": 1031.91, "y": 810.81},
+    "target_inside_footprint": true,
+    "wcs_roundtrip_error_arcsec": 3.627555e-09,
+    "cutout_extracted_shape": [20, 20],
+    "cutout_center_skycoord": {"ra": 269.45225, "dec": 4.692965}
+  },
+  "five_challenge_targets": [
+    {
+      "name": "Barnard's Star",
+      "slug": "barnards-star",
+      "ra": 269.4521,
+      "dec": 4.6933,
+      "obs_found": 50,
+      "first_product_id": "2026W35_2A_0412_1",
+      "obs_date": "2026-08-29 15:49:06",
+      "collection": "spherex_qr3",
+      "footprint_separation_deg": 0.71,
+      "in_footprint": true
+    },
+    {
+      "name": "WISE 0855",
+      "slug": "wise-0855",
+      "ra": 133.7879,
+      "dec": -7.2435,
+      "obs_found": 50,
+      "first_product_id": "2026W19_1A_0594_2",
+      "obs_date": "2026-05-05 14:09:48",
+      "collection": "spherex_dr1",
+      "footprint_separation_deg": 0.75,
+      "in_footprint": true
+    },
+    {
+      "name": "Epsilon Indi B",
+      "slug": "epsilon-indi-b",
+      "ra": 330.8408,
+      "dec": -56.7868,
+      "obs_found": 50,
+      "first_product_id": "2026W40_1A_0692_1",
+      "obs_date": "2026-10-01 01:15:26",
+      "collection": "spherex_qr3",
+      "footprint_separation_deg": 0.57,
+      "in_footprint": true
+    },
+    {
+      "name": "RW Aurigae",
+      "slug": "rw-aurigae",
+      "ra": 83.4042,
+      "dec": 30.4017,
+      "obs_found": 50,
+      "first_product_id": "2026W38_1A_0254_1",
+      "obs_date": "2026-09-15 08:00:28",
+      "collection": "spherex_qr3",
+      "footprint_separation_deg": 0.60,
+      "in_footprint": true
+    },
+    {
+      "name": "R Draconis",
+      "slug": "r-draconis",
+      "ra": 166.5708,
+      "dec": 68.0417,
+      "obs_found": 50,
+      "first_product_id": "2026W19_1A_0912_3",
+      "obs_date": "2026-05-06 11:01:35",
+      "collection": "spherex_dr1",
+      "footprint_separation_deg": 0.23,
+      "in_footprint": true
+    }
+  ],
+  "mock_data_findings": [
+    {
+      "module": "routers/processing.py",
+      "endpoint": "/api/processing/preview",
+      "type": "MOCK",
+      "detail": "Generates 256x256 Gaussian PSF using np.random.normal instead of loading FITS cutouts"
+    },
+    {
+      "module": "routers/processing.py",
+      "endpoint": "/api/processing/stack",
+      "type": "MOCK",
+      "detail": "Stacks synthetic Gaussian noise frames instead of multi-exposure FITS files"
+    },
+    {
+      "module": "routers/comparison.py",
+      "endpoint": "/api/comparison/align",
+      "type": "MOCK",
+      "detail": "Injects hardcoded shift_x = 4.2, shift_y = 3.5 yielding false 34.3 arcsec motion for Barnard's Star"
+    },
+    {
+      "module": "pages/SpectralExplorer.tsx",
+      "endpoint": "/spectra",
+      "type": "MOCK",
+      "detail": "Computes bar heights with Gaussian continuum formula Math.exp(); API flux_uJy is null"
+    },
+    {
+      "module": "services/lightcurve_service.py",
+      "endpoint": "/api/lightcurves/{id}",
+      "type": "MOCK",
+      "detail": "Hardcoded static photometric time-series dictionaries for R Draconis and RW Aurigae"
+    }
+  ],
+  "checklist_counts": {
+    "pass": 14,
+    "partial": 6,
+    "fail": 3,
+    "missing": 1,
+    "mock": 2,
+    "unverified": 0
+  }
+}
