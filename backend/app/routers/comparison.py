@@ -72,12 +72,12 @@ def _resolve_fits_file_for_obs(
             idx = fallback_index % len(covering_files)
             return covering_files[idx]
 
-    # 4. Fallback across cached genuine FITS products
-    if cached_fits:
-        idx = fallback_index % len(cached_fits)
-        return cached_fits[idx]
-
-    raise FileNotFoundError(f"No authentic FITS file found for observation '{obs_id}'")
+    # 4. Strict scientific integrity check: silent substitution of unrelated observations is prohibited
+    coord_info = f" or coordinates (RA {target_ra}°, Dec {target_dec}°)" if target_ra is not None else ""
+    raise HTTPException(
+        status_code=404,
+        detail=f"Requested SPHEREx observation product '{obs_id}'{coord_info} was not found in archive. Silent substitution is prohibited."
+    )
 
 @router.post("/align", response_model=ComparisonResponse)
 def compare_observations(req: ComparisonRequest = Body(...)):
@@ -278,6 +278,8 @@ def compare_observations(req: ComparisonRequest = Body(...)):
         COMPARISON_CACHE[cache_key] = result
         return result
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Astronomical cross-epoch comparison failed: {str(e)}")
 

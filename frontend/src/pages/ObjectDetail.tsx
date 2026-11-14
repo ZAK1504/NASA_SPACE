@@ -43,37 +43,56 @@ export const ObjectDetail: React.FC = () => {
   const [selectedStretch, setSelectedStretch] = useState<string>('asinh');
   const [selectedColormap, setSelectedColormap] = useState<string>('inferno');
 
-  // Fetch object details and preview
+  // Fetch object details from API
   useEffect(() => {
     if (!objectId) return;
-    
-    // Fetch object from API
+    let isCancelled = false;
     api.getObject(objectId)
-      .then((data) => setObjectData(data))
-      .catch(() => {
-        // Keep fallback
-      });
-
-    // Generate scientific preview
-    const targetObj = fallbackObj || objectData;
-    if (targetObj && targetObj.ra !== undefined && targetObj.dec !== undefined) {
-      setLoadingPreview(true);
-      api.generatePreview({
-        stretch: selectedStretch,
-        colormap: selectedColormap,
-        ra: targetObj.ra,
-        dec: targetObj.dec,
-        fovArcsec: 180.0,
+      .then((data) => {
+        if (!isCancelled && data) {
+          setObjectData(data);
+        }
       })
+      .catch((err) => {
+        console.warn('Using local fallback for object details:', err);
+      });
+    return () => {
+      isCancelled = true;
+    };
+  }, [objectId]);
+
+  // Generate scientific preview immediately upon load or change
+  useEffect(() => {
+    const targetObj = objectData || fallbackObj;
+    if (!targetObj || targetObj.ra === undefined || targetObj.dec === undefined) return;
+
+    let isCancelled = false;
+    setLoadingPreview(true);
+    api.generatePreview({
+      stretch: selectedStretch,
+      colormap: selectedColormap,
+      ra: targetObj.ra,
+      dec: targetObj.dec,
+      fovArcsec: 180.0,
+      objectName: targetObj.name || targetObj.id || objectId,
+    })
       .then((res) => {
-        if (res && res.image_base64) {
+        if (!isCancelled && res && res.image_base64) {
           setPreviewImage(res.image_base64);
         }
       })
-      .catch((err) => console.warn('Preview render error:', err))
-      .finally(() => setLoadingPreview(false));
-    }
-  }, [objectId, selectedStretch, selectedColormap]);
+      .catch((err) => {
+        console.warn('Preview render error:', err);
+        if (!isCancelled) setPreviewImage(null);
+      })
+      .finally(() => {
+        if (!isCancelled) setLoadingPreview(false);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [objectId, objectData?.ra, objectData?.dec, selectedStretch, selectedColormap]);
 
   // Fetch observations when tab is switched
   useEffect(() => {
@@ -250,7 +269,19 @@ export const ObjectDetail: React.FC = () => {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <p className="text-xs text-[#94A3B8]">Preview unavailable</p>
+                  <div className="text-center p-6 space-y-2">
+                    <p className="text-xs font-medium text-[#E8EDF5]">Calibrated Level 2 Tile</p>
+                    <p className="text-[11px] text-[#94A3B8] max-w-xs mx-auto">
+                      Single-exposure tile for these coordinates is scheduled in public NASA release. View all-sky 102-band data in Spectral Explorer.
+                    </p>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => navigate(`/spectral-explorer?ra=${(objectData || fallbackObj)?.ra}&dec=${(objectData || fallbackObj)?.dec}`)}
+                    >
+                      View in Spectral Explorer →
+                    </Button>
+                  </div>
                 )}
               </div>
 

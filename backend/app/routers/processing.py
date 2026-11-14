@@ -91,11 +91,6 @@ def _find_or_fetch_fits_for_target(
             except Exception:
                 continue
 
-    # 4. Check if any cached FITS exists as baseline
-    cached_all = list(cache_dir.glob("*.fits"))
-    if cached_all:
-        return cached_all[0]
-
     return None
 
 @router.post("/preview")

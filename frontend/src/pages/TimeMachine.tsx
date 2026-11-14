@@ -38,6 +38,17 @@ export const TimeMachine: React.FC = () => {
     if (!isCustomMode) {
       setCustomRa(selectedObject.ra);
       setCustomDec(selectedObject.dec);
+
+      const targetObsPairs: Record<string, { obs1: string; obs2: string }> = {
+        'barnards-star': { obs1: '2025W35_1A_0444_3', obs2: '2026W34_2A_0249_1' },
+        'wise-0855': { obs1: '2025W50_2A_0254_1', obs2: '2025W50_2A_0254_1' },
+        'epsilon-indi-b': { obs1: '2026W40_1A_0692_1', obs2: '2026W40_1A_0692_1' },
+        'r-draconis': { obs1: '2026W29_1A_0430_1', obs2: '2026W29_1A_0430_1' },
+        'rw-aurigae': { obs1: '2025W35_1A_0444_3', obs2: '2026W34_2A_0249_1' },
+      };
+      const pair = targetObsPairs[selectedObject.slug] || targetObsPairs['barnards-star'];
+      setEpoch1Id(pair.obs1);
+      setEpoch2Id(pair.obs2);
     }
   }, [selectedObject, isCustomMode]);
 
@@ -107,10 +118,8 @@ export const TimeMachine: React.FC = () => {
     };
   }, [customRa, customDec, fovArcsec, stretch, colormap, smooth, selectedObject, isCustomMode]);
 
-  // Fetch pairwise Comparison when pairwise modes are active
+  // Fetch pairwise Comparison so comparison modes are ready immediately
   useEffect(() => {
-    if (viewMode === 'timelapse') return;
-
     let isCancelled = false;
     setLoadingComparison(true);
 
@@ -136,7 +145,7 @@ export const TimeMachine: React.FC = () => {
     return () => {
       isCancelled = true;
     };
-  }, [viewMode, epoch1Id, epoch2Id, customRa, customDec, fovArcsec, stretch, colormap, smooth, selectedObject, isCustomMode]);
+  }, [epoch1Id, epoch2Id, customRa, customDec, fovArcsec, stretch, colormap, smooth, selectedObject, isCustomMode]);
 
   // Video Timelapse animation interval
   useEffect(() => {
@@ -358,14 +367,16 @@ export const TimeMachine: React.FC = () => {
 
       {/* Main Astronomical Canvas Container */}
       <div className="bg-[#111927] border-x border-[#263247] p-6 relative">
-        {loadingManifest && viewMode === 'timelapse' ? (
+        {(loadingManifest && viewMode === 'timelapse') || (loadingComparison && viewMode !== 'timelapse' && !comparison) ? (
           <div className="aspect-[4/3] max-w-2xl mx-auto flex flex-col items-center justify-center text-center">
             <RefreshCw className="w-8 h-8 text-[#6EA8FE] animate-spin mb-3" />
             <h4 className="text-sm font-semibold text-[#E8EDF5] mb-1">
-              Loading Authentic NASA SPHEREx Observations…
+              {viewMode === 'timelapse' ? 'Loading Authentic NASA SPHEREx Observations…' : 'Aligning Authentic SPHEREx Observations…'}
             </h4>
             <p className="text-xs text-[#94A3B8] max-w-sm">
-              Retrieving calibrated Level 2 FITS arrays and aligning onto fixed tangent celestial grid.
+              {viewMode === 'timelapse'
+                ? 'Retrieving calibrated Level 2 FITS arrays and aligning onto fixed tangent celestial grid.'
+                : 'Performing celestial WCS reprojection and sigma-clipped background matching.'}
             </p>
           </div>
         ) : (

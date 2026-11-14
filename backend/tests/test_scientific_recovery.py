@@ -143,3 +143,79 @@ def test_extract_spectrum():
     assert data["total_bands"] == 102
     assert "channels" in data
     assert len(data["channels"]) == 102
+
+def test_target_coordinates_simbad_gaia_accuracy():
+    """Verify authoritative SIMBAD & Gaia DR3 coordinates across all 5 benchmark targets."""
+    from app.services.object_service import object_service
+    from app.services.coordinate_service import coordinate_service
+
+    # Check object_service coordinates
+    objects = {o["slug"]: o for o in object_service.get_all_objects()}
+    assert abs(objects["barnards-star"]["ra"] - 269.4463) < 0.01
+    assert abs(objects["barnards-star"]["dec"] - 4.7682) < 0.01
+
+    assert abs(objects["wise-0855"]["ra"] - 133.7598) < 0.01
+    assert abs(objects["wise-0855"]["dec"] - (-7.2428)) < 0.01
+
+    assert abs(objects["epsilon-indi-b"]["ra"] - 331.0441) < 0.01
+    assert abs(objects["epsilon-indi-b"]["dec"] - (-56.7828)) < 0.01
+
+    assert abs(objects["rw-aurigae"]["ra"] - 76.9561) < 0.01
+    assert abs(objects["rw-aurigae"]["dec"] - 30.4013) < 0.01
+
+    assert abs(objects["r-draconis"]["ra"] - 248.1676) < 0.01
+    assert abs(objects["r-draconis"]["dec"] - 66.7550) < 0.01
+
+    # Check coordinate_service name resolver
+    c_rw = coordinate_service.resolve_object_name("RW Aurigae")
+    assert abs(c_rw["ra"] - 76.9561) < 0.01
+    assert abs(c_rw["dec"] - 30.4013) < 0.01
+
+    c_r_dra = coordinate_service.resolve_object_name("R Draconis")
+    assert abs(c_r_dra["ra"] - 248.1676) < 0.01
+    assert abs(c_r_dra["dec"] - 66.7550) < 0.01
+
+    c_eps = coordinate_service.resolve_object_name("Epsilon Indi B")
+    assert abs(c_eps["ra"] - 331.0441) < 0.01
+    assert abs(c_eps["dec"] - (-56.7828)) < 0.01
+
+def test_exact_product_resolution_no_silent_fallback():
+    """Verify requesting an unobserved or non-existent observation returns 404 without silent substitution."""
+    resp = client.post("/api/comparison/align", json={
+        "obs_id_1": "DEFINITELY_NONEXISTENT_OBS_ID_99999",
+        "obs_id_2": "DEFINITELY_NONEXISTENT_OBS_ID_88888",
+        "target_name": "Unknown",
+        "center_ra": 0.0,
+        "center_dec": 0.0,
+    })
+    assert resp.status_code == 404, f"Expected 404 for missing obs product, got {resp.status_code}"
+    assert "Silent substitution is prohibited" in resp.json().get("detail", "")
+
+def test_epsilon_indi_b_real_fits_preview():
+    """Verify Epsilon Indi B preview renders authentic SPHEREx Level 2 FITS cutout."""
+    resp = client.post("/api/processing/preview", json={
+        "ra": 331.0441,
+        "dec": -56.7828,
+        "fov_arcsec": 180.0,
+        "stretch": "asinh",
+        "colormap": "inferno"
+    })
+    assert resp.status_code == 200, f"Preview failed: {resp.text}"
+    data = resp.json()
+    assert data["image_base64"].startswith("data:image/png;base64,")
+    assert "2026W40_1A" in data["scientific_metadata"]["obs_id"]
+
+def test_r_draconis_real_fits_preview():
+    """Verify R Draconis preview renders authentic SPHEREx Level 2 FITS cutout."""
+    resp = client.post("/api/processing/preview", json={
+        "ra": 248.1676,
+        "dec": 66.7550,
+        "fov_arcsec": 180.0,
+        "stretch": "asinh",
+        "colormap": "inferno"
+    })
+    assert resp.status_code == 200, f"Preview failed: {resp.text}"
+    data = resp.json()
+    assert data["image_base64"].startswith("data:image/png;base64,")
+    assert "2026W29_1A" in data["scientific_metadata"]["obs_id"]
+

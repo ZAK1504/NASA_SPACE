@@ -22,10 +22,11 @@ class CatalogService:
                     "bibcode_count": 842
                 },
                 "gaia_dr3": {
-                    "source_id": "Gaia DR3 4472832130942585856",
-                    "ra_deg": 269.45207,
-                    "dec_deg": 4.69336,
+                    "source_id": "Gaia DR3 4472832130942575872",
+                    "ra_deg": 269.448503,
+                    "dec_deg": 4.739420,
                     "epoch": "J2016.0",
+                    "propagated_j2026": {"ra_deg": 269.4463, "dec_deg": 4.7682},
                     "pm_ra_mas_yr": -801.55,
                     "pm_dec_mas_yr": 10362.39,
                     "total_pm_mas_yr": 10393.36,
@@ -64,9 +65,10 @@ class CatalogService:
                 },
                 "gaia_dr3": {
                     "source_id": "Not Detected (Below Gaia G > 21.0 optical limit)",
-                    "ra_deg": 133.7879,
-                    "dec_deg": -7.2435,
-                    "epoch": "J2014.0",
+                    "ra_deg": 133.7598,
+                    "dec_deg": -7.2428,
+                    "epoch": "J2026.0 (Propagated)",
+                    "reference_coords_historical": {"ra_deg": 133.7951, "dec_deg": -7.2452, "epoch": "2010.0 (Discovery)"},
                     "pm_ra_mas_yr": -8132.0,
                     "pm_dec_mas_yr": 546.0,
                     "total_pm_mas_yr": 8150.3,
@@ -102,9 +104,9 @@ class CatalogService:
                     "bibcode_count": 312
                 },
                 "gaia_dr3": {
-                    "source_id": "Gaia DR3 6414704870024765696",
-                    "ra_deg": 330.8408,
-                    "dec_deg": -56.7868,
+                    "source_id": "Gaia DR3 6412596012146801152",
+                    "ra_deg": 331.0441,
+                    "dec_deg": -56.7828,
                     "epoch": "J2016.0",
                     "pm_ra_mas_yr": 3961.4,
                     "pm_dec_mas_yr": -2538.3,
@@ -118,7 +120,7 @@ class CatalogService:
                     "phot_rp_mean_mag": 16.8
                 },
                 "allwise": {
-                    "designation": "WISE J220321.65-564709.4",
+                    "designation": "WISE J220410.59-564658.2",
                     "w1_mag_3_4um": 12.15,
                     "w2_mag_4_6um": 10.42,
                     "w3_mag_12um": 9.15,
@@ -142,8 +144,8 @@ class CatalogService:
                 },
                 "gaia_dr3": {
                     "source_id": "Gaia DR3 162985392019482112",
-                    "ra_deg": 83.4042,
-                    "dec_deg": 30.4017,
+                    "ra_deg": 76.9561,
+                    "dec_deg": 30.4013,
                     "epoch": "J2016.0",
                     "pm_ra_mas_yr": 1.25,
                     "pm_dec_mas_yr": -21.40,
@@ -157,7 +159,7 @@ class CatalogService:
                     "phot_rp_mean_mag": 9.68
                 },
                 "allwise": {
-                    "designation": "WISE J053336.93+302406.8",
+                    "designation": "WISE J050749.54+302405.0",
                     "w1_mag_3_4um": 7.42,
                     "w2_mag_4_6um": 6.85,
                     "w3_mag_12um": 5.10,
@@ -181,8 +183,8 @@ class CatalogService:
                 },
                 "gaia_dr3": {
                     "source_id": "Gaia DR3 1667439201492042240",
-                    "ra_deg": 166.5708,
-                    "dec_deg": 68.0417,
+                    "ra_deg": 248.1676,
+                    "dec_deg": 66.7550,
                     "epoch": "J2016.0",
                     "pm_ra_mas_yr": -14.2,
                     "pm_dec_mas_yr": -8.5,
