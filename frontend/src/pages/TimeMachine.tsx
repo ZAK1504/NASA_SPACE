@@ -27,11 +27,14 @@ export const TimeMachine: React.FC = () => {
 
   // Selected Target or Custom Coordinates
   const objectParam = searchParams.get('object') || 'barnards-star';
+  const paramRa = searchParams.get('ra');
+  const paramDec = searchParams.get('dec');
+  const isCustomFromUrl = objectParam === 'custom' || (paramRa !== null && paramDec !== null);
   const selectedObject = FEATURED_OBJECTS.find((o) => o.slug === objectParam) || FEATURED_OBJECTS[0];
 
-  const [customRa, setCustomRa] = useState<number>(selectedObject.ra);
-  const [customDec, setCustomDec] = useState<number>(selectedObject.dec);
-  const [isCustomMode, setIsCustomMode] = useState<boolean>(false);
+  const [customRa, setCustomRa] = useState<number>(paramRa ? parseFloat(paramRa) : selectedObject.ra);
+  const [customDec, setCustomDec] = useState<number>(paramDec ? parseFloat(paramDec) : selectedObject.dec);
+  const [isCustomMode, setIsCustomMode] = useState<boolean>(isCustomFromUrl);
 
   // Synchronize when query param changes
   useEffect(() => {
@@ -53,7 +56,8 @@ export const TimeMachine: React.FC = () => {
   }, [selectedObject, isCustomMode]);
 
   // Comparison & View Mode
-  const [viewMode, setViewMode] = useState<ViewMode>('timelapse');
+  const paramView = searchParams.get('view') as ViewMode | null;
+  const [viewMode, setViewMode] = useState<ViewMode>(paramView || 'timelapse');
 
   // Scientific FOV & Display Preferences
   const [fovArcsec, setFovArcsec] = useState<number>(900.0); // 15 arcminutes default (avoids Minecraft pixelation)
@@ -283,7 +287,7 @@ export const TimeMachine: React.FC = () => {
       </div>
 
       {/* Astrometric Proper Motion Distinction Banner (Barnard's Star) */}
-      {selectedObject?.slug === 'barnards-star' && manifest && manifest.total_frames >= 2 && (
+      {!isCustomMode && selectedObject?.slug === 'barnards-star' && manifest && manifest.total_frames >= 2 && (
         <div className="bg-[#151E30] border border-[#263247] rounded-lg p-3 mb-4 flex items-start gap-2.5 text-xs">
           <Info className="w-4 h-4 text-[#F59E0B] flex-shrink-0 mt-0.5" />
           <div className="space-y-1">
@@ -301,7 +305,7 @@ export const TimeMachine: React.FC = () => {
       )}
 
       {/* Companion Star / Target Annotation Banner (e.g. Epsilon Indi A & B) */}
-      {selectedObject?.companion && (
+      {!isCustomMode && selectedObject?.companion && (
         <div className="bg-[#151E30] border border-[#263247] rounded-lg p-3 mb-4 flex items-start gap-2.5 text-xs">
           <Info className="w-4 h-4 text-[#6EA8FE] flex-shrink-0 mt-0.5" />
           <div className="space-y-1">
