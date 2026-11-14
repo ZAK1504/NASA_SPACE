@@ -136,9 +136,9 @@ export const SpectralExplorer: React.FC = () => {
       if (surveyKey === 'spherex') {
         aladinInstanceRef.current.setImageSurvey('https://irsa.ipac.caltech.edu/data/hips/SPHEREx/spherex_allsky_cube');
       } else if (surveyKey === 'allwise') {
-        aladinInstanceRef.current.setImageSurvey('P/allWISE/color');
+        aladinInstanceRef.current.setImageSurvey('https://irsa.ipac.caltech.edu/data/hips/CDS/AllWISE/RGB-W4-W2-W1');
       } else if (surveyKey === '2mass') {
-        aladinInstanceRef.current.setImageSurvey('P/2MASS/color');
+        aladinInstanceRef.current.setImageSurvey('https://irsa.ipac.caltech.edu/data/hips/CDS/2MASS/Color');
       }
     } catch (e) {
       console.warn('Survey switch notice:', e);
@@ -262,10 +262,23 @@ export const SpectralExplorer: React.FC = () => {
       {/* Official DR1 All-Sky Spectral Map Viewport */}
       <div className="bg-[#151E30] border border-[#263247] rounded-lg overflow-hidden mb-6 shadow-2xl">
         <div className="p-3.5 bg-[#0D1526] border-b border-[#263247] flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2">
-            <Globe className="w-4 h-4 text-[#6EA8FE]" />
-            <span className="font-semibold text-[#E8EDF5]">Official SPHEREx DR1 All-Sky HiPS Cube</span>
-            <span className="font-mono text-[#94A3B8]">spherex_allsky_cube</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <Globe className="w-4 h-4 text-[#6EA8FE]" />
+              <span className="font-semibold text-[#E8EDF5]">Official SPHEREx DR1 HiPS Cube</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-[#0B1020] border border-[#263247] rounded px-2 py-0.5 text-[11px]">
+              <span className="text-[#94A3B8]">Survey:</span>
+              <select
+                value={activeSurvey}
+                onChange={(e) => handleSurveyChange(e.target.value)}
+                className="bg-transparent text-[#6EA8FE] font-mono focus:outline-none cursor-pointer"
+              >
+                <option value="spherex">SPHEREx DR1 HiPS Cube (102 Bands)</option>
+                <option value="allwise">AllWISE Mid-IR (NASA IRSA)</option>
+                <option value="2mass">2MASS Near-IR (NASA IRSA)</option>
+              </select>
+            </div>
           </div>
           <div className="flex items-center gap-3 font-mono text-[11px]">
             <span className="text-[#6EA8FE]">Channel {currentChannel} / 102</span>
@@ -313,25 +326,6 @@ export const SpectralExplorer: React.FC = () => {
                   </p>
                 </div>
               )}
-
-              {/* Target Sky Position Badge */}
-              <div className="absolute top-3 left-3 bg-[#0B1020]/80 border border-[#263247] rounded px-2.5 py-1 text-[11px] font-mono text-[#E8EDF5] shadow backdrop-blur-sm z-10 pointer-events-none">
-                Target: {selectedObject.name} (RA: {selectedObject.ra.toFixed(2)}°, Dec: {selectedObject.dec.toFixed(2)}°)
-              </div>
-
-              {/* Survey / Projection Switcher */}
-              <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 bg-[#0B1020]/85 border border-[#263247] rounded px-2 py-1 text-[11px]">
-                <span className="text-[#94A3B8]">Survey:</span>
-                <select
-                  value={activeSurvey}
-                  onChange={(e) => handleSurveyChange(e.target.value)}
-                  className="bg-transparent text-[#6EA8FE] font-mono focus:outline-none cursor-pointer"
-                >
-                  <option value="spherex">SPHEREx DR1 HiPS Cube (102 Bands)</option>
-                  <option value="allwise">AllWISE Mid-IR (W1–W4)</option>
-                  <option value="2mass">2MASS Near-IR (J/H/Ks)</option>
-                </select>
-              </div>
             </div>
           )}
         </div>

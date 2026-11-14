@@ -14,7 +14,7 @@ import { getAladinInstance } from '../utils/aladinLoader';
 export const ExploreSky: React.FC = () => {
   const navigate = useNavigate();
   const [selectedTarget, setSelectedTarget] = useState<any>(FEATURED_OBJECTS[0]);
-  const [surveyLayer, setSurveyLayer] = useState<string>('P/DSS2/color');
+  const [surveyLayer, setSurveyLayer] = useState<string>('https://irsa.ipac.caltech.edu/data/hips/CDS/DSS2/color');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searching, setSearching] = useState<boolean>(false);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
@@ -75,7 +75,6 @@ export const ExploreSky: React.FC = () => {
 
     return () => {
       isMounted = false;
-      // Do not destroy instance destructively to allow instant tab switching
     };
   }, []);
 
@@ -151,21 +150,22 @@ export const ExploreSky: React.FC = () => {
         {/* Survey Layer Picker */}
         <div className="flex items-center gap-2">
           <Layers className="w-4 h-4 text-[#94A3B8]" />
-          <span className="text-xs text-[#94A3B8]">Background Survey:</span>
+          <span className="text-xs text-[#94A3B8]">Survey:</span>
           <select
             value={surveyLayer}
             onChange={(e) => handleLayerChange(e.target.value)}
             className="bg-[#151E30] border border-[#263247] text-[#E8EDF5] text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-[#6EA8FE]"
           >
-            <option value="P/DSS2/color">DSS2 Color (Optical)</option>
-            <option value="P/2MASS/color">2MASS Color (Near-Infrared J/H/Ks)</option>
-            <option value="P/allWISE/color">AllWISE Color (Mid-Infrared)</option>
+            <option value="https://irsa.ipac.caltech.edu/data/hips/CDS/DSS2/color">DSS2 Color (Optical · NASA/IPAC IRSA)</option>
+            <option value="https://irsa.ipac.caltech.edu/data/hips/CDS/2MASS/Color">2MASS Color (Near-Infrared · NASA/IPAC IRSA)</option>
+            <option value="https://irsa.ipac.caltech.edu/data/hips/CDS/AllWISE/RGB-W4-W2-W1">AllWISE Color (Mid-Infrared · NASA/IPAC IRSA)</option>
+            <option value="https://irsa.ipac.caltech.edu/data/hips/SPHEREx/spherex_allsky_cube">SPHEREx DR1 All-Sky HiPS (102-Band NIR)</option>
           </select>
         </div>
       </div>
 
       {/* Target Quick Jump and Search */}
-      <div className="bg-[#151E30] border border-[#263247] rounded p-4 mb-6">
+      <div className="bg-[#151E30] border border-[#263247] rounded p-4 mb-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Quick jump buttons */}
           <div className="flex flex-wrap items-center gap-1.5">
@@ -210,6 +210,27 @@ export const ExploreSky: React.FC = () => {
         )}
       </div>
 
+      {/* Active Selected Target Bar (Clean, Non-Overlapping) */}
+      {selectedTarget && (
+        <div className="bg-[#151E30] border border-[#263247] rounded p-3.5 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="font-bold text-[#E8EDF5] text-sm">{selectedTarget.name}</span>
+            <Badge variant="blue">{selectedTarget.type}</Badge>
+            <span className="font-mono text-[#6EA8FE]">
+              RA: {selectedTarget.ra.toFixed(4)}° ({selectedTarget.ra_hms || selectedTarget.raHms}) · Dec: {selectedTarget.dec.toFixed(4)}° ({selectedTarget.dec_dms || selectedTarget.decDms})
+            </span>
+          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => navigate(`/objects/${selectedTarget.slug || selectedTarget.id}`)}
+            rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+          >
+            Inspect in Object Explorer
+          </Button>
+        </div>
+      )}
+
       {/* Main Aladin Map Container */}
       <div className="bg-[#0B1020] border border-[#263247] rounded overflow-hidden relative mb-6" style={{ height: '62vh' }}>
         <div ref={aladinContainerRef} className="w-full h-full" />
@@ -217,8 +238,8 @@ export const ExploreSky: React.FC = () => {
         {aladinStatus === 'initializing' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0B1020]/80 backdrop-blur-sm p-6 text-center z-10">
             <RefreshCw className="w-8 h-8 text-[#6EA8FE] animate-spin mb-3" />
-            <h4 className="text-sm font-semibold text-[#E8EDF5] mb-1">Initializing Aladin Lite v3 WebGL Engine…</h4>
-            <p className="text-xs text-[#94A3B8]">Streaming hierarchical HiPS sky tiles from CDS Strasbourg…</p>
+            <h4 className="text-sm font-semibold text-[#E8EDF5] mb-1">Connecting to NASA/IPAC IRSA Sky Atlas…</h4>
+            <p className="text-xs text-[#94A3B8]">Streaming hierarchical HiPS sky tiles from NASA/IPAC archive…</p>
           </div>
         )}
 
@@ -232,7 +253,7 @@ export const ExploreSky: React.FC = () => {
               </div>
             </div>
             <div className="text-sm font-bold text-[#E8EDF5] mb-1">
-              Celestial Sphere Contextual View ({surveyLayer})
+              Celestial Sphere Contextual View
             </div>
             <p className="text-xs text-[#94A3B8] max-w-md mb-4 font-mono">
               RA {selectedTarget?.ra.toFixed(4)}° · Dec {selectedTarget?.dec.toFixed(4)}° · Coordinate Frame: ICRS / J2000
@@ -249,36 +270,6 @@ export const ExploreSky: React.FC = () => {
             </div>
           </div>
         )}
-
-        {/* Selected Target HUD Overlay */}
-        {selectedTarget && (
-          <div className="absolute top-4 left-4 z-20 bg-[#151E30]/90 backdrop-blur-md border border-[#263247] rounded p-4 max-w-xs shadow-xl text-xs space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-[#E8EDF5]">{selectedTarget.name}</span>
-              <Badge variant="blue">{selectedTarget.type}</Badge>
-            </div>
-            <div className="font-mono text-[#6EA8FE] space-y-0.5 text-[11px]">
-              <div>RA: {selectedTarget.ra.toFixed(4)}° ({selectedTarget.ra_hms || selectedTarget.raHms})</div>
-              <div>Dec: {selectedTarget.dec.toFixed(4)}° ({selectedTarget.dec_dms || selectedTarget.decDms})</div>
-            </div>
-            <div className="pt-2 border-t border-[#263247] flex gap-2">
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => navigate(`/objects/${selectedTarget.slug || selectedTarget.id}`)}
-                className="w-full text-xs"
-                rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-              >
-                Inspect in Explorer
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Layer Attribution Badge */}
-        <div className="absolute bottom-3 right-3 z-20 bg-[#0B1020]/80 border border-[#263247] rounded px-2.5 py-1 text-[10px] text-[#94A3B8]">
-          Layer: <span className="text-[#E8EDF5]">{surveyLayer}</span> · CDS Strasbourg
-        </div>
       </div>
 
       <InfoPanel title="About the Aladin Lite Sky Map">
