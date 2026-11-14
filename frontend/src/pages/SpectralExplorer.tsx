@@ -4,13 +4,14 @@ import {
   BarChart2, Layers, Info, Filter, ArrowRight,
   Sparkles, CheckCircle2, ChevronRight, HelpCircle,
   Play, Pause, SkipBack, SkipForward, Download, Globe,
-  AlertTriangle, Compass, MapPin, Sliders
+  AlertTriangle, Compass, MapPin, Sliders, RefreshCw
 } from 'lucide-react';
 import { api, TargetSpectrumResponse } from '../services/api';
 import { FEATURED_OBJECTS } from '../constants/objects';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { InfoPanel } from '../components/ui/InfoPanel';
+import { getAladinInstance } from '../utils/aladinLoader';
 
 const DETECTORS = [
   { id: 'ALL', name: 'All Arrays', range: '0.75 – 5.00 μm', chRange: [1, 102] },
@@ -51,7 +52,98 @@ export const SpectralExplorer: React.FC = () => {
 
   // Aladin Lite ref for HiPS
   const aladinContainerRef = useRef<HTMLDivElement>(null);
+  const aladinInstanceRef = useRef<any>(null);
   const [aladinReady, setAladinReady] = useState<boolean>(false);
+  const [activeSurvey, setActiveSurvey] = useState<string>('spherex');
+
+  // Initialize Aladin Lite v3 with SPHEREx DR1 HiPS Cube
+  useEffect(() => {
+    let isMounted = true;
+    getAladinInstance()
+      .then((A) => {
+        if (!isMounted || !aladinContainerRef.current) return;
+        if (!aladinInstanceRef.current) {
+          aladinInstanceRef.current = A.aladin(aladinContainerRef.current, {
+            survey: 'https://irsa.ipac.caltech.edu/data/hips/SPHEREx/spherex_allsky_cube',
+            projection: 'AITOFF',
+            fov: 180,
+            target: `${selectedObject.ra} ${selectedObject.dec}`,
+            cooFrame: 'J2000',
+            showReticle: true,
+            showZoomControl: true,
+            showFullscreenControl: true,
+            showLayersControl: false,
+            showGotoControl: false,
+          });
+
+          // Add target marker
+          try {
+            const cat = A.catalog({ name: 'Selected Target', sourceSize: 20, color: '#6EA8FE' });
+            aladinInstanceRef.current.addCatalog(cat);
+            const marker = A.marker(selectedObject.ra, selectedObject.dec, {
+              popupTitle: selectedObject.name,
+              popupDesc: `Target: ${selectedObject.type} · RA ${selectedObject.ra.toFixed(4)}°, Dec ${selectedObject.dec.toFixed(4)}°`,
+            });
+            cat.addSources([marker]);
+          } catch (e) {
+            console.warn('Marker overlay notice:', e);
+          }
+
+          if (isMounted) setAladinReady(true);
+        }
+      })
+      .catch((err) => {
+        console.error('Aladin Lite Spectral Explorer init error:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Update cube slice when currentChannel changes
+  useEffect(() => {
+    if (aladinInstanceRef.current && aladinReady && activeSurvey === 'spherex') {
+      try {
+        const baseLayer = aladinInstanceRef.current.getBaseImageLayer?.();
+        if (baseLayer && typeof baseLayer.setSliceNumber === 'function') {
+          // Channel 1..102 -> slice index 0..101
+          baseLayer.setSliceNumber(Math.max(0, currentChannel - 1));
+          aladinInstanceRef.current.requestRedraw?.();
+        }
+      } catch (e) {
+        console.warn('Could not update HiPS cube slice:', e);
+      }
+    }
+  }, [currentChannel, aladinReady, activeSurvey]);
+
+  // Update position when selectedObject changes
+  useEffect(() => {
+    if (aladinInstanceRef.current && aladinReady && selectedObject) {
+      try {
+        aladinInstanceRef.current.gotoRaDec(selectedObject.ra, selectedObject.dec);
+      } catch (e) {
+        console.warn('Aladin goto error:', e);
+      }
+    }
+  }, [selectedObject, aladinReady]);
+
+  // Survey layer switcher
+  const handleSurveyChange = (surveyKey: string) => {
+    setActiveSurvey(surveyKey);
+    if (!aladinInstanceRef.current) return;
+    try {
+      if (surveyKey === 'spherex') {
+        aladinInstanceRef.current.setImageSurvey('https://irsa.ipac.caltech.edu/data/hips/SPHEREx/spherex_allsky_cube');
+      } else if (surveyKey === 'allwise') {
+        aladinInstanceRef.current.setImageSurvey('P/allWISE/color');
+      } else if (surveyKey === '2mass') {
+        aladinInstanceRef.current.setImageSurvey('P/2MASS/color');
+      }
+    } catch (e) {
+      console.warn('Survey switch notice:', e);
+    }
+  };
 
   // Fetch authentic spectrum profile
   useEffect(() => {
@@ -103,6 +195,17 @@ export const SpectralExplorer: React.FC = () => {
   };
 
   const currentDetector = getCurrentDetectorId();
+
+  // Handle detector filter tab click: syncs table/chart AND jumps channel scanner
+  const handleSelectDetector = (detId: string) => {
+    setActiveDetector(detId);
+    if (detId !== 'ALL') {
+      const det = DETECTORS.find((d) => d.id === detId);
+      if (det && (currentChannel < det.chRange[0] || currentChannel > det.chRange[1])) {
+        setCurrentChannel(det.chRange[0]);
+      }
+    }
+  };
 
   // Export spectrum to CSV
   const handleExportCSV = () => {
@@ -195,26 +298,39 @@ export const SpectralExplorer: React.FC = () => {
               </Button>
             </div>
           ) : (
-            <div className="w-full h-full relative flex items-center justify-center">
-              {/* Aladin / HiPS Canvas or Wide-field Infrared All-Sky Projection */}
-              <img
-                src={`https://irsa.ipac.caltech.edu/data/hips/SPHEREx/spherex_allsky_cube/Norder3/Dir0/Npix${currentChannel % 8}.jpg`}
-                onError={(e) => {
-                  // Fallback to high-res genuine infrared all-sky survey tile if external HiPS tile unavailable
-                  (e.target as HTMLImageElement).src = 'https://alasky.cds.unistra.fr/AllWISE/RGB-W4-W2-W1/Norder3/Dir0/Npix14.jpg';
-                }}
-                alt={`SPHEREx All-Sky Infrared Channel ${currentChannel}`}
-                className="w-full h-full object-cover opacity-90 transition-opacity duration-300"
-              />
-              {/* Celestial Reticle Overlay */}
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full border border-dashed border-[#6EA8FE]/40 flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#6EA8FE]" />
+            <div className="w-full h-full relative">
+              {/* Aladin Lite v3 HiPS WebGL Canvas */}
+              <div ref={aladinContainerRef} className="w-full h-full" />
+
+              {!aladinReady && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#070B14]/90 backdrop-blur-sm p-6 text-center z-10">
+                  <RefreshCw className="w-8 h-8 text-[#6EA8FE] animate-spin mb-3" />
+                  <h4 className="text-sm font-semibold text-[#E8EDF5] mb-1">
+                    Connecting to Official NASA SPHEREx DR1 HiPS Cube…
+                  </h4>
+                  <p className="text-xs text-[#94A3B8] max-w-sm">
+                    Streaming calibrated 102-band all-sky spectral cube from NASA/IPAC IRSA (Aitoff projection)
+                  </p>
                 </div>
-              </div>
+              )}
+
               {/* Target Sky Position Badge */}
-              <div className="absolute top-3 left-3 bg-[#0B1020]/80 border border-[#263247] rounded px-2.5 py-1 text-[11px] font-mono text-[#E8EDF5] shadow backdrop-blur-sm">
+              <div className="absolute top-3 left-3 bg-[#0B1020]/80 border border-[#263247] rounded px-2.5 py-1 text-[11px] font-mono text-[#E8EDF5] shadow backdrop-blur-sm z-10 pointer-events-none">
                 Target: {selectedObject.name} (RA: {selectedObject.ra.toFixed(2)}°, Dec: {selectedObject.dec.toFixed(2)}°)
+              </div>
+
+              {/* Survey / Projection Switcher */}
+              <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 bg-[#0B1020]/85 border border-[#263247] rounded px-2 py-1 text-[11px]">
+                <span className="text-[#94A3B8]">Survey:</span>
+                <select
+                  value={activeSurvey}
+                  onChange={(e) => handleSurveyChange(e.target.value)}
+                  className="bg-transparent text-[#6EA8FE] font-mono focus:outline-none cursor-pointer"
+                >
+                  <option value="spherex">SPHEREx DR1 HiPS Cube (102 Bands)</option>
+                  <option value="allwise">AllWISE Mid-IR (W1–W4)</option>
+                  <option value="2mass">2MASS Near-IR (J/H/Ks)</option>
+                </select>
               </div>
             </div>
           )}
@@ -301,21 +417,27 @@ export const SpectralExplorer: React.FC = () => {
 
       {/* Detector Filter Tabs for Chart */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div className="flex flex-wrap gap-1.5">
-          {DETECTORS.map((det) => (
-            <button
-              key={det.id}
-              onClick={() => setActiveDetector(det.id)}
-              className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors cursor-pointer ${
-                activeDetector === det.id
-                  ? 'bg-[#6EA8FE] text-[#0B1020] border-[#6EA8FE]'
-                  : 'bg-[#151E30] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
-              }`}
-            >
-              <span>{det.name}</span>
-              <span className="ml-1.5 opacity-70 text-[10px]">({det.range})</span>
-            </button>
-          ))}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <span className="text-xs text-[#94A3B8] font-medium flex items-center gap-1.5">
+            <Filter className="w-3.5 h-3.5 text-[#6EA8FE]" />
+            Filter Spectrum Chart & Table by Detector:
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {DETECTORS.map((det) => (
+              <button
+                key={det.id}
+                onClick={() => handleSelectDetector(det.id)}
+                className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors cursor-pointer ${
+                  activeDetector === det.id
+                    ? 'bg-[#6EA8FE] text-[#0B1020] border-[#6EA8FE]'
+                    : 'bg-[#151E30] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+                }`}
+              >
+                <span>{det.name}</span>
+                <span className="ml-1.5 opacity-70 text-[10px]">({det.range})</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Export Data Action */}

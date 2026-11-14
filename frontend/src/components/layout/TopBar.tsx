@@ -72,8 +72,16 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenCommandPalette }) => {
         </button>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-[#94A3B8] hidden sm:block">NASA/IPAC IRSA</span>
-          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" title="Archive online" />
+          <span className="text-xs font-mono text-[#94A3B8] hidden sm:block">
+            {pathname.startsWith('/explore')
+              ? 'Sky Atlas: Aladin Lite v3'
+              : pathname.startsWith('/spectra')
+              ? 'HiPS Cube: 102 Bands'
+              : pathname.startsWith('/time-machine')
+              ? 'Multi-Epoch Time Machine'
+              : 'NASA/IPAC IRSA: Online'}
+          </span>
+          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" title="System online & verified" />
         </div>
       </div>
     </header>

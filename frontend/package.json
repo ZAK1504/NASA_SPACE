@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "aladin-lite": "^3.9.2-beta",
     "driver.js": "^1.14.0",
     "lucide-react": "^0.469.0",
     "react": "^19.0.0",

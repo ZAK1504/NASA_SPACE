@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Map, Search, Navigation, Crosshair, Layers,
-  ExternalLink, ArrowRight, Info
+  ExternalLink, ArrowRight, Info, RefreshCw, CheckCircle2
 } from 'lucide-react';
 import { FEATURED_OBJECTS } from '../constants/objects';
 import { api } from '../services/api';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { InfoPanel } from '../components/ui/InfoPanel';
+import { getAladinInstance } from '../utils/aladinLoader';
 
 export const ExploreSky: React.FC = () => {
   const navigate = useNavigate();
@@ -17,66 +18,65 @@ export const ExploreSky: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searching, setSearching] = useState<boolean>(false);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
-  const [aladinFailed, setAladinFailed] = useState<boolean>(false);
+  const [aladinStatus, setAladinStatus] = useState<'initializing' | 'ready' | 'fallback'>('initializing');
 
   const aladinContainerRef = useRef<HTMLDivElement>(null);
   const aladinInstanceRef = useRef<any>(null);
 
-  // Initialize Aladin Lite
+  // Initialize Aladin Lite v3 WebGL engine
   useEffect(() => {
-    // Dynamically load Aladin Lite v3 script if not present
-    const loadAladin = () => {
-      if ((window as any).A) {
-        initAladin();
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = 'https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js';
-      script.async = true;
-      script.onload = () => {
-        initAladin();
-      };
-      script.onerror = () => {
-        console.warn('Aladin Lite external script unavailable, activating celestial context fallback.');
-        setAladinFailed(true);
-      };
-      document.body.appendChild(script);
-    };
+    let isMounted = true;
+    setAladinStatus('initializing');
 
-    const initAladin = () => {
-      if (!aladinContainerRef.current || !(window as any).A) return;
-      try {
-        if (!aladinInstanceRef.current) {
-          aladinInstanceRef.current = (window as any).A.aladin(aladinContainerRef.current, {
-            survey: surveyLayer,
-            fov: 0.8,
-            target: `${selectedTarget.ra} ${selectedTarget.dec}`,
-            cooFrame: 'J2000',
-            showReticle: true,
-            showZoomControl: true,
-            showFullscreenControl: false,
-            showLayersControl: false,
-            showGotoControl: false,
-          });
-
-          // Add markers for featured objects
-          const cat = (window as any).A.catalog({ name: 'SPHEREx Targets', sourceSize: 18, color: '#6EA8FE' });
-          aladinInstanceRef.current.addCatalog(cat);
-
-          FEATURED_OBJECTS.forEach((obj) => {
-            const marker = (window as any).A.marker(obj.ra, obj.dec, {
-              popupTitle: obj.name,
-              popupDesc: `${obj.type} · RA ${obj.ra.toFixed(4)}°, Dec ${obj.dec.toFixed(4)}°`,
+    getAladinInstance()
+      .then((A) => {
+        if (!isMounted || !aladinContainerRef.current) return;
+        try {
+          if (!aladinInstanceRef.current) {
+            aladinInstanceRef.current = A.aladin(aladinContainerRef.current, {
+              survey: surveyLayer,
+              fov: 0.8,
+              target: `${selectedTarget.ra} ${selectedTarget.dec}`,
+              cooFrame: 'J2000',
+              showReticle: true,
+              showZoomControl: true,
+              showFullscreenControl: true,
+              showLayersControl: false,
+              showGotoControl: false,
             });
-            cat.addSources([marker]);
-          });
-        }
-      } catch (e) {
-        console.error('Aladin Lite init error:', e);
-      }
-    };
 
-    loadAladin();
+            // Add markers for featured objects
+            try {
+              const cat = A.catalog({ name: 'SPHEREx Targets', sourceSize: 18, color: '#6EA8FE' });
+              aladinInstanceRef.current.addCatalog(cat);
+
+              FEATURED_OBJECTS.forEach((obj) => {
+                const marker = A.marker(obj.ra, obj.dec, {
+                  popupTitle: obj.name,
+                  popupDesc: `${obj.type} · RA ${obj.ra.toFixed(4)}°, Dec ${obj.dec.toFixed(4)}°`,
+                });
+                cat.addSources([marker]);
+              });
+            } catch (catErr) {
+              console.warn('Aladin catalog overlay notice:', catErr);
+            }
+
+            if (isMounted) setAladinStatus('ready');
+          }
+        } catch (e) {
+          console.error('Aladin Lite instantiation error:', e);
+          if (isMounted) setAladinStatus('fallback');
+        }
+      })
+      .catch((err) => {
+        console.error('Aladin Lite module load error:', err);
+        if (isMounted) setAladinStatus('fallback');
+      });
+
+    return () => {
+      isMounted = false;
+      // Do not destroy instance destructively to allow instant tab switching
+    };
   }, []);
 
   // Update Aladin position when selectedTarget changes
@@ -214,7 +214,15 @@ export const ExploreSky: React.FC = () => {
       <div className="bg-[#0B1020] border border-[#263247] rounded overflow-hidden relative mb-6" style={{ height: '62vh' }}>
         <div ref={aladinContainerRef} className="w-full h-full" />
 
-        {aladinFailed && (
+        {aladinStatus === 'initializing' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0B1020]/80 backdrop-blur-sm p-6 text-center z-10">
+            <RefreshCw className="w-8 h-8 text-[#6EA8FE] animate-spin mb-3" />
+            <h4 className="text-sm font-semibold text-[#E8EDF5] mb-1">Initializing Aladin Lite v3 WebGL Engine…</h4>
+            <p className="text-xs text-[#94A3B8]">Streaming hierarchical HiPS sky tiles from CDS Strasbourg…</p>
+          </div>
+        )}
+
+        {aladinStatus === 'fallback' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0B1020]/90 backdrop-blur-sm p-6 text-center z-10">
             <div className="relative w-48 h-48 rounded-full border border-[#6EA8FE]/30 flex items-center justify-center mb-4 bg-gradient-to-b from-[#1a2540]/40 to-transparent shadow-glow-blue animate-pulse">
               <div className="absolute inset-2 rounded-full border border-dashed border-[#263247]" />

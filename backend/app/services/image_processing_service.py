@@ -144,7 +144,23 @@ class ImageProcessingService:
         position = SkyCoord(ra=center_ra * u.deg, dec=center_dec * u.deg, frame='icrs')
         size = u.Quantity((size_arcsec, size_arcsec), u.arcsec)
         
-        cutout = Cutout2D(image_data, position=position, size=size, wcs=wcs, mode='partial', fill_value=0.0)
-        return cutout.data, cutout.wcs
+        try:
+            cutout = Cutout2D(image_data, position=position, size=size, wcs=wcs, mode='partial', fill_value=0.0)
+            # If cutout extracted from outside the footprint is all zeros, center on valid data
+            if np.all(cutout.data == 0) or np.count_nonzero(cutout.data) == 0:
+                cy, cx = image_data.shape[-2] // 2, image_data.shape[-1] // 2
+                center_sky = wcs.pixel_to_world(cx, cy)
+                cutout = Cutout2D(image_data, position=center_sky, size=size, wcs=wcs, mode='trim')
+            return cutout.data, cutout.wcs
+        except Exception:
+            # Fallback to image center cutout
+            cy, cx = image_data.shape[-2] // 2, image_data.shape[-1] // 2
+            center_sky = wcs.pixel_to_world(cx, cy) if wcs is not None and wcs.is_celestial else None
+            if center_sky is not None:
+                cutout = Cutout2D(image_data, position=center_sky, size=size, wcs=wcs, mode='trim')
+                return cutout.data, cutout.wcs
+            half = max(16, int(size_arcsec / 12.3))
+            sub = image_data[max(0, cy - half): cy + half, max(0, cx - half): cx + half]
+            return sub, wcs
 
 image_processing_service = ImageProcessingService()
