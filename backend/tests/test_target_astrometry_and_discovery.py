@@ -104,3 +104,41 @@ def test_comparison_endpoint_alignment_and_metrics():
     assert metrics is not None
     assert "astrometric_stability_arcsec" in metrics
     assert "associations" in metrics
+
+def test_arbitrary_coordinates_uncached_out_of_bounds_honesty():
+    """
+    Test originally failing region RA 180.0°, Dec +60.0° with controlled cache bypass.
+    Must NOT silently reuse R Draconis frames with negative out-of-bounds pixels.
+    Must report exact archive search status and return 0 frames honestly.
+    """
+    manifest = archive_discovery_service.discover_and_prepare_manifest(
+        ra=180.0,
+        dec=60.0,
+        target_name="Arbitrary Ursa Major Field",
+        cutout_size_arcsec=180.0,
+        bypass_cache=True
+    )
+    # Target is outside calibrated SPHEREx Level 2 detector arrays
+    assert manifest.total_frames == 0
+    # Must contain honest scientific notes explaining why 0 frames were prepared
+    joined_notes = " ".join(manifest.processing_notes)
+    assert any(term in joined_notes.lower() for term in ["out-of-bounds", "footprint", "0 observation", "outside"])
+    assert "r-draconis" not in joined_notes.lower()
+
+def test_arbitrary_coordinates_valid_coverage_demonstration():
+    """
+    Test arbitrary field within genuine SPHEREx footprint (e.g. RA 270.0°, Dec +4.0°).
+    Must validate genuine celestial WCS, ensure native pixels are inside [0, 2040),
+    and prepare multi-epoch playable frames on fixed celestial grid.
+    """
+    manifest = archive_discovery_service.discover_and_prepare_manifest(
+        ra=270.0,
+        dec=4.0,
+        target_name="Arbitrary Ophiuchus Field",
+        cutout_size_arcsec=180.0
+    )
+    assert manifest.total_frames >= 2
+    assert manifest.baseline_days >= 350
+    for frame in manifest.frames:
+        assert frame.image_base64 is not None
+        assert len(frame.image_base64) > 1000

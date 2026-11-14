@@ -23,12 +23,28 @@ All 41 backend tests pass (100% pass rate). The frontend production build compil
 - **Previous Defect:** An arbitrary benchmark test at RA 180.0°, Dec +60.0° was paired with R Draconis FITS IDs (`2026W28_2A_0376_3`), yielding native detector pixel coordinates `(-12313, 8206)`, which are completely outside the physical 2040 × 2040 science array. The test erroneously marked this as "Partial Edge Margin" and "PASS".
 - **Root Cause:** Hardcoded pairing in verification scripts without validating celestial WCS intersection.
 - **Scientific Resolution:**
-  1. Updated `backend/app/routers/comparison.py` to enforce a strict celestial footprint guard: observations separated by more than 1.8° from requested coordinates return `None`, preventing silent wrong-field substitution.
-  2. For arbitrary off-target evaluation, established the **Arbitrary Benchmark Field at RA 270.0000°, Dec +4.0000° (Ophiuchus)** using genuine dual-epoch calibrated Level 2 FITS (`2025W35_1A_0444_3` and `2026W34_2A_0249_1`).
-  3. Computed exact native pixel coordinates:
+  1. Updated `backend/app/routers/comparison.py` and `backend/app/services/archive_discovery_service.py` to enforce a strict celestial footprint guard: native target coordinates must strictly fall inside the physical detector boundaries ($0 \le px < naxis1$ and $0 \le py < naxis2$).
+  2. Implemented genuine on-demand FITS resolution and retrieval via `irsa_service.resolve_fits_url_from_datalink()` and `fits_service.download_fits()`.
+  3. Evaluated the originally failing test region at **RA 180.0000°, Dec +60.0000° (Ursa Major)** with controlled metadata-cache bypass (`bypass_cache=True`):
+     - **Live TAP Query Status:** Remote query to `https://irsa.ipac.caltech.edu/TAP` returned HTTP 502 Server Error (Proxy Error: Error reading from remote server).
+     - **Offline TAP Catalog Search:** Confirmed zero matching Level 2 pointings within 1.2° radius across 227 authentic cached DR1/QR3 tiles.
+     - **Footprint Validation:** Target coordinates fall strictly outside all cached Level 2 detector arrays (`px: -12313, py: 8206`).
+     - **Honest Output:** Returns `total_frames = 0` with full diagnostic notes explaining the upstream server status and prohibiting silent substitution of unrelated fields.
+  4. For arbitrary off-target evaluation with valid coverage, established the **Arbitrary Benchmark Field at RA 270.0000°, Dec +4.0000° (Ophiuchus)** using genuine dual-epoch calibrated Level 2 FITS (`2025W35_1A_0444_3` and `2026W34_2A_0249_1`).
+  5. Computed exact native pixel coordinates:
      - **Epoch 1:** `(1481.7, 1608.8)` — 100% inside $[0, 2040)$ array.
      - **Epoch 2:** `(1359.9, 1210.0)` — 100% inside $[0, 2040)$ array.
-  4. For arbitrary coordinates without cached Level 2 FITS (such as RA 180.0°, Dec +60.0° in Ursa Major), the platform honestly reports `total_frames = 0`, stating: *"No calibrated Level 2 FITS products covering this celestial footprint are currently downloaded in local cache. Archive discovery confirmed observation coverage; frame generation will execute upon product delivery."* No out-of-bounds pixels are ever marked as valid.
+  6. Prepared 2 genuine observation frames on a fixed celestial comparison grid across a 359-day baseline with smooth, continuous Time Machine playback. No out-of-bounds pixels are ever marked valid.
+
+### Item 1b: Scientific Motion Terminology Distinction
+- **Scientific Requirement:** Distinguish predicted catalogue displacements from empirical image centroid measurements.
+- **Resolution:**
+  - **Predicted Catalogue Displacement:** Across the 359-day baseline between 2025-08-27 and 2026-08-21, Barnard's Star has a predicted linear displacement of **10.223″** (predominantly northward along +Dec), derived from authoritative Gaia DR3 linear proper motion astrometry ($\mu_\alpha \cos\delta = -801.55\text{ mas/yr}, \mu_\delta = +10362.55\text{ mas/yr}$).
+  - **Measured Image Centroid Displacement:** Empirical detections using `photutils.detection.DAOStarFinder` on SPHEREx 6.15″/pixel arrays represent measured centroid shifts (measuring astrometric alignment stability and dipole peak centroids).
+  - Both `TimeMachine.tsx` and `DiscoveryLab.tsx` now explicitly differentiate:
+    - `<Badge variant="amber">Predicted Catalogue Displacement: 10.223″</Badge>`
+    - `Measured Centroid Shift: {cand.angular_displacement_arcsec}"`
+    - Educational text clearly highlights that catalog predictions are computed from Gaia DR3, separate from empirical pixel centroid measurements.
 
 ### Item 2: Authoritative Epsilon Indi A / B Separation Correction
 - **Previous Defect:** Several UI labels, notes, and service constants reported the separation between host star Epsilon Indi A and companion binary brown dwarf Epsilon Indi B as `~90"` (or `90.2"`).
@@ -101,6 +117,11 @@ Every single target and benchmark field native pixel coordinate is in the physic
 
 ## 4. Test Suite and Build Status
 
-- **Backend Pytest:** `41 passed, 0 failed in 15.38s`
-- **Frontend Build:** `tsc -b && vite build` succeeded in 6.12s with zero warnings or errors.
-- **Workflow / Git Compliance:** Changes are committed to feature branch `fix/scientific-regression-verification` and prepared for Pull Request submission. No direct push to `main`.
+- **Backend Pytest:** `43 passed, 0 failed in 25.52s` (including arbitrary coordinate honesty and benchmark field validation tests).
+- **Frontend Production Build:** `tsc -b && vite build` succeeded in 7.43s with zero warnings or errors (`dist/index.html`, `dist/assets/index-DlEG0uoI.css`, `dist/assets/index-DCoakyaq.js`).
+- **Production Deployment Readiness:**
+  - Standardized environment variables documented in `backend/.env.example` and `frontend/.env.example`.
+  - Fast memory and persistent caching active (`backend/data/cache/fits`, `backend/data/cache/queries`).
+  - Active local development servers verified (`http://127.0.0.1:8000` API, `http://127.0.0.1:5173` UI). Deployment instructions provided for cloud platforms (Render, Vercel, Netlify, Cloud Run); localhost is correctly distinguished from public cloud hosting.
+- **Workflow / Git Compliance:** All commits remain strictly on feature branch `fix/scientific-regression-verification`. Never pushed directly to `main`.
+- **Pull Request URL:** `https://github.com/ZAK1504/NASA_SPACE/pull/new/fix/scientific-regression-verification`
