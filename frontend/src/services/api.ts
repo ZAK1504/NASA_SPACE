@@ -77,9 +77,17 @@ export interface CandidateDetection {
   scientific_limitations: string;
 }
 
+export interface ComparisonObservationSummary {
+  obs_id: string;
+  date_obs?: string;
+  bunit?: string;
+  file_name?: string;
+  metadata: any;
+}
+
 export interface ComparisonResponse {
-  observation_1: { obs_id: string; metadata: any };
-  observation_2: { obs_id: string; metadata: any };
+  observation_1: ComparisonObservationSummary;
+  observation_2: ComparisonObservationSummary;
   common_footprint: boolean;
   overlap_area_arcmin2?: number;
   epoch1_image_base64: string;
@@ -118,13 +126,21 @@ export interface TargetSpectrumResponse {
   channels: Array<{
     channel: number;
     detector: string;
+    detector_name?: string;
     wavelength_um: number;
     observed: boolean;
+    is_dichroic_gap?: boolean;
+    flux_mjy_sr?: number | null;
     flux_uJy?: number | null;
+    flux_err_uJy?: number | null;
+    reference_model_flux_uJy?: number | null;
+    gap_notes?: string | null;
   }>;
   wavelength_units: string;
   flux_units: string;
   science_explanation: string;
+  dichroic_gap_channels?: number[];
+  dichroic_gap_wavelength_um?: number[];
 }
 
 export interface DiscoveryRecord {

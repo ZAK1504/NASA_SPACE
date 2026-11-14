@@ -4,7 +4,7 @@ import {
   Clock, Play, Pause, Split, Layers, Sparkles,
   Sliders, ArrowRight, AlertCircle, RefreshCw, CheckCircle2, ChevronRight
 } from 'lucide-react';
-import { api, ComparisonResponse, CandidateDetection } from '../services/api';
+import { api, ComparisonResponse, CandidateDetection, ObservationRecord } from '../services/api';
 import { FEATURED_OBJECTS } from '../constants/objects';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -23,9 +23,12 @@ export const TimeMachine: React.FC = () => {
   // Comparison mode
   const [viewMode, setViewMode] = useState<ViewMode>('side-by-side');
 
+  // Observations available from NASA archive
+  const [availableObs, setAvailableObs] = useState<ObservationRecord[]>([]);
+
   // Observations pair
-  const [epoch1Id, setEpoch1Id] = useState<string>('2025W34_2B_0030_1');
-  const [epoch2Id, setEpoch2Id] = useState<string>('2025W42_3A_0045_2');
+  const [epoch1Id, setEpoch1Id] = useState<string>('2025W35_1A_0444_3');
+  const [epoch2Id, setEpoch2Id] = useState<string>('2026W34_2A_0249_1');
 
   // Comparison data
   const [comparison, setComparison] = useState<ComparisonResponse | null>(null);
@@ -41,7 +44,27 @@ export const TimeMachine: React.FC = () => {
   const [isBlinking, setIsBlinking] = useState<boolean>(true);
   const [blinkSpeedMs, setBlinkSpeedMs] = useState<number>(500);
 
-  // Run alignment and comparison
+  // Fetch authentic observations for target from NASA IRSA archive
+  useEffect(() => {
+    api.getObservations({ objectId: selectedObject.id, limit: 30 })
+      .then((res) => {
+        if (res.observations && res.observations.length > 0) {
+          setAvailableObs(res.observations);
+          // Pick two distinct observation IDs if available
+          const distinctObsIds = Array.from(new Set(res.observations.map((o) => o.obs_id)));
+          if (distinctObsIds.length >= 2) {
+            setEpoch1Id(distinctObsIds[0]);
+            setEpoch2Id(distinctObsIds[1]);
+          } else if (distinctObsIds.length === 1) {
+            setEpoch1Id(distinctObsIds[0]);
+            setEpoch2Id(distinctObsIds[0]);
+          }
+        }
+      })
+      .catch((err) => console.warn('Could not fetch observations list:', err));
+  }, [selectedObject.id]);
+
+  // Run alignment and comparison on real FITS products
   useEffect(() => {
     setLoading(true);
     api.compareObservations({
@@ -70,6 +93,20 @@ export const TimeMachine: React.FC = () => {
     }, blinkSpeedMs);
     return () => clearInterval(interval);
   }, [viewMode, isBlinking, blinkSpeedMs]);
+
+  // Calculate genuine observation dates and baseline
+  const date1Str = comparison?.observation_1?.date_obs || '2025-08-27';
+  const date2Str = comparison?.observation_2?.date_obs || '2026-08-21';
+  let deltaDays = 359;
+  try {
+    const t1 = new Date(date1Str.slice(0, 10)).getTime();
+    const t2 = new Date(date2Str.slice(0, 10)).getTime();
+    if (!isNaN(t1) && !isNaN(t2)) {
+      deltaDays = Math.round(Math.abs(t2 - t1) / (1000 * 3600 * 24));
+    }
+  } catch (e) {
+    // fallback
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
@@ -105,14 +142,49 @@ export const TimeMachine: React.FC = () => {
       {/* Observation Timeline Bar */}
       <div className="bg-[#151E30] border border-[#263247] rounded p-4 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-          <div className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider">
-            Observation Epoch Pair
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider">
+              Authentic NASA Epoch Pair:
+            </span>
+            {availableObs.length > 0 && (
+              <div className="flex items-center gap-2">
+                <select
+                  value={epoch1Id}
+                  onChange={(e) => setEpoch1Id(e.target.value)}
+                  className="bg-[#0B1020] border border-[#263247] text-[#6EA8FE] text-xs rounded px-2 py-1 max-w-[190px] truncate"
+                >
+                  {Array.from(new Set(availableObs.map((o) => o.obs_id))).map((oid) => {
+                    const ob = availableObs.find((o) => o.obs_id === oid);
+                    return (
+                      <option key={`ep1-${oid}`} value={oid}>
+                        E1: {oid} ({ob?.date_obs ? ob.date_obs.slice(0, 10) : 'IRSA'}) [{ob?.bandpass}]
+                      </option>
+                    );
+                  })}
+                </select>
+                <span className="text-[#94A3B8]">vs</span>
+                <select
+                  value={epoch2Id}
+                  onChange={(e) => setEpoch2Id(e.target.value)}
+                  className="bg-[#0B1020] border border-[#263247] text-[#F3B85B] text-xs rounded px-2 py-1 max-w-[190px] truncate"
+                >
+                  {Array.from(new Set(availableObs.map((o) => o.obs_id))).map((oid) => {
+                    const ob = availableObs.find((o) => o.obs_id === oid);
+                    return (
+                      <option key={`ep2-${oid}`} value={oid}>
+                        E2: {oid} ({ob?.date_obs ? ob.date_obs.slice(0, 10) : 'IRSA'}) [{ob?.bandpass}]
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-4 text-xs font-mono">
-            <span className="text-[#6EA8FE]">Epoch 1: 2025-08-22</span>
+          <div className="flex items-center gap-3 text-xs font-mono">
+            <span className="text-[#6EA8FE]">Epoch 1: {date1Str.slice(0, 10)}</span>
             <span className="text-[#94A3B8]">➔</span>
-            <span className="text-[#F3B85B]">Epoch 2: 2025-10-18</span>
-            <span className="text-[#94A3B8]">· Δt = 57 days</span>
+            <span className="text-[#F3B85B]">Epoch 2: {date2Str.slice(0, 10)}</span>
+            <span className="text-[#94A3B8]">· Δt = {deltaDays} days</span>
           </div>
         </div>
 
@@ -297,7 +369,9 @@ export const TimeMachine: React.FC = () => {
                       {isBlinking ? 'Pause' : 'Play Blink'}
                     </Button>
                     <Badge variant={blinkIndex === 0 ? 'blue' : 'amber'}>
-                      {blinkIndex === 0 ? 'Showing: Epoch 1 (2025-08-22)' : 'Showing: Epoch 2 (2025-10-18)'}
+                      {blinkIndex === 0
+                        ? `Epoch 1: ${date1Str.slice(0, 10)} (${comparison?.observation_1?.obs_id || epoch1Id})`
+                        : `Epoch 2: ${date2Str.slice(0, 10)} (${comparison?.observation_2?.obs_id || epoch2Id})`}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-[#94A3B8]">

@@ -114,10 +114,41 @@ export const SpectralExplorer: React.FC = () => {
             </p>
           </div>
           {hoveredChannel && (
-            <div className="text-xs font-mono bg-[#0B1020] border border-[#263247] rounded px-3 py-1 text-[#6EA8FE]">
-              Channel {hoveredChannel.channel} ({hoveredChannel.detector}) · {hoveredChannel.wavelength_um} μm
+            <div className="text-xs font-mono bg-[#0B1020] border border-[#263247] rounded px-3 py-1.5 text-[#6EA8FE]">
+              <span className="font-semibold">Channel {hoveredChannel.channel}</span> ({hoveredChannel.detector}) · {hoveredChannel.wavelength_um} μm
+              {hoveredChannel.is_dichroic_gap || hoveredChannel.channel === 51 || hoveredChannel.channel === 52 ? (
+                <span className="ml-2 text-amber-400 font-bold">⚠ Dichroic Gap (2.42 μm beam-splitter)</span>
+              ) : hoveredChannel.observed ? (
+                <span className="ml-2 text-emerald-400">
+                  ✓ Authentic SPHEREx L2: {hoveredChannel.flux_mjy_sr != null ? `${hoveredChannel.flux_mjy_sr.toFixed(3)} MJy/sr` : 'Calibrated'} {hoveredChannel.flux_uJy ? `(${hoveredChannel.flux_uJy} μJy)` : ''}
+                </span>
+              ) : (
+                <span className="ml-2 text-[#94A3B8]">
+                  ○ Unobserved in public release {hoveredChannel.reference_model_flux_uJy ? `(Reference Model: ${hoveredChannel.reference_model_flux_uJy} μJy)` : ''}
+                </span>
+              )}
             </div>
           )}
+        </div>
+
+        {/* Chart Legend */}
+        <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-[#94A3B8] mb-3">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 bg-[#6EA8FE] rounded-sm" />
+            <span>Authentic SPHEREx Level 2 Observation</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 bg-[#263247] rounded-sm" />
+            <span>Unobserved Channel</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 bg-amber-500/80 border border-amber-400 rounded-sm" />
+            <span>Dichroic Gap (2.42 μm Boundary)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-0.5 border-t border-dashed border-[#F3B85B]" />
+            <span>Molecular Absorption / Emission</span>
+          </div>
         </div>
 
         {/* Interactive Bar Chart for Spectral Bands */}
@@ -140,36 +171,38 @@ export const SpectralExplorer: React.FC = () => {
           })}
 
           {filteredChannels.map((ch) => {
-            // Compute a realistic continuum curve for display
-            // Cooler stars peak in infrared (~1.5 - 2.5 um)
-            const wl = ch.wavelength_um;
-            let relativeFlux = 0.3;
-            if (selectedObject.type.includes('Red Dwarf')) {
-              // M dwarf continuum peaks near 1.2 - 1.6 um
-              relativeFlux = Math.max(0.15, 0.85 * Math.exp(-((wl - 1.4)**2) / 0.8) + 0.15);
-            } else if (selectedObject.type.includes('Brown Dwarf')) {
-              // Cold brown dwarf peaks around 4.0 - 4.5 um
-              relativeFlux = Math.max(0.1, 0.9 * Math.exp(-((wl - 4.2)**2) / 1.2) + 0.1);
-            } else {
-              relativeFlux = Math.max(0.2, 0.8 * Math.exp(-((wl - 2.2)**2) / 1.5) + 0.2);
-            }
+            const isGap = ch.is_dichroic_gap || ch.channel === 51 || ch.channel === 52;
+            const isObserved = ch.observed && !isGap;
 
-            const isObserved = ch.observed;
+            // Height calculation based on authentic scientific measurements or honest unobserved baseline
+            let barHeightPct = 12; // Unobserved minimal indicator
+            if (isGap) {
+              barHeightPct = 8;
+            } else if (isObserved) {
+              if (ch.flux_uJy && ch.flux_uJy > 0) {
+                // Scale authentic flux logarithmically or linearly into 30-90% range
+                barHeightPct = Math.min(90, Math.max(35, Math.round(Math.log10(ch.flux_uJy + 1) * 20)));
+              } else {
+                barHeightPct = 65; // Observed detector bandpass coverage
+              }
+            }
 
             return (
               <div
                 key={ch.channel}
                 onMouseEnter={() => setHoveredChannel(ch)}
                 onMouseLeave={() => setHoveredChannel(null)}
-                className="flex-1 h-full flex flex-col justify-end group cursor-pointer"
+                className="flex-1 h-full flex flex-col justify-end group cursor-pointer relative"
               >
                 <div
                   className={`w-full rounded-t transition-all ${
-                    isObserved
-                      ? 'bg-[#6EA8FE] group-hover:bg-[#99c4ff]'
-                      : 'bg-[#263247] group-hover:bg-[#3a4d6b]'
+                    isGap
+                      ? 'bg-amber-600/60 border-t-2 border-amber-400 group-hover:bg-amber-500'
+                      : isObserved
+                      ? 'bg-[#6EA8FE] shadow-sm shadow-[#6EA8FE]/30 group-hover:bg-[#99c4ff]'
+                      : 'bg-[#1E293B] border border-dashed border-[#334155] group-hover:bg-[#263247]'
                   }`}
-                  style={{ height: `${Math.round(relativeFlux * 85)}%` }}
+                  style={{ height: `${barHeightPct}%` }}
                 />
               </div>
             );

@@ -31,6 +31,8 @@ interface LightCurveResponse {
   secondary_band?: string;
   amplitude_mag: number;
   scientific_summary: string;
+  data_source?: string;
+  citation?: string;
   data_points: LightCurveDataPoint[];
 }
 
@@ -169,9 +171,12 @@ export const LightCurves: React.FC = () => {
             {/* Top Toolbar */}
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#263247]/60 pb-4">
               <div>
-                <h2 className="text-lg font-bold text-[#E8EDF5] flex items-center gap-2">
+                <h2 className="text-lg font-bold text-[#E8EDF5] flex flex-wrap items-center gap-2">
                   <span>{data.object_name}</span>
                   <Badge variant="blue">{data.variability_type}</Badge>
+                  {data.citation && (
+                    <Badge variant="purple">Source: {data.citation}</Badge>
+                  )}
                 </h2>
                 <p className="text-xs text-[#94A3B8] mt-1">{data.scientific_summary}</p>
               </div>

@@ -35,7 +35,9 @@ def get_target_spectrum(object_id: str):
 
     coverage = spectral_service.get_spectral_coverage_for_target(
         object_id=object_id,
-        observations=observations
+        observations=observations,
+        target_ra=obj.get("ra"),
+        target_dec=obj.get("dec")
     )
 
     coverage["object_name"] = obj["name"]

@@ -8,15 +8,15 @@ router = APIRouter(prefix="/archive", tags=["archive"])
 
 @router.get("/search", response_model=ArchiveQueryResponse)
 def search_archive(
-    ra: float = Query(..., description="Right Ascension (degrees, J2000)"),
-    dec: float = Query(..., description="Declination (degrees, J2000)"),
-    radius_deg: float = Query(0.5, description="Search radius in degrees"),
-    bandpass: Optional[str] = Query(None, description="Optional SPHEREx detector bandpass (e.g. SPHEREx-D1)"),
-    limit: int = Query(50, description="Maximum number of observations to retrieve")
+    ra: float = Query(..., ge=0.0, le=360.0, description="Right Ascension (degrees, J2000, 0-360)"),
+    dec: float = Query(..., ge=-90.0, le=90.0, description="Declination (degrees, J2000, -90 to +90)"),
+    radius_deg: float = Query(0.5, gt=0.0, le=5.0, description="Search radius in degrees (0 to 5)"),
+    bandpass: Optional[str] = Query(None, description="Optional SPHEREx detector bandpass (e.g. SPHEREx-D1 to SPHEREx-D6)"),
+    limit: int = Query(50, ge=1, le=200, description="Maximum number of observations to retrieve")
 ):
     """
     Query the official NASA/IPAC IRSA SPHEREx archive (spherex.obscore)
-    using IVOA TAP spatial cone search.
+    using IVOA TAP spatial cone search with strict astronomical coordinate validation.
     """
     start_time = time.time()
     try:
@@ -38,5 +38,7 @@ def search_archive(
             "query_time_seconds": round(elapsed, 3),
             "cached": False
         }
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"IRSA archive query error: {str(e)}")

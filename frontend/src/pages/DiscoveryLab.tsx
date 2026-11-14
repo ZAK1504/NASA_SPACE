@@ -41,8 +41,8 @@ export const DiscoveryLab: React.FC = () => {
     setLoading(true);
     setSavedSuccess(false);
     api.compareObservations({
-      obsId1: '2025W34_2B_0030_1',
-      obsId2: '2025W42_3A_0045_2',
+      obsId1: '2025W35_1A_0444_3',
+      obsId2: '2026W34_2A_0249_1',
       targetName: selectedObject.name,
       centerRa: selectedObject.ra,
       centerDec: selectedObject.dec,
@@ -52,8 +52,10 @@ export const DiscoveryLab: React.FC = () => {
         if (data.candidates && data.candidates.length > 0) {
           setSelectedCandidate(data.candidates[0]);
           setDiscoveryTitle(`Candidate Detection in ${selectedObject.name}`);
+          const date1 = data.observation_1?.date_obs?.slice(0, 10) || '2025-08-27';
+          const date2 = data.observation_2?.date_obs?.slice(0, 10) || '2026-08-21';
           setDiscoveryNotes(
-            `Inspected SPHEREx cross-epoch observation difference. Observed positional displacement of ${data.candidates[0].angular_displacement_arcsec}" across 57 days baseline.`
+            `Inspected SPHEREx cross-epoch difference between ${date1} and ${date2}. Astrometrically measured displacement of ${data.candidates[0].angular_displacement_arcsec}" using photutils DAOStarFinder.`
           );
         }
       })
@@ -92,7 +94,10 @@ export const DiscoveryLab: React.FC = () => {
         object_id: selectedObject.slug,
         object_name: selectedObject.name,
         notes: discoveryNotes,
-        observation_ids: ['2025W34_2B_0030_1', '2025W42_3A_0045_2'],
+        observation_ids: [
+          comparison?.observation_1?.obs_id || '2025W35_1A_0444_3',
+          comparison?.observation_2?.obs_id || '2026W34_2A_0249_1'
+        ],
         analysis_summary: selectedCandidate ? selectedCandidate.explanation : 'Scientific image subtraction analysis performed.',
         candidate_type: selectedCandidate ? selectedCandidate.candidate_type : 'moving_source',
         angular_displacement_arcsec: selectedCandidate?.angular_displacement_arcsec,
