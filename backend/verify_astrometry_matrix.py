@@ -5,7 +5,9 @@ from astropy.coordinates import SkyCoord
 import astropy.units as u
 from datetime import datetime
 
-fits_dir = Path('data/cache/fits')
+fits_dir = Path('backend/data/cache/fits')
+if not fits_dir.exists():
+    fits_dir = Path('data/cache/fits')
 
 targets = [
     {
@@ -49,12 +51,12 @@ targets = [
         'obs2_id': '2026W29_1A_0430_1',
     },
     {
-        'name': 'Arbitrary North Field',
-        'cat_id': 'RA 180.0°, Dec +60.0° (Benchmark Field)',
-        'ref_coords': '180.0000°, +60.0000° (ICRS J2000)',
-        'obs_coords': '180.0000°, +60.0000° (J2026.0)',
-        'obs1_id': '2026W28_2A_0376_3',
-        'obs2_id': '2026W29_1A_0430_1',
+        'name': 'Arbitrary Benchmark Field',
+        'cat_id': 'Benchmark Field (RA 270.0°, Dec +4.0°)',
+        'ref_coords': '270.0000°, +4.0000° (ICRS J2000)',
+        'obs_coords': '270.0000°, +4.0000° (J2026.0)',
+        'obs1_id': '2025W35_1A_0444_3',
+        'obs2_id': '2026W34_2A_0249_1',
     }
 ]
 
@@ -108,6 +110,12 @@ for t in targets:
 
     in_b1 = 0 <= px1_f < 2040 and 0 <= py1_f < 2040
     in_b2 = 0 <= px2_f < 2040 and 0 <= py2_f < 2040
-    coverage = "100% Calibrated Science Array" if (in_b1 and in_b2) else ("Partial Edge Margin" if t['name'].startswith('Arbitrary') else "In Bounds")
     
-    print(f"| **{t['name']}** | {t['cat_id']} | {t['ref_coords']} | {t['obs_coords']} | `{t['obs1_id']}` / `{t['obs2_id']}` | {d1[:10]} → {d2[:10]} | E1: ({px1_f:.1f}, {py1_f:.1f})<br>E2: ({px2_f:.1f}, {py2_f:.1f}) | {coverage} | 2 Calibrated FITS Epochs | **{baseline:.2f} days** | Verified Dual-Epoch |")
+    if in_b1 and in_b2:
+        coverage = "100% Calibrated Science Array"
+        playback = "Verified Dual-Epoch"
+    else:
+        coverage = "Outside Detector Bounds"
+        playback = "FAILED — Non-Covered Field"
+    
+    print(f"| **{t['name']}** | {t['cat_id']} | {t['ref_coords']} | {t['obs_coords']} | `{t['obs1_id']}` / `{t['obs2_id']}` | {d1[:10]} → {d2[:10]} | E1: ({px1_f:.1f}, {py1_f:.1f})<br>E2: ({px2_f:.1f}, {py2_f:.1f}) | {coverage} | 2 Calibrated FITS Epochs | **{baseline:.2f} days** | {playback} |")

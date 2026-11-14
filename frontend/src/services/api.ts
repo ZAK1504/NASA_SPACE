@@ -97,6 +97,10 @@ export interface TimeMachineFrame {
   pixel_scale_arcsec: number;
   exposure_time_s: number;
   bunit: string;
+  target_ra?: number;
+  target_dec?: number;
+  target_epoch_year?: number;
+  target_coords_display?: string;
 }
 
 export interface TimeMachineManifestResponse {
@@ -136,6 +140,8 @@ export interface ComparisonResponse {
   };
   processing_notes: string[];
   scientific_disclaimer: string;
+  is_cross_wavelength?: boolean;
+  cross_wavelength_note?: string;
 }
 
 export interface SpectralChannel {

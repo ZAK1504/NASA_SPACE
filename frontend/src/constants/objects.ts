@@ -88,12 +88,12 @@ export const FEATURED_OBJECTS: AstronomicalObject[] = [
       ra: 330.840223,
       dec: -56.785979,
       type: "Primary K5V Star (V=4.69, Saturated Core)",
-      separationArcsec: 90.2
+      separationArcsec: 402.4
     },
     description:
-      "A benchmark binary system of two T-type brown dwarfs (T1 + T6, Gaia DR3 6412596012146801152) orbiting Epsilon Indi A. At 11.82 light-years, it provides an exquisite laboratory for substellar atmospheric modeling across SPHEREx's 102 infrared bands.",
+      "A benchmark binary system of two T-type brown dwarfs (T1 + T6, Gaia DR3 6412596012146801152) orbiting primary star Epsilon Indi A at ~1460 AU (~402\" / ~6.7′ separation). At 11.82 light-years, it provides an exquisite laboratory for substellar atmospheric modeling across SPHEREx's 102 infrared bands.",
     scientificLimitations:
-      "In typical 15′ FOV cutouts, primary star Epsilon Indi A (K5V, V=4.69) is present in the field and heavily saturated with a masked core. Epsilon Indi B is separated by ~90″ to the ENE. Individual Ba and Bb components (0.7\" separation) are spatially unresolved at SPHEREx's 6.15\"/pixel scale.",
+      "In typical 15′ FOV cutouts, primary star Epsilon Indi A (K5V, V=4.69) is present in the field and heavily saturated with a masked core. Epsilon Indi B is separated by ~402″ (~6.7′) to the ENE. Individual Ba and Bb components (0.7\" separation) are spatially unresolved at SPHEREx's 6.15\"/pixel scale.",
     astrometricCitation: "Scholz et al. (2003); Gaia DR3 (Gaia Collaboration, 2022)",
     tags: ['brown dwarf', 'binary', 'nearby', 'atmospheric benchmark'],
     slug: 'epsilon-indi-b',

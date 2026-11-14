@@ -363,8 +363,21 @@ export const DiscoveryLab: React.FC = () => {
                 {comparison?.difference_image_base64 && (
                   <Badge variant="amber">Multi-Epoch Comparison</Badge>
                 )}
+                {(comparison?.is_cross_wavelength || selectedObject.slug === 'rw-aurigae') && (
+                  <Badge variant="amber">Exploratory Cross-Band (D4 vs D3)</Badge>
+                )}
               </div>
             </div>
+
+            {(comparison?.is_cross_wavelength || selectedObject.slug === 'rw-aurigae') && (
+              <div className="p-3 bg-amber-950/30 border border-amber-700/60 rounded-lg text-xs text-amber-200 flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-amber-300">Exploratory Cross-Wavelength Analysis:</strong>{' '}
+                  Epoch 1 observed with Array D4 (2.42–3.82 μm) and Epoch 2 with Array D3 (1.64–2.42 μm). Apparent flux differences reflect both chromatic spectral energy distribution (SED) slopes and temporal changes, not monochromatic variability alone.
+                </div>
+              </div>
+            )}
 
             {/* Scientific Display Preferences Controls */}
             <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0B1020] border border-[#263247] rounded-lg p-3 text-xs">
@@ -700,7 +713,7 @@ export const DiscoveryLab: React.FC = () => {
                           : selectedObject.slug === 'wise-0855'
                           ? "WISE 0855−0714 is an ultra-cool sub-stellar brown dwarf (~250 K). In Level 2 FITS, stationary background stars cleanly subtract, leaving the 8.1\"/yr proper motion displacement visible across epochs."
                           : selectedObject.slug === 'epsilon-indi-b'
-                          ? "Epsilon Indi B is a sub-stellar T1/T6 binary brown dwarf located ~90\" to the ENE of host star Epsilon Indi A. Note that host star A's high flux core is saturation-masked in SPHEREx detectors."
+                          ? "Epsilon Indi B is a sub-stellar T1/T6 binary brown dwarf located ~402\" (~6.7 arcminutes) to the ENE of host star Epsilon Indi A. Note that host star A's high flux core is saturation-masked in SPHEREx detectors."
                           : selectedObject.slug === 'rw-aurigae'
                           ? "RW Aurigae is a binary T Tauri system characterized by complex accretion stream dynamics, obscuration events, and emission lines (Pa-β at 1.28 μm)."
                           : "R Draconis is a Mira-type pulsating variable giant exhibiting massive magnitude swings between epochs across its ~245-day pulsation cycle."

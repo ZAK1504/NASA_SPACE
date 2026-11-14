@@ -89,12 +89,23 @@ class IrsaService:
             except Exception:
                 pass
 
+        # Check local TAP query cache inventory before live remote request
+        cached_inventory = self._search_cached_tap_inventory(
+            ra=ra,
+            dec=dec,
+            radius_deg=max(radius_deg, 1.2),
+            bandpass=bandpass,
+            limit=limit
+        )
+        if cached_inventory:
+            return cached_inventory
+
         try:
             # Use async TAP job to ensure complete execution without http read timeouts
             job = self.tap_service.submit_job(adql)
             job.run()
-            # Wait up to 25s
-            for _ in range(25):
+            # Wait up to 4s for live response
+            for _ in range(4):
                 time.sleep(1)
                 phase = job.phase
                 if phase in ('COMPLETED', 'ERROR', 'ABORTED'):

@@ -190,7 +190,7 @@ export const TOURS: Record<string, TourDefinition> = {
         element: '[data-tour="fov-selector"]',
         popover: {
           title: '🔍 Configurable Field of View (FOV)',
-          description: 'Expand from 2′ up to 30′ cutouts. Authentic larger cutouts are generated from calibrated FITS arrays. On Epsilon Indi B, inspect primary star Epsilon Indi A ~90″ to the WSW.',
+          description: 'Expand from 2′ up to 30′ cutouts. Authentic larger cutouts are generated from calibrated FITS arrays. On Epsilon Indi B, inspect primary star Epsilon Indi A ~402″ (~6.7′) to the WSW.',
           side: 'bottom',
         },
       },

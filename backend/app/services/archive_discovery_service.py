@@ -157,6 +157,18 @@ class ArchiveDiscoveryService:
                 date_display = d_obs[:10] if d_obs else "2025-08-27"
                 prepared_dates.add(date_display)
 
+                # Individual observation-date target propagation
+                frame_ra = None
+                frame_dec = None
+                frame_epoch_year = None
+                frame_coords_display = None
+                if canonical_target:
+                    f_ra, f_dec, f_meta = astrometry_service.propagate_to_date(canonical_target, d_obs or date_display)
+                    frame_ra = round(f_ra, 6)
+                    frame_dec = round(f_dec, 6)
+                    frame_epoch_year = float(f_meta.get("target_observation_epoch", "J2026.0").replace("J", ""))
+                    frame_coords_display = f"Target @ {date_display} ({f_meta.get('target_observation_epoch', '')}): RA {frame_ra:.4f}°, Dec {frame_dec:.4f}°"
+
                 frames.append(
                     TimeMachineFrame(
                         frame_index=len(frames),
@@ -169,7 +181,11 @@ class ArchiveDiscoveryService:
                         image_base64=b64_img,
                         pixel_scale_arcsec=6.15,
                         exposure_time_s=float(h.get("EXPTIME", 120.0)),
-                        bunit=str(h.get("BUNIT", "MJy / sr"))
+                        bunit=str(h.get("BUNIT", "MJy / sr")),
+                        target_ra=frame_ra,
+                        target_dec=frame_dec,
+                        target_epoch_year=frame_epoch_year,
+                        target_coords_display=frame_coords_display
                     )
                 )
             except Exception:
@@ -197,7 +213,7 @@ class ArchiveDiscoveryService:
                 "companion_dec": canonical_target.companion_dec_deg,
                 "companion_type": canonical_target.companion_type,
                 "separation_arcsec": canonical_target.companion_separation_arcsec,
-                "note": "Epsilon Indi A is a bright K5V star (V=4.69) with a saturated, masked central core in SPHEREx detectors. Epsilon Indi B is the sub-stellar brown dwarf binary located ~90\" to the ENE."
+                "note": "Epsilon Indi A is a bright K5V star (V=4.69) with a saturated, masked central core in SPHEREx detectors. Epsilon Indi B is the sub-stellar brown dwarf binary located ~402\" (~6.7′) to the ENE."
             }
 
         # 7. Scientifically Honest Processing Notes
