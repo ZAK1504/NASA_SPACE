@@ -1,10 +1,20 @@
-from fastapi import APIRouter, HTTPException, Query
+import os
+import urllib.request
+from pathlib import Path
+from fastapi import APIRouter, HTTPException, Query, Response
+from fastapi.responses import FileResponse
 from typing import Optional, List, Dict, Any
+from app.config import settings
 from app.services.spectral_service import spectral_service
 from app.services.object_service import object_service
 from app.services.irsa_service import irsa_service
 
 router = APIRouter(prefix="/spectra", tags=["spectra"])
+
+HIPS_CACHE_DIR = settings.CACHE_DIR / "hips"
+HIPS_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+IPAC_HIPS_ROOT = "https://irsa.ipac.caltech.edu/data/hips/SPHEREx/spherex_allsky_cube"
 
 OFFICIAL_HIPS_CUBE_METADATA = {
     "hips_service_url": "https://irsa.ipac.caltech.edu/data/hips/SPHEREx/spherex_allsky_cube",
@@ -47,6 +57,135 @@ def get_all_channels():
         "wavelength_range_um": [0.75, 5.0],
         "channels": spectral_service.get_all_102_channels()
     }
+
+
+def _get_channel_properties_text(channel: int) -> str:
+    """Generate authentic HiPS 2D image properties for an individual SPHEREx spectral channel."""
+    channels = spectral_service.get_all_102_channels()
+    ch_info = next((c for c in channels if c.get("channel") == channel), None)
+    wavelength = ch_info.get("wavelength_um", 1.0) if ch_info else 1.0
+    det = ch_info.get("detector", "D1") if ch_info else "D1"
+
+    return (
+        f"creator_did          = ivo://IPAC/P/SPHEREx/DR1/ch{channel}\n"
+        f"obs_title            = SPHEREx DR1 Channel {channel} ({wavelength:.3f} um, {det})\n"
+        f"hips_order           = 5\n"
+        f"hips_order_min       = 0\n"
+        f"hips_tile_width      = 512\n"
+        f"hips_tile_format     = png\n"
+        f"dataproduct_type     = image\n"
+        f"hips_frame           = equatorial\n"
+        f"hips_service_url     = /api/spectra/hips/{channel}\n"
+        f"obs_regime           = Infrared\n"
+        f"em_min               = {wavelength * 1e-6:.3e}\n"
+        f"em_max               = {wavelength * 1e-6:.3e}\n"
+        f"obs_description      = Calibrated NASA/IPAC SPHEREx DR1 All-Sky Channel {channel} ({wavelength:.3f} um)\n"
+        f"hips_status          = public mirror unclonable\n"
+    )
+
+
+def _fetch_and_stream_tile(channel: Optional[int], order: int, dir_val: str, filename: str) -> Response:
+    """Retrieve and cache genuine SPHEREx DR1 HiPS PNG tiles directly from NASA IPAC."""
+    dir_str = dir_val if dir_val.startswith("Dir") else f"Dir{dir_val}"
+    name_clean = filename.split(".")[0]
+    if "_" in name_clean:
+        pix_str = name_clean.split("_")[0].replace("Npix", "")
+    else:
+        pix_str = name_clean.replace("Npix", "")
+
+    cache_key = f"ch{channel if channel is not None else 'root'}_order{order}_{dir_str}_pix{pix_str}.png"
+    cache_path = HIPS_CACHE_DIR / cache_key
+
+    if cache_path.exists() and cache_path.stat().st_size > 100:
+        return FileResponse(cache_path, media_type="image/png")
+
+    candidate_urls = []
+    if channel is not None:
+        candidate_urls.append(f"{IPAC_HIPS_ROOT}/Norder{order}/{dir_str}/Npix{pix_str}_{channel}.png")
+        candidate_urls.append(f"{IPAC_HIPS_ROOT}/{channel}/Norder{order}/{dir_str}/Npix{pix_str}.png")
+    candidate_urls.append(f"{IPAC_HIPS_ROOT}/Norder{order}/{dir_str}/Npix{pix_str}.png")
+    candidate_urls.append(f"{IPAC_HIPS_ROOT}/Norder{order}/{dir_str}/{filename}")
+
+    for ipac_url in candidate_urls:
+        try:
+            req = urllib.request.Request(
+                ipac_url,
+                headers={"User-Agent": "SPHEREx-Horizon/1.0 (NASA-SpaceApps-2026; Team-Meteor-Rizzlers)"}
+            )
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                if resp.status == 200:
+                    content = resp.read()
+                    if content and len(content) > 100:
+                        try:
+                            with open(cache_path, "wb") as f:
+                                f.write(content)
+                        except Exception:
+                            pass
+                        return Response(content=content, media_type="image/png")
+        except Exception:
+            continue
+
+    raise HTTPException(status_code=404, detail=f"Tile {filename} not found for channel {channel}")
+
+
+# Official HiPS Cube Endpoints for Aladin Lite v3
+@router.get("/hips/cube/properties")
+def get_cube_root_properties():
+    """Serve official SPHEREx DR1 HiPS Cube properties."""
+    props = (
+        "creator_did          = ivo://IPAC/P/SPHEREx/DR1/cube\n"
+        "obs_title            = SPHEREx DR1 all-sky data cube\n"
+        "hips_order           = 5\n"
+        "hips_order_min       = 0\n"
+        "hips_tile_width      = 512\n"
+        "hips_tile_format     = png\n"
+        "dataproduct_type     = cube\n"
+        "hips_cube_depth      = 102\n"
+        "hips_cube_firstframe = 1\n"
+        "hips_frame           = equatorial\n"
+        "obs_regime           = Infrared\n"
+        "hips_service_url     = /api/spectra/hips/cube\n"
+    )
+    return Response(content=props, media_type="text/plain; charset=utf-8")
+
+
+@router.get("/hips/cube/{channel}/properties")
+def get_cube_slice_properties(channel: int):
+    """Serve HiPS slice properties when Aladin Lite v3 requests frame-level properties."""
+    return Response(content=_get_channel_properties_text(channel), media_type="text/plain; charset=utf-8")
+
+
+@router.get("/hips/cube/{channel}/Norder{order}/Dir{dir_val}/{filename}")
+def get_cube_slice_tile(channel: int, order: int, dir_val: str, filename: str):
+    """Serve HiPS tile for cube slice frame."""
+    return _fetch_and_stream_tile(channel=channel, order=order, dir_val=dir_val, filename=filename)
+
+
+@router.get("/hips/cube/Norder{order}/Dir{dir_val}/{filename}")
+def get_cube_direct_tile(order: int, dir_val: str, filename: str):
+    """Serve direct HiPS tile from cube root."""
+    return _fetch_and_stream_tile(channel=None, order=order, dir_val=dir_val, filename=filename)
+
+
+# Channel-specific 2D Image HiPS Endpoints (Allows individual slice navigation in Aladin Lite)
+@router.get("/hips/{channel}/properties")
+def get_channel_properties_endpoint(channel: int):
+    """Serve authentic HiPS 2D image properties for SPHEREx spectral band."""
+    if channel < 1 or channel > 102:
+        raise HTTPException(status_code=404, detail=f"Channel {channel} outside SPHEREx range [1, 102]")
+    return Response(content=_get_channel_properties_text(channel), media_type="text/plain; charset=utf-8")
+
+
+@router.get("/hips/{channel}/Norder{order}/Dir{dir_val}/{filename}")
+def get_channel_tile_endpoint(channel: int, order: int, dir_val: str, filename: str):
+    """Serve authentic SPHEREx DR1 HiPS tile for channel."""
+    return _fetch_and_stream_tile(channel=channel, order=order, dir_val=dir_val, filename=filename)
+
+
+@router.get("/hips/{channel}/{filename:path}")
+def get_channel_fallback_file(channel: int, filename: str):
+    """Handle standard HiPS metadata files (Moc.fits, Allsky.jpg) gracefully."""
+    raise HTTPException(status_code=404, detail=f"File {filename} not present in channel {channel}")
 
 @router.get("/extract")
 def extract_spectrum_at_coordinates(

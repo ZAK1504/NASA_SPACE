@@ -45,6 +45,16 @@
   .hud-bracket {
     position: relative;
   }
+
+  /* Prevent white flashes during WebGL survey and layer updates */
+  .aladin-container,
+  .aladin-canvas,
+  .aladin-holder,
+  .aladin-box,
+  .aladin-image-canvas,
+  div[id^="aladin"] canvas {
+    background-color: #070B14 !important;
+  }
   .hud-bracket::before {
     content: '';
     position: absolute;

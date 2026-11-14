@@ -30,6 +30,14 @@ const MOLECULAR_FEATURES = [
   { name: 'Pa-β Hydrogen', wavelength: 1.28, detector: 'D2', desc: 'Paschen-beta emission in accreting young stars like RW Aurigae.' },
 ];
 
+const getHipsApiBase = (): string => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname || '127.0.0.1';
+    return `http://${host}:8000/api/spectra/hips`;
+  }
+  return 'http://127.0.0.1:8000/api/spectra/hips';
+};
+
 export const SpectralExplorer: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -39,8 +47,9 @@ export const SpectralExplorer: React.FC = () => {
 
   // Spectral Channel Selection (1 to 102)
   const [currentChannel, setCurrentChannel] = useState<number>(24); // Channel 24 in D2 (1.35 μm)
+  const isGap = currentChannel === 51 || currentChannel === 52;
   const [isScanning, setIsScanning] = useState<boolean>(false);
-  const [scanSpeedMs, setScanSpeedMs] = useState<number>(300);
+  const [scanSpeedMs, setScanSpeedMs] = useState<number>(600); // 600ms smooth scan cadence
 
   // Active detector filter
   const [activeDetector, setActiveDetector] = useState<string>('ALL');
@@ -56,25 +65,32 @@ export const SpectralExplorer: React.FC = () => {
   const [aladinReady, setAladinReady] = useState<boolean>(false);
   const [activeSurvey, setActiveSurvey] = useState<string>('spherex');
 
-  // Initialize Aladin Lite v3 with SPHEREx DR1 HiPS Cube
+  // Initialize Aladin Lite v3 with authentic SPHEREx DR1 HiPS channel stream
   useEffect(() => {
     let isMounted = true;
     getAladinInstance()
       .then((A) => {
         if (!isMounted || !aladinContainerRef.current) return;
         if (!aladinInstanceRef.current) {
+          const hipsBase = getHipsApiBase();
           aladinInstanceRef.current = A.aladin(aladinContainerRef.current, {
-            survey: 'https://irsa.ipac.caltech.edu/data/hips/SPHEREx/spherex_allsky_cube',
+            survey: `${hipsBase}/${currentChannel}`,
             projection: 'AITOFF',
             fov: 180,
             target: `${selectedObject.ra} ${selectedObject.dec}`,
             cooFrame: 'J2000',
-            showReticle: true,
+            showReticle: false,
             showZoomControl: true,
             showFullscreenControl: true,
             showLayersControl: false,
             showGotoControl: false,
           });
+
+          try {
+            aladinInstanceRef.current.setBackgroundColor('#070B14');
+          } catch (e) {
+            // ignore
+          }
 
           // Add target marker
           try {
@@ -101,21 +117,21 @@ export const SpectralExplorer: React.FC = () => {
     };
   }, []);
 
-  // Update cube slice when currentChannel changes
+  // Update HiPS channel survey when currentChannel changes (debounced by 40ms to avoid thrashing during quick scrubbing)
   useEffect(() => {
-    if (aladinInstanceRef.current && aladinReady && activeSurvey === 'spherex') {
+    if (!aladinInstanceRef.current || !aladinReady || activeSurvey !== 'spherex' || isGap) return;
+
+    const timer = setTimeout(() => {
       try {
-        const baseLayer = aladinInstanceRef.current.getBaseImageLayer?.();
-        if (baseLayer && typeof baseLayer.setSliceNumber === 'function') {
-          // Channel 1..102 -> slice index 0..101
-          baseLayer.setSliceNumber(Math.max(0, currentChannel - 1));
-          aladinInstanceRef.current.requestRedraw?.();
-        }
+        const hipsBase = getHipsApiBase();
+        aladinInstanceRef.current.setImageSurvey(`${hipsBase}/${currentChannel}`);
       } catch (e) {
-        console.warn('Could not update HiPS cube slice:', e);
+        console.warn('Could not update HiPS channel survey:', e);
       }
-    }
-  }, [currentChannel, aladinReady, activeSurvey]);
+    }, 40);
+
+    return () => clearTimeout(timer);
+  }, [currentChannel, aladinReady, activeSurvey, isGap]);
 
   // Update position when selectedObject changes
   useEffect(() => {
@@ -133,8 +149,9 @@ export const SpectralExplorer: React.FC = () => {
     setActiveSurvey(surveyKey);
     if (!aladinInstanceRef.current) return;
     try {
+      const hipsBase = getHipsApiBase();
       if (surveyKey === 'spherex') {
-        aladinInstanceRef.current.setImageSurvey('https://irsa.ipac.caltech.edu/data/hips/SPHEREx/spherex_allsky_cube');
+        aladinInstanceRef.current.setImageSurvey(`${hipsBase}/${currentChannel}`);
       } else if (surveyKey === 'allwise') {
         aladinInstanceRef.current.setImageSurvey('https://irsa.ipac.caltech.edu/data/hips/CDS/AllWISE/RGB-W4-W2-W1');
       } else if (surveyKey === '2mass') {
@@ -154,11 +171,16 @@ export const SpectralExplorer: React.FC = () => {
       .finally(() => setLoadingSpectrum(false));
   }, [selectedObject]);
 
-  // Wavelength scan playback
+  // Wavelength scan playback (smoothly skips unobserved 2.42 μm optical dichroic gap channels 51-52)
   useEffect(() => {
     if (!isScanning) return;
     const interval = setInterval(() => {
-      setCurrentChannel((prev) => (prev >= 102 ? 1 : prev + 1));
+      setCurrentChannel((prev) => {
+        if (prev >= 102) return 1;
+        // Seamlessly jump optical dichroic gap during scan (channels 51 and 52 are unobserved physical boundary)
+        if (prev === 50) return 53;
+        return prev + 1;
+      });
     }, scanSpeedMs);
     return () => clearInterval(interval);
   }, [isScanning, scanSpeedMs]);
@@ -182,7 +204,6 @@ export const SpectralExplorer: React.FC = () => {
   };
 
   const currentWavelengthUm = getWavelengthForChannel(currentChannel);
-  const isGap = currentChannel === 51 || currentChannel === 52;
 
   // Find which detector owns current channel
   const getCurrentDetectorId = (): string => {
@@ -291,8 +312,11 @@ export const SpectralExplorer: React.FC = () => {
 
         {/* Interactive Sky Canvas */}
         <div data-tour="spectral-viewer" className="relative aspect-[21/9] sm:aspect-[16/7] bg-[#070B14] flex items-center justify-center overflow-hidden">
-          {/* Dichroic Gap Banner when Ch 51 or 52 is selected */}
-          {isGap ? (
+          {/* Always-mounted Aladin Lite v3 WebGL Canvas */}
+          <div ref={aladinContainerRef} className="w-full h-full" style={{ backgroundColor: '#070B14' }} />
+
+          {/* Dichroic Gap Banner when Ch 51 or 52 is selected (Overlay, never destroys canvas) */}
+          {isGap && (
             <div className="absolute inset-0 bg-[#0B1020]/95 flex flex-col items-center justify-center p-6 text-center z-20 animate-fade-in">
               <AlertTriangle className="w-12 h-12 text-amber-400 mb-3" />
               <h3 className="text-base font-bold text-[#E8EDF5] mb-1">
@@ -310,22 +334,18 @@ export const SpectralExplorer: React.FC = () => {
                 Jump to Array 4 (Channel 53 · 2.50 μm) →
               </Button>
             </div>
-          ) : (
-            <div className="w-full h-full relative">
-              {/* Aladin Lite v3 HiPS WebGL Canvas */}
-              <div ref={aladinContainerRef} className="w-full h-full" />
+          )}
 
-              {!aladinReady && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#070B14]/90 backdrop-blur-sm p-6 text-center z-10">
-                  <RefreshCw className="w-8 h-8 text-[#6EA8FE] animate-spin mb-3" />
-                  <h4 className="text-sm font-semibold text-[#E8EDF5] mb-1">
-                    Connecting to Official NASA SPHEREx DR1 HiPS Cube…
-                  </h4>
-                  <p className="text-xs text-[#94A3B8] max-w-sm">
-                    Streaming calibrated 102-band all-sky spectral cube from NASA/IPAC IRSA (Aitoff projection)
-                  </p>
-                </div>
-              )}
+          {/* Loading state indicator */}
+          {!aladinReady && !isGap && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#070B14]/90 backdrop-blur-sm p-6 text-center z-10">
+              <RefreshCw className="w-8 h-8 text-[#6EA8FE] animate-spin mb-3" />
+              <h4 className="text-sm font-semibold text-[#E8EDF5] mb-1">
+                Connecting to Official NASA SPHEREx DR1 HiPS Stream…
+              </h4>
+              <p className="text-xs text-[#94A3B8] max-w-sm">
+                Streaming calibrated 102-band all-sky spectral observations from NASA/IPAC IRSA (Aitoff projection)
+              </p>
             </div>
           )}
         </div>
