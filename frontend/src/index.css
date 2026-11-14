@@ -51,9 +51,19 @@
   .aladin-canvas,
   .aladin-holder,
   .aladin-box,
+  .aladin-view,
+  .aladin-wrapper,
   .aladin-image-canvas,
+  .aladin-fullscreen,
+  div[id^="aladin"],
   div[id^="aladin"] canvas {
     background-color: #070B14 !important;
+  }
+
+  /* Prevent overlapping native Aladin location / coordinate HUD box */
+  .aladin-location,
+  .aladin-box.aladin-location {
+    display: none !important;
   }
   .hud-bracket::before {
     content: '';

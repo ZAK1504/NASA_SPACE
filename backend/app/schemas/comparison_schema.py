@@ -38,11 +38,11 @@ class ComparisonRequest(BaseModel):
 
 class ComparisonResponse(BaseModel):
     observation_1: Dict[str, Any]
-    observation_2: Dict[str, Any]
+    observation_2: Optional[Dict[str, Any]] = None
     common_footprint: bool
     overlap_area_arcmin2: Optional[float] = None
     epoch1_image_base64: str
-    epoch2_image_base64: str
+    epoch2_image_base64: Optional[str] = None
     difference_image_base64: Optional[str] = None
     aligned: bool
     reprojection_performed: bool
@@ -52,6 +52,8 @@ class ComparisonResponse(BaseModel):
     candidates: List[CandidateDetection] = Field(default_factory=list)
     detection_metrics: Optional[Dict[str, Any]] = None
     processing_notes: List[str] = Field(default_factory=list)
+    comparison_available: bool = True
+    prepared_frame_count: int = 2
     scientific_disclaimer: str = (
         "Calculations performed using Astropy WCS and Reproject. "
         "Candidate detections are potential astronomical features, not confirmed discoveries."

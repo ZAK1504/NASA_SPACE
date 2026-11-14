@@ -41,10 +41,10 @@ export const TimeMachine: React.FC = () => {
 
       const targetObsPairs: Record<string, { obs1: string; obs2: string }> = {
         'barnards-star': { obs1: '2025W35_1A_0444_3', obs2: '2026W34_2A_0249_1' },
-        'wise-0855': { obs1: '2025W50_2A_0254_1', obs2: '2025W50_2A_0254_1' },
-        'epsilon-indi-b': { obs1: '2026W40_1A_0692_1', obs2: '2026W40_1A_0692_1' },
-        'r-draconis': { obs1: '2026W29_1A_0430_1', obs2: '2026W29_1A_0430_1' },
-        'rw-aurigae': { obs1: '2026W35_1A_0079_4', obs2: '2026W35_1A_0079_4' },
+        'wise-0855': { obs1: '2025W46_2A_0214_1', obs2: '2025W50_2A_0254_1' },
+        'epsilon-indi-b': { obs1: '2025W40_1A_0675_1', obs2: '2026W40_1A_0692_1' },
+        'rw-aurigae': { obs1: '2026W37_2A_0581_1', obs2: '2026W38_1A_0565_1' },
+        'r-draconis': { obs1: '2026W28_2A_0376_3', obs2: '2026W29_1A_0430_1' },
       };
       const pair = targetObsPairs[selectedObject.slug] || targetObsPairs['barnards-star'];
       setEpoch1Id(pair.obs1);
@@ -608,13 +608,13 @@ export const TimeMachine: React.FC = () => {
                     {isSingleEpoch ? (
                       <div className="text-center p-6 space-y-2 max-w-xs">
                         <Clock className="w-8 h-8 text-[#F3B85B] mx-auto opacity-70" />
-                        <p className="text-xs font-semibold text-[#E8EDF5]">Single Observation Epoch Available</p>
+                        <p className="text-xs font-semibold text-[#E8EDF5]">Single Observation Epoch Prepared</p>
                         <p className="text-[11px] text-[#94A3B8] leading-relaxed">
-                          Only 1 calibrated Level 2 observation visit is currently available in the archive for {selectedObject.name}.
+                          1 calibrated Level 2 observation visit is currently prepared for this field.
                           Multi-epoch cross-comparison requires subsequent visits.
                         </p>
                         <p className="text-[10px] text-[#6EA8FE]">
-                          Select <button onClick={() => { setSearchParams({ object: 'barnards-star' }); }} className="underline font-bold">Barnard's Star</button> to compare two genuine observation dates (2025 vs 2026).
+                          Use the Target selector above to explore verified multi-epoch challenge targets with multiple prepared observation dates.
                         </p>
                       </div>
                     ) : comparison.epoch2_image_base64 ? (

@@ -157,14 +157,19 @@ def compare_observations(req: ComparisonRequest = Body(...)):
             except Exception:
                 continue
 
-        # If f1 and f2 are the same file, check if a second distinct covering file exists
-        if f1 == f2 and len(covering_files) > 1:
-            for alt_f in covering_files:
-                if alt_f != f1:
-                    f2 = alt_f
-                    break
-
-        is_single_epoch = (f1 == f2)
+        # Check if single epoch was requested or only one distinct epoch is available
+        if not obs_id_2 or obs_id_1 == obs_id_2:
+            is_single_epoch = True
+            f2 = f1
+        elif f1 == f2:
+            if len(covering_files) > 1:
+                for alt_f in covering_files:
+                    if alt_f != f1:
+                        f2 = alt_f
+                        break
+            is_single_epoch = (f1 == f2)
+        else:
+            is_single_epoch = False
 
         # Load authentic science arrays and celestial WCS
         data1, wcs1, h1 = fits_service.get_image_data_and_wcs(f1)
@@ -204,16 +209,17 @@ def compare_observations(req: ComparisonRequest = Body(...)):
         bunit = str(h1.get("BUNIT", "MJy / sr"))
 
         if is_single_epoch:
-            # Honest single epoch handling: do NOT generate false differences
-            b64_2 = b64_1
-            meta2 = meta1
+            # Honest single epoch handling: do NOT duplicate earlier observation as later observation!
+            b64_2 = None
+            meta2 = None
             b64_diff = None
             candidates = []
             detection_metrics = None
-            overlap_area_arcmin2 = round(c1.size * (6.15 / 60.0) ** 2, 2)
+            overlap_area_arcmin2 = None
+            obs2_dict = None
             notes = [
-                f"Single authentic SPHEREx Level 2 observation visit ({f1.name}) available in local cache (ObsDate: {date1[:10]}).",
-                "Multi-epoch time-domain comparison and difference imaging require at least two distinct observation visits.",
+                f"Single authentic SPHEREx Level 2 observation visit ({f1.name}) prepared in local cache (ObsDate: {date1[:10]}).",
+                "Second observation visit has not been prepared. Multi-epoch time-domain comparison requires two distinct observation visits.",
                 "Displaying calibrated Level 2 observation with standard North-up, East-left celestial tangential orientation."
             ]
         else:
@@ -229,6 +235,13 @@ def compare_observations(req: ComparisonRequest = Body(...)):
             footprint_mask = (c1 != 0) & (c2 != 0)
             overlap_pixels = int(footprint_mask.sum())
             overlap_area_arcmin2 = round(overlap_pixels * (6.15 / 60.0) ** 2, 2)
+            obs2_dict = {
+                "obs_id": str(h2.get("OBSID", obs_id_2)),
+                "date_obs": date2,
+                "bunit": bunit,
+                "file_name": f2.name,
+                "metadata": meta2
+            }
 
             # Compute scientific difference: Difference = Later - Earlier
             diff_data, diff_meta = difference_service.calculate_difference_image(
@@ -275,14 +288,8 @@ def compare_observations(req: ComparisonRequest = Body(...)):
                 "file_name": f1.name,
                 "metadata": meta1
             },
-            "observation_2": {
-                "obs_id": str(h2.get("OBSID", obs_id_2)),
-                "date_obs": date2,
-                "bunit": bunit,
-                "file_name": f2.name,
-                "metadata": meta2
-            },
-            "common_footprint": True,
+            "observation_2": obs2_dict,
+            "common_footprint": not is_single_epoch,
             "overlap_area_arcmin2": overlap_area_arcmin2,
             "epoch1_image_base64": b64_1,
             "epoch2_image_base64": b64_2,
@@ -294,6 +301,8 @@ def compare_observations(req: ComparisonRequest = Body(...)):
             "max_percentile": 99.5,
             "candidates": candidates,
             "detection_metrics": detection_metrics,
+            "comparison_available": not is_single_epoch,
+            "prepared_frame_count": 1 if is_single_epoch else 2,
             "processing_notes": notes,
             "scientific_disclaimer": (
                 "Observations extracted from calibrated SPHEREx FITS data with standard North-up, East-left tangential projection. "

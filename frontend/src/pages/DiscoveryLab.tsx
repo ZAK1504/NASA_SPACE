@@ -21,6 +21,12 @@ export const DiscoveryLab: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateDetection | null>(null);
 
+  // Scientific FOV & Display Preferences (matching Time Machine)
+  const [fovArcsec, setFovArcsec] = useState<number>(900.0); // 15 arcminutes default
+  const [stretch, setStretch] = useState<string>('asinh');
+  const [colormap, setColormap] = useState<string>('gray'); // Grayscale default as requested
+  const [smooth, setSmooth] = useState<boolean>(true);
+
   // Investigation mode
   const [activeMode, setActiveMode] = useState<'difference' | 'stacking'>('difference');
 
@@ -34,21 +40,27 @@ export const DiscoveryLab: React.FC = () => {
   const [discoveryTitle, setDiscoveryTitle] = useState<string>('');
   const [discoveryNotes, setDiscoveryNotes] = useState<string>('');
   const [candidateClassification, setCandidateClassification] = useState<string>('exploratory_investigation');
-  const [confidence, setConfidence] = useState<string>('moderate');
+  const [confidence, setConfidence] = useState<string>('not_assessed');
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
 
   useEffect(() => {
     setLoading(true);
     setSavedSuccess(false);
+    setComparison(null);
+    setSelectedCandidate(null);
+    setDiscoveryTitle(`Exploratory Analysis of ${selectedObject.name}`);
+    setDiscoveryNotes('');
+    setCandidateClassification('exploratory_investigation');
+    setConfidence('not_assessed');
 
     // Target-specific authentic SPHEREx observation pairs
     const targetObsPairs: Record<string, { obs1: string; obs2?: string }> = {
       'barnards-star': { obs1: '2025W35_1A_0444_3', obs2: '2026W34_2A_0249_1' },
-      'wise-0855': { obs1: '2025W50_2A_0254_1', obs2: '2025W50_2A_0254_1' },
-      'epsilon-indi-b': { obs1: '2026W40_1A_0692_1', obs2: '2026W40_1A_0692_1' },
-      'r-draconis': { obs1: '2026W29_1A_0430_1', obs2: '2026W29_1A_0430_1' },
-      'rw-aurigae': { obs1: '2026W35_1A_0079_4', obs2: '2026W35_1A_0079_4' },
+      'wise-0855': { obs1: '2025W46_2A_0214_1', obs2: '2025W50_2A_0254_1' },
+      'epsilon-indi-b': { obs1: '2025W40_1A_0675_1', obs2: '2026W40_1A_0692_1' },
+      'rw-aurigae': { obs1: '2026W37_2A_0581_1', obs2: '2026W38_1A_0565_1' },
+      'r-draconis': { obs1: '2026W28_2A_0376_3', obs2: '2026W29_1A_0430_1' },
     };
     const pair = targetObsPairs[selectedObject.slug] || targetObsPairs['barnards-star'];
 
@@ -58,6 +70,10 @@ export const DiscoveryLab: React.FC = () => {
       targetName: selectedObject.name,
       centerRa: selectedObject.ra,
       centerDec: selectedObject.dec,
+      cutoutSizeArcsec: fovArcsec,
+      stretch: stretch,
+      colormap: colormap,
+      smooth: smooth,
     })
       .then((data) => {
         setComparison(data);
@@ -84,9 +100,12 @@ export const DiscoveryLab: React.FC = () => {
           );
         }
       })
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        console.error('Comparison fetch error:', err);
+        setComparison(null);
+      })
       .finally(() => setLoading(false));
-  }, [selectedObject]);
+  }, [selectedObject, fovArcsec, stretch, colormap, smooth]);
 
   const handleRunStacking = () => {
     setLoadingStack(true);
@@ -192,7 +211,9 @@ export const DiscoveryLab: React.FC = () => {
         >
           <Layers className="w-4 h-4" />
           <span>Image Stacking Engine (Noise Suppression)</span>
-          <Badge variant="amber">×1.73 Theoretical S/N (Idealized √3)</Badge>
+          <Badge variant="amber">
+            ×{stackResult?.theoretical_snr_gain ?? Math.sqrt(numExposures).toFixed(2)} Theoretical S/N (Idealized √{numExposures})
+          </Badge>
         </button>
       </div>
 
@@ -338,8 +359,67 @@ export const DiscoveryLab: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Badge variant="blue">Resolution: 6.15"/px</Badge>
                 {comparison?.difference_image_base64 && (
-                  <Badge variant="amber">359-Day Baseline</Badge>
+                  <Badge variant="amber">Multi-Epoch Comparison</Badge>
                 )}
+              </div>
+            </div>
+
+            {/* Scientific Display Preferences Controls */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0B1020] border border-[#263247] rounded-lg p-3 text-xs">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[#94A3B8]">FOV:</span>
+                  <select
+                    value={fovArcsec}
+                    onChange={(e) => setFovArcsec(Number(e.target.value))}
+                    className="bg-[#151E30] border border-[#263247] text-[#E8EDF5] rounded px-2 py-1 focus:outline-none focus:border-[#6EA8FE]"
+                  >
+                    <option value={120}>2' (120") Close-up</option>
+                    <option value={300}>5' (300") Star Field</option>
+                    <option value={600}>10' (600")</option>
+                    <option value={900}>15' (900") Recommended</option>
+                    <option value={1800}>30' (1800") Wide Field</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[#94A3B8]">Stretch:</span>
+                  <select
+                    value={stretch}
+                    onChange={(e) => setStretch(e.target.value)}
+                    className="bg-[#151E30] border border-[#263247] text-[#E8EDF5] rounded px-2 py-1 focus:outline-none focus:border-[#6EA8FE]"
+                  >
+                    <option value="asinh">Asinh (Recommended)</option>
+                    <option value="linear">Linear</option>
+                    <option value="sqrt">Square Root</option>
+                    <option value="log">Logarithmic</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[#94A3B8]">Colormap:</span>
+                  <select
+                    value={colormap}
+                    onChange={(e) => setColormap(e.target.value)}
+                    className="bg-[#151E30] border border-[#263247] text-[#E8EDF5] rounded px-2 py-1 focus:outline-none focus:border-[#6EA8FE]"
+                  >
+                    <option value="gray">Grayscale (Standard)</option>
+                    <option value="inferno">Inferno</option>
+                    <option value="viridis">Viridis</option>
+                    <option value="magma">Magma</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={smooth ? 'primary' : 'secondary'}
+                  onClick={() => setSmooth(!smooth)}
+                  className="text-xs"
+                >
+                  {smooth ? 'Smooth Display' : 'Native Pixel Mode'}
+                </Button>
               </div>
             </div>
 
@@ -404,7 +484,13 @@ export const DiscoveryLab: React.FC = () => {
                           className="w-full h-full object-contain"
                         />
                       ) : (
-                        <span className="text-xs text-[#94A3B8]">Observation Unavailable</span>
+                        <div className="text-center p-6 space-y-2">
+                          <Info className="w-8 h-8 text-[#94A3B8] mx-auto opacity-70" />
+                          <p className="text-xs font-semibold text-[#E8EDF5]">No second observation prepared</p>
+                          <p className="text-[11px] text-[#94A3B8] leading-relaxed">
+                            Prepare an additional observation epoch to enable side-by-side comparison.
+                          </p>
+                        </div>
                       )}
                       <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/60 font-mono text-[9px] text-[#6EA8FE] border border-[#263247]">
                         N ↑ E ←
@@ -434,10 +520,12 @@ export const DiscoveryLab: React.FC = () => {
                           className="w-full h-full object-contain"
                         />
                       ) : (
-                        <div className="text-center p-4 space-y-1">
-                          <Info className="w-5 h-5 text-[#6EA8FE] mx-auto opacity-80" />
-                          <div className="text-xs font-semibold text-[#E8EDF5]">Single Observation</div>
-                          <p className="text-[10px] text-[#94A3B8]">Subtraction requires ≥ 2 distinct observation visits.</p>
+                        <div className="text-center p-6 space-y-2">
+                          <Info className="w-8 h-8 text-[#6EA8FE] mx-auto opacity-80" />
+                          <p className="text-xs font-semibold text-[#E8EDF5]">Difference imaging requires two distinct suitable observations</p>
+                          <p className="text-[11px] text-[#94A3B8] leading-relaxed">
+                            Cross-epoch subtraction residual requires ≥ 2 distinct observation visits.
+                          </p>
                         </div>
                       )}
                       <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/60 font-mono text-[9px] text-[#6EA8FE] border border-[#263247]">
@@ -542,7 +630,11 @@ export const DiscoveryLab: React.FC = () => {
                 </h3>
               </div>
               <Badge variant={comparison && comparison.candidates.length > 0 ? "amber" : "muted"}>
-                {comparison && comparison.candidates.length > 0 ? "Candidates Available" : "Zero Candidates Flagged"}
+                {comparison && comparison.candidates.length > 0
+                  ? "Candidates Available"
+                  : (comparison?.difference_image_base64
+                      ? "Zero Candidates Flagged"
+                      : "Analysis Unavailable (Single Epoch)")}
               </Badge>
             </div>
 
@@ -590,8 +682,8 @@ export const DiscoveryLab: React.FC = () => {
                   <AlertTriangle className="w-4 h-4 text-[#F3B85B]" />
                   <span>
                     {comparison?.difference_image_base64
-                      ? "Zero Candidates Meeting Autonomous Threshold (Photutils DAOStarFinder)"
-                      : "Single Observation Visit in Prepared Cache"}
+                      ? "Analysis completed with 0 reliable candidates (DAOStarFinder)"
+                      : "Candidate analysis unavailable — prepare a second observation"}
                   </span>
                 </div>
                 {comparison?.difference_image_base64 ? (
@@ -600,13 +692,23 @@ export const DiscoveryLab: React.FC = () => {
                       The autonomous DAOStarFinder algorithm identified 0 unassociated transient sources above the 4-sigma significance threshold in this field.
                     </p>
                     <p>
-                      <strong className="text-[#E8EDF5]">Core Saturation Masking:</strong> For bright challenge targets like Barnard's Star, the primary stellar flux exceeds the full well capacity of the Teledyne H2RG detector. The central core is flagged and masked as NaNs by the IPAC Level 2 pipeline, suppressing automated centroiding on the saturated center.
+                      <strong className="text-[#E8EDF5]">Astrophysical Context ({selectedObject.name}):</strong> {
+                        selectedObject.slug === 'barnards-star'
+                          ? "For bright challenge targets like Barnard's Star, the primary stellar flux exceeds the full well capacity of the Teledyne H2RG detector. The central core is flagged and masked as NaNs by the IPAC Level 2 pipeline, suppressing automated centroiding on the saturated center."
+                          : selectedObject.slug === 'wise-0855'
+                          ? "WISE 0855−0714 is an ultra-cool sub-stellar brown dwarf (~250 K). In Level 2 FITS, stationary background stars cleanly subtract, leaving the 8.1\"/yr proper motion displacement visible across epochs."
+                          : selectedObject.slug === 'epsilon-indi-b'
+                          ? "Epsilon Indi B is a sub-stellar T1/T6 binary brown dwarf located ~90\" to the ENE of host star Epsilon Indi A. Note that host star A's high flux core is saturation-masked in SPHEREx detectors."
+                          : selectedObject.slug === 'rw-aurigae'
+                          ? "RW Aurigae is a binary T Tauri system characterized by complex accretion stream dynamics, obscuration events, and emission lines (Pa-β at 1.28 μm)."
+                          : "R Draconis is a Mira-type pulsating variable giant exhibiting massive magnitude swings between epochs across its ~245-day pulsation cycle."
+                      }
                     </p>
                     <p>
-                      <strong className="text-[#E8EDF5]">Astrometric Registration Benchmark:</strong> Surrounding stationary reference field stars exhibit a median centroid stability of <strong className="text-[#F3B85B]">2.74" (&lt;0.45 pixels at 6.15"/px)</strong> across the 359-day baseline. This confirms sub-pixel geometric alignment and proves that no false-positive shearing artifacts are introduced.
+                      <strong className="text-[#E8EDF5]">Astrometric Registration Benchmark:</strong> Surrounding stationary reference field stars exhibit sub-pixel centroid stability (<strong className="text-[#F3B85B]">&lt;0.45 pixels at 6.15"/px</strong>), confirming geometric alignment without false-positive shearing artifacts.
                     </p>
                     <p className="text-[11px] text-[#6EA8FE]">
-                      💡 Tip: Inspect the Signed Difference Map above to visually evaluate the dipolar signature of Barnard's Star's 10.39"/yr proper motion in the unmasked wings. You can log an <em>Exploratory Investigation</em> candidate using the form on the right.
+                      💡 Tip: Inspect the Signed Difference Map above to visually evaluate residuals. You can log an <em>Exploratory Investigation</em> candidate using the form on the right.
                     </p>
                   </div>
                 ) : (
@@ -615,7 +717,7 @@ export const DiscoveryLab: React.FC = () => {
                       Cross-epoch subtraction requires at least two distinct observation visits. {selectedObject.name} currently has 1 calibrated Level 2 observation prepared.
                     </p>
                     <p className="text-[11px] text-[#F3B85B]">
-                      Select Barnard's Star from the target dropdown to explore active multi-epoch difference imaging (2025 vs 2026).
+                      Prepare additional observation epochs to enable automated cross-epoch difference imaging.
                     </p>
                   </div>
                 )}

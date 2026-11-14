@@ -43,6 +43,11 @@ export const ExploreSky: React.FC = () => {
               showFullscreenControl: true,
               showLayersControl: false,
               showGotoControl: false,
+              showCoordinates: false,
+              showFrame: false,
+              showSimbadPointerControl: false,
+              showShareControl: false,
+              backgroundColor: '#070B14',
             });
 
             try {

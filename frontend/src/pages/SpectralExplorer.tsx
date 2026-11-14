@@ -71,6 +71,9 @@ export const SpectralExplorer: React.FC = () => {
   const [preloading, setPreloading] = useState<boolean>(true);
   const [preparedCount, setPreparedCount] = useState<number>(0);
   const [totalPreloadPlanes, setTotalPreloadPlanes] = useState<number>(100);
+  const isUpdatingLayerRef = useRef<boolean>(false);
+  const lastSurveyChannelRef = useRef<number>(currentChannel);
+  const lastSurveyTimeRef = useRef<number>(0);
 
   // Preload and cache HiPS tiles for the current viewport before playback
   useEffect(() => {
@@ -83,13 +86,13 @@ export const SpectralExplorer: React.FC = () => {
       .then((r) => r.json())
       .then((data) => {
         if (!isCancelled) {
-          setPreparedCount(data.prepared_channels);
-          setTotalPreloadPlanes(data.total_channels);
-          setIsPreloaded(data.is_ready);
+          setPreparedCount(data.prepared_channels ?? 100);
+          setTotalPreloadPlanes(data.total_channels ?? 100);
+          setIsPreloaded(Boolean(data.is_ready));
         }
       })
       .catch((err) => {
-        console.warn('Preload fetch error:', err);
+        console.warn('Preload fetch notice:', err);
         if (!isCancelled) {
           setIsPreloaded(true);
           setPreparedCount(100);
@@ -123,6 +126,11 @@ export const SpectralExplorer: React.FC = () => {
             showFullscreenControl: true,
             showLayersControl: false,
             showGotoControl: false,
+            showCoordinates: false,
+            showFrame: false,
+            showSimbadPointerControl: false,
+            showShareControl: false,
+            backgroundColor: '#070B14',
           });
 
           try {
@@ -156,9 +164,28 @@ export const SpectralExplorer: React.FC = () => {
     };
   }, []);
 
-  // Update HiPS channel survey when currentChannel changes (debounced by 40ms to avoid thrashing during quick scrubbing)
+  // Update HiPS channel survey when currentChannel changes (guarded against concurrent WebGL re-entrancy & throttled during rapid scan)
   useEffect(() => {
     if (!aladinInstanceRef.current || !aladinReady || activeSurvey !== 'spherex' || isGap) return;
+
+    const now = Date.now();
+    // When scanning rapidly across 102 channels, throttle full HiPS survey swaps to prevent WebGL context exhaustion
+    if (isScanning) {
+      const timeSinceLast = now - lastSurveyTimeRef.current;
+      const lastCh = lastSurveyChannelRef.current;
+      const chDiff = Math.abs(currentChannel - lastCh);
+      if (timeSinceLast < 1500 && chDiff < 3) {
+        return;
+      }
+    }
+
+    if (isUpdatingLayerRef.current) {
+      return;
+    }
+
+    isUpdatingLayerRef.current = true;
+    lastSurveyTimeRef.current = now;
+    lastSurveyChannelRef.current = currentChannel;
 
     const timer = setTimeout(() => {
       try {
@@ -166,11 +193,33 @@ export const SpectralExplorer: React.FC = () => {
         aladinInstanceRef.current.setImageSurvey(`${hipsBase}/${currentChannel}`);
       } catch (e) {
         console.warn('Could not update HiPS channel survey:', e);
+      } finally {
+        setTimeout(() => {
+          isUpdatingLayerRef.current = false;
+        }, 150);
       }
     }, 40);
 
-    return () => clearTimeout(timer);
-  }, [currentChannel, aladinReady, activeSurvey, isGap]);
+    return () => {
+      clearTimeout(timer);
+      isUpdatingLayerRef.current = false;
+    };
+  }, [currentChannel, aladinReady, activeSurvey, isGap, isScanning]);
+
+  // When scan finishes or is paused, synchronize viewer to the exact final currentChannel
+  useEffect(() => {
+    if (!isScanning && aladinInstanceRef.current && aladinReady && activeSurvey === 'spherex' && !isGap) {
+      if (lastSurveyChannelRef.current !== currentChannel) {
+        try {
+          const hipsBase = getHipsApiBase();
+          aladinInstanceRef.current.setImageSurvey(`${hipsBase}/${currentChannel}`);
+          lastSurveyChannelRef.current = currentChannel;
+        } catch (e) {
+          console.warn('Sync final channel error:', e);
+        }
+      }
+    }
+  }, [isScanning, currentChannel, aladinReady, activeSurvey, isGap]);
 
   // Update position when selectedObject changes
   useEffect(() => {

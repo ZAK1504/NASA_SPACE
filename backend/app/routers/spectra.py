@@ -112,7 +112,7 @@ def _fetch_and_stream_tile(channel: Optional[int], order: int, dir_val: str, fil
                 ipac_url,
                 headers={"User-Agent": "SPHEREx-Horizon/1.0 (NASA-SpaceApps-2026; Team-Meteor-Rizzlers)"}
             )
-            with urllib.request.urlopen(req, timeout=6) as resp:
+            with urllib.request.urlopen(req, timeout=2.0) as resp:
                 if resp.status == 200:
                     content = resp.read()
                     if content and len(content) > 100:
@@ -142,7 +142,7 @@ def get_preload_status():
     """Get current status of preloaded spectral visualization frames."""
     return PRELOAD_STATUS
 
-@router.post("/hips/preload")
+@router.api_route("/hips/preload", methods=["GET", "POST"])
 def preload_spectral_frames(
     mode: str = Query("all", description="all, D1, D2, D3, D4, D5, D6"),
     order: int = Query(0, description="HiPS resolution order")
