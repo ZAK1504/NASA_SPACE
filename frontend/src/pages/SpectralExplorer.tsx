@@ -196,9 +196,8 @@ export const SpectralExplorer: React.FC = () => {
     // When scanning rapidly across 102 channels, throttle full HiPS survey swaps to prevent WebGL context exhaustion
     if (isScanning) {
       const timeSinceLast = now - lastSurveyTimeRef.current;
-      const lastCh = lastSurveyChannelRef.current;
-      const chDiff = Math.abs(currentChannel - lastCh);
-      if (timeSinceLast < 1500 && chDiff < 3) {
+      const minInterval = Math.max(300, scanSpeedMs * 0.7);
+      if (timeSinceLast < minInterval) {
         return;
       }
     }
@@ -378,7 +377,6 @@ export const SpectralExplorer: React.FC = () => {
         setCurrentChannel(53);
         setRenderedChannel(53);
       }
-      setViewerMode('scan');
       setIsScanning(true);
     } else {
       setIsScanning(false);
@@ -410,10 +408,11 @@ export const SpectralExplorer: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
             <BarChart2 className="w-5 h-5 text-[#6EA8FE]" />
             <h1 className="text-2xl font-bold text-[#E8EDF5]">SPHEREx Spectral Explorer</h1>
             <Badge variant="blue">Official DR1 All-Sky Cube</Badge>
+            <Badge variant="amber">Cube Resolution: ~12.9″/px (DR1 Order 5)</Badge>
           </div>
           <p className="text-sm text-[#94A3B8]">
             Explore genuine all-sky near-infrared observations across all 102 SPHEREx spectral channels (0.75 μm – 5.0 μm)
@@ -495,8 +494,8 @@ export const SpectralExplorer: React.FC = () => {
 
         {/* Interactive Sky Canvas */}
         <div data-tour="spectral-viewer" className="relative aspect-[21/9] sm:aspect-[16/7] bg-[#070B14] flex items-center justify-center overflow-hidden">
-          {/* Synchronized Spectral Scan View (Prepared 100-plane Image Player) */}
-          {(viewerMode === 'scan' || isScanning) && !isGap && (
+          {/* Synchronized Spectral Scan View (All-Sky 100-plane Image Player) */}
+          {viewerMode === 'scan' && !isGap && (
             <div className="relative w-full h-full flex items-center justify-center bg-[#070B14]">
               <img
                 src={`http://${typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1'}:8000/api/spectra/frame/${renderedChannel}`}
@@ -505,20 +504,27 @@ export const SpectralExplorer: React.FC = () => {
               />
               <div className="absolute top-3 left-3 bg-[#0B1020]/90 border border-[#263247] rounded px-2.5 py-1 text-xs font-mono text-[#E8EDF5] flex items-center gap-2 shadow-lg backdrop-blur-sm">
                 <span className={`w-2 h-2 rounded-full ${isScanning ? 'bg-green-400 animate-pulse' : 'bg-[#6EA8FE]'}`} />
-                <span>SPHEREx DR1 HiPS Cube: Ch {renderedChannel} ({currentWavelengthUm} μm · Array {currentDetector})</span>
+                <span>SPHEREx DR1 All-Sky Scan: Ch {renderedChannel} ({currentWavelengthUm} μm · Array {currentDetector}) · All-Sky Preview · Science Cube: ~12.9″/px (Order 5)</span>
               </div>
             </div>
           )}
 
-          {/* Always-mounted Aladin Lite v3 WebGL Canvas */}
+          {/* Always-mounted Aladin Lite v3 WebGL Canvas (Target Viewport) */}
           <div
             ref={aladinContainerRef}
-            className="w-full h-full"
+            className="w-full h-full relative"
             style={{
               backgroundColor: '#070B14',
-              display: (viewerMode === 'aladin' && !isScanning) ? 'block' : 'none'
+              display: viewerMode === 'aladin' ? 'block' : 'none'
             }}
-          />
+          >
+            {viewerMode === 'aladin' && (
+              <div className="absolute top-3 left-3 z-10 bg-[#0B1020]/90 border border-[#263247] rounded px-2.5 py-1 text-xs font-mono text-[#E8EDF5] flex items-center gap-2 shadow-lg backdrop-blur-sm pointer-events-none">
+                <span className={`w-2 h-2 rounded-full ${isScanning ? 'bg-green-400 animate-pulse' : 'bg-[#6EA8FE]'}`} />
+                <span>SPHEREx DR1 Target View: Ch {renderedChannel} ({currentWavelengthUm} μm · Array {currentDetector}) · Active Viewport · HiPS Order 5 (~12.9″/px)</span>
+              </div>
+            )}
+          </div>
 
           {/* Dichroic Gap Banner when Ch 51 or 52 is selected (Overlay, never destroys canvas) */}
           {isGap && (

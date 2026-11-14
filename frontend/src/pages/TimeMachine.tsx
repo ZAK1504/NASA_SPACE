@@ -293,7 +293,7 @@ export const TimeMachine: React.FC = () => {
               <span className="text-[#94A3B8] font-mono">Separation: {selectedObject.companion.separationArcsec}"</span>
             </div>
             <p className="text-[#94A3B8] text-[11px] leading-relaxed">
-              In this field, the prominent bright saturated source with a masked central core is primary star <strong className="text-[#E8EDF5]">Epsilon Indi A</strong> (K5V, V=4.69). Target <strong className="text-[#6EA8FE]">Epsilon Indi B</strong> (T-dwarf binary, ~0.30 MJy/sr) is located ~90" to the ENE at RA {selectedObject.ra.toFixed(4)}°, Dec {selectedObject.dec.toFixed(4)}°.
+              In this field, the prominent bright saturated source with a masked central core is primary star <strong className="text-[#E8EDF5]">Epsilon Indi A</strong> (K5V, V=4.69). Target <strong className="text-[#6EA8FE]">Epsilon Indi B</strong> (T-dwarf binary, ~0.30 MJy/sr) is located ~402" (~6.7′) to the ENE at RA {selectedObject.ra.toFixed(4)}°, Dec {selectedObject.dec.toFixed(4)}°.
             </p>
           </div>
         </div>
@@ -433,13 +433,18 @@ export const TimeMachine: React.FC = () => {
             {viewMode === 'timelapse' && activeFrame && (
               <div className="max-w-2xl mx-auto">
                 {/* HUD Top Bar */}
-                <div className="flex items-center justify-between text-xs mb-2">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center justify-between text-xs mb-2 gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="blue">
                       Epoch {activeFrame.frame_index + 1} of {manifest?.total_frames || 1}
                     </Badge>
                     <span className="font-semibold text-[#E8EDF5]">{activeFrame.date_display}</span>
                     <span className="text-[#94A3B8] font-mono text-[11px]">[{activeFrame.bandpass}]</span>
+                    {activeFrame.target_coords_display && (
+                      <span className="text-[11px] font-mono text-[#F3B85B] bg-[#0B1020] px-2 py-0.5 rounded border border-[#263247]">
+                        {activeFrame.target_coords_display}
+                      </span>
+                    )}
                   </div>
                   <div className="text-[11px] font-mono text-[#6EA8FE]">
                     ObsID: {activeFrame.obs_id}
@@ -459,6 +464,14 @@ export const TimeMachine: React.FC = () => {
                     <div className="absolute top-3 left-3 bg-[#0B1020]/80 border border-[#263247] rounded px-2 py-1 text-[10px] text-[#94A3B8] flex items-center gap-1.5 shadow backdrop-blur-sm pointer-events-none">
                       <Compass className="w-3.5 h-3.5 text-[#6EA8FE]" />
                       <span>N ↑ &nbsp; E ←</span>
+                    </div>
+                  )}
+
+                  {/* Observation-Date Target Coordinates Badge */}
+                  {activeFrame.target_ra !== undefined && activeFrame.target_ra !== null && (
+                    <div className="absolute top-3 right-3 bg-[#0B1020]/85 border border-[#6EA8FE]/40 rounded px-2 py-1 text-[10px] font-mono text-[#E8EDF5] shadow backdrop-blur-sm pointer-events-none">
+                      <span className="text-[#94A3B8]">Target @ {activeFrame.date_display}:</span>{' '}
+                      <span className="text-[#6EA8FE]">{activeFrame.target_ra.toFixed(4)}°, {activeFrame.target_dec?.toFixed(4)}°</span>
                     </div>
                   )}
 

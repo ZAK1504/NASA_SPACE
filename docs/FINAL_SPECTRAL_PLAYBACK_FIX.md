@@ -43,7 +43,7 @@ This report documents the resolution of the Spectral Explorer Wavelength Scan bu
 | Metric / Parameter | Value | Verification Proof |
 |:---|:---|:---|
 | **Selected Viewport** | SPHEREx DR1 Full Spectrum All-Sky & Target Fields | Verified via Aitoff projection & Target cutout |
-| **Playback Resolution** | 512 × 512 native order 0 HiPS tiles / 6.15″/px | 100 valid science planes cached locally (9.74 MB) |
+| **Playback Resolution** | All-sky Order 0 survey tiles (~6.8′/px) · DR1 Science Cube up to Order 5 (~12.9″/px) | 100 valid science planes cached locally (9.74 MB) |
 | **Required Valid Planes** | 100 valid science planes | Channels 1–50 and 53–102 (51 & 52 are dichroic gap) |
 | **Prepared Plane Count** | 100 / 100 | Verified via `GET /api/spectra/hips/preload/status` |
 | **Failed Plane Count** | 0 | `failed_channels: 0, is_ready: true` |

@@ -244,7 +244,7 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
                   <strong className="text-[#F3B85B]">Primary A:</strong> Saturated K5V star (V=4.69, masked core).
                 </p>
                 <p className="text-[10px] text-[#94A3B8] leading-tight">
-                  <strong className="text-[#38BDF8]">Target B:</strong> T1+T6 sub-stellar binary at center reticle (~90″ ENE separation).
+                  <strong className="text-[#38BDF8]">Target B:</strong> T1+T6 sub-stellar binary at center reticle (~402″ / 6.7′ ENE separation).
                 </p>
               </div>
             )}

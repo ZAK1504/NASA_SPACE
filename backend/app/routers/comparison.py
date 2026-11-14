@@ -61,6 +61,7 @@ def _resolve_fits_file_for_obs(
                     continue
             if best_f is not None:
                 return best_f
+            return None
         return matching_obs[0]
 
     # 2. Match by inspecting primary/image header without reading entire data
@@ -213,6 +214,18 @@ def compare_observations(req: ComparisonRequest = Body(...)):
         date1 = str(h1.get("DATE-OBS", h1.get("DATE", "2025-08-27")))
         date2 = str(h2.get("DATE-OBS", h2.get("DATE", "2026-08-21")))
         bunit = str(h1.get("BUNIT", "MJy / sr"))
+        det1 = int(h1.get("DETECTOR", 2))
+        det2 = int(h2.get("DETECTOR", 2))
+        band1 = str(h1.get("FILTER", h1.get("BANDPASS", f"D{det1}")))
+        band2 = str(h2.get("FILTER", h2.get("BANDPASS", f"D{det2}")))
+        is_cross_wavelength = (det1 != det2) and not is_single_epoch
+        cross_note = None
+        if is_cross_wavelength:
+            cross_note = (
+                f"Exploratory Cross-Band Comparison: Epoch 1 is Array D{det1} ({band1}) while "
+                f"Epoch 2 is Array D{det2} ({band2}). Residual flux differences reflect both chromatic "
+                "spectral energy distribution (SED) slopes and temporal variation, not monochromatic variability alone."
+            )
 
         if is_single_epoch:
             # Honest single epoch handling: do NOT duplicate earlier observation as later observation!
@@ -246,6 +259,8 @@ def compare_observations(req: ComparisonRequest = Body(...)):
                 "date_obs": date2,
                 "bunit": bunit,
                 "file_name": f2.name,
+                "bandpass": band2,
+                "detector": det2,
                 "metadata": meta2
             }
 
@@ -279,12 +294,14 @@ def compare_observations(req: ComparisonRequest = Body(...)):
                 detection_metrics = None
 
             notes = [
-                f"Epoch 1 loaded from authentic SPHEREx Level 2 product: {f1.name} (ObsDate: {date1[:10]}).",
-                f"Epoch 2 loaded from authentic SPHEREx Level 2 product: {f2.name} (ObsDate: {date2[:10]}).",
+                f"Epoch 1 loaded from authentic SPHEREx Level 2 product: {f1.name} (ObsDate: {date1[:10]}, Band: {band1}).",
+                f"Epoch 2 loaded from authentic SPHEREx Level 2 product: {f2.name} (ObsDate: {date2[:10]}, Band: {band2}).",
                 f"Standardized onto North-up, East-left celestial tangential grid ({c1.shape[1]}×{c1.shape[0]} px, {cutout_size}\" FOV).",
                 f"Background matched via sigma-clipped statistics (Scale factor: {diff_meta.get('scale_factor', 1.0):.3f}).",
                 f"Detected {len(candidates)} candidate change feature(s) meeting scientific detection threshold."
             ]
+            if cross_note:
+                notes.append(cross_note)
 
         result = {
             "observation_1": {
@@ -292,6 +309,8 @@ def compare_observations(req: ComparisonRequest = Body(...)):
                 "date_obs": date1,
                 "bunit": bunit,
                 "file_name": f1.name,
+                "bandpass": band1,
+                "detector": det1,
                 "metadata": meta1
             },
             "observation_2": obs2_dict,
@@ -309,6 +328,8 @@ def compare_observations(req: ComparisonRequest = Body(...)):
             "detection_metrics": detection_metrics,
             "comparison_available": not is_single_epoch,
             "prepared_frame_count": 1 if is_single_epoch else 2,
+            "is_cross_wavelength": is_cross_wavelength,
+            "cross_wavelength_note": cross_note,
             "processing_notes": notes,
             "scientific_disclaimer": (
                 "Observations extracted from calibrated SPHEREx FITS data with standard North-up, East-left tangential projection. "

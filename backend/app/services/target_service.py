@@ -5,9 +5,10 @@ Provides rigorous epoch-aware astrometric propagation, coordinate reference fram
 and celestial comparison grid calculations.
 """
 
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple, Union
 from dataclasses import dataclass, asdict
 import math
+from datetime import datetime
 from astropy.coordinates import SkyCoord, FK5, ICRS, Distance
 import astropy.units as u
 from astropy.time import Time
@@ -113,14 +114,14 @@ TARGET_REGISTRY: Dict[str, TargetRecord] = {
         distance_ly=11.82,
         radial_velocity_km_s=-40.4,
         spectral_type="T1 + T6",
-        description="A benchmark substellar binary of two brown dwarfs (T1 + T6) orbiting primary star Epsilon Indi A at ~1460 AU (~90\" separation). Provides an essential laboratory for substellar atmospheric physics.",
-        scientific_limitations="In typical SPHEREx 15′ FOV cutouts, primary star Epsilon Indi A (K5V, V=4.69 mag) is present in the field and heavily saturated with a masked core. Epsilon Indi B is separated by ~90″ to the ENE. Individual Ba and Bb components (0.7\" separation) are spatially unresolved at SPHEREx's 6.15\"/pixel scale.",
+        description="A benchmark substellar binary of two brown dwarfs (T1 + T6) orbiting primary star Epsilon Indi A at ~1460 AU (~402\" / ~6.7′ separation). Provides an essential laboratory for substellar atmospheric physics.",
+        scientific_limitations="In typical SPHEREx 15′ FOV cutouts, primary star Epsilon Indi A (K5V, V=4.69 mag) is present in the field and heavily saturated with a masked core. Epsilon Indi B is separated by ~402″ (~6.7′) to the ENE. Individual Ba and Bb components (0.7\" separation) are spatially unresolved at SPHEREx's 6.15\"/pixel scale.",
         astrometric_citation="Scholz et al. (2003); King et al. (2010); Gaia DR3 (Gaia Collaboration, 2022)",
         companion_name="Epsilon Indi A",
         companion_ra_deg=330.840223,
         companion_dec_deg=-56.785979,
         companion_type="Primary K5V Dwarf Star (V=4.69, Saturated Core)",
-        companion_separation_arcsec=90.2
+        companion_separation_arcsec=402.4
     ),
     "rw-aurigae": TargetRecord(
         id="rw-aurigae",
@@ -223,7 +224,7 @@ class AstrometryService:
 
         metadata = {
             "catalog_reference_epoch": target.reference_epoch,
-            "target_observation_epoch": f"J{target_epoch_year:.1f}",
+            "target_observation_epoch": f"J{target_epoch_year:.2f}",
             "delta_years": round(delta_years, 3),
             "propagated_ra_deg": round(new_ra_deg, 6),
             "propagated_dec_deg": round(new_dec_deg, 6),
@@ -232,6 +233,38 @@ class AstrometryService:
             "total_motion_arcsec": round(math.hypot(d_ra_deg * cos_mean_dec, d_dec_deg) * 3600.0, 3)
         }
         return new_ra_deg, new_dec_deg, metadata
+
+    @classmethod
+    def propagate_to_date(
+        cls,
+        target: TargetRecord,
+        date_obs: Any
+    ) -> Tuple[float, float, Dict[str, Any]]:
+        """
+        Propagate reference coordinates to an exact observation date string (e.g. '2025-08-27' or ISO).
+        Computes the decimal Besselian/Julian epoch year:
+        epoch_year = year + (day_of_year - 1) / 365.25
+        """
+        if isinstance(date_obs, (int, float)):
+            epoch_year = float(date_obs)
+            date_str = f"Epoch {epoch_year:.2f}"
+        else:
+            try:
+                date_clean = str(date_obs).replace("Z", "").split("+")[0].strip()
+                if "T" in date_clean:
+                    dt = datetime.fromisoformat(date_clean)
+                else:
+                    dt = datetime.strptime(date_clean[:10], "%Y-%m-%d")
+                epoch_year = dt.year + (dt.timetuple().tm_yday - 1.0) / 365.25
+                date_str = dt.strftime("%Y-%m-%d")
+            except Exception:
+                epoch_year = 2026.0
+                date_str = "2026-01-01"
+
+        ra_deg, dec_deg, meta = cls.propagate_to_epoch(target, epoch_year)
+        meta["observation_date"] = date_str
+        meta["target_observation_epoch"] = f"J{epoch_year:.2f}"
+        return ra_deg, dec_deg, meta
 
     @classmethod
     def get_fixed_comparison_center(

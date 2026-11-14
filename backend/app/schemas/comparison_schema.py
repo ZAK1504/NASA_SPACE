@@ -54,6 +54,8 @@ class ComparisonResponse(BaseModel):
     processing_notes: List[str] = Field(default_factory=list)
     comparison_available: bool = True
     prepared_frame_count: int = 2
+    is_cross_wavelength: bool = False
+    cross_wavelength_note: Optional[str] = None
     scientific_disclaimer: str = (
         "Calculations performed using Astropy WCS and Reproject. "
         "Candidate detections are potential astronomical features, not confirmed discoveries."
@@ -71,6 +73,10 @@ class TimeMachineFrame(BaseModel):
     pixel_scale_arcsec: float = 6.15
     exposure_time_s: float = 120.0
     bunit: str = "MJy / sr"
+    target_ra: Optional[float] = None
+    target_dec: Optional[float] = None
+    target_epoch_year: Optional[float] = None
+    target_coords_display: Optional[str] = None
 
 class TimeMachineManifestResponse(BaseModel):
     target_name: str
