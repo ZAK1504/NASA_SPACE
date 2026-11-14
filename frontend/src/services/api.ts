@@ -79,10 +79,34 @@ export interface CandidateDetection {
 
 export interface ComparisonObservationSummary {
   obs_id: string;
-  date_obs?: string;
-  bunit?: string;
-  file_name?: string;
-  metadata: any;
+  date_obs: string;
+  bunit: string;
+  file_name: string;
+  metadata?: any;
+}
+
+export interface TimeMachineFrame {
+  frame_index: number;
+  obs_id: string;
+  date_obs: string;
+  date_display: string;
+  bandpass: string;
+  detector: number;
+  file_name: string;
+  image_base64: string;
+  pixel_scale_arcsec: number;
+  exposure_time_s: number;
+  bunit: string;
+}
+
+export interface TimeMachineManifestResponse {
+  target_name: string;
+  ra: number;
+  dec: number;
+  total_frames: number;
+  baseline_days: number;
+  frames: TimeMachineFrame[];
+  processing_notes: string[];
 }
 
 export interface ComparisonResponse {
@@ -211,6 +235,9 @@ export const api = {
     upperPercentile?: number;
     ra?: number;
     dec?: number;
+    fovArcsec?: number;
+    smooth?: boolean;
+    objectName?: string;
   }) {
     const res = await fetch(`${API_BASE_URL}/processing/preview`, {
       method: 'POST',
@@ -222,6 +249,9 @@ export const api = {
         upper_percentile: params.upperPercentile || 99.5,
         ra: params.ra,
         dec: params.dec,
+        fov_arcsec: params.fovArcsec || 180.0,
+        smooth: params.smooth || false,
+        object_name: params.objectName,
       }),
     });
     if (!res.ok) throw new Error('Failed to render preview');
@@ -234,8 +264,10 @@ export const api = {
     targetName?: string;
     centerRa?: number;
     centerDec?: number;
+    cutoutSizeArcsec?: number;
     stretch?: string;
     colormap?: string;
+    smooth?: boolean;
   }): Promise<ComparisonResponse> {
     const res = await fetch(`${API_BASE_URL}/comparison/align`, {
       method: 'POST',
@@ -246,11 +278,56 @@ export const api = {
         target_name: params.targetName || 'Target',
         center_ra: params.centerRa,
         center_dec: params.centerDec,
+        cutout_size_arcsec: params.cutoutSizeArcsec || 180.0,
         stretch: params.stretch || 'asinh',
         colormap: params.colormap || 'inferno',
+        smooth: params.smooth || false,
       }),
     });
     if (!res.ok) throw new Error('Failed to compare observations');
+    return res.json();
+  },
+
+  async getTimeMachineManifest(params: {
+    ra: number;
+    dec: number;
+    targetName?: string;
+    cutoutSizeArcsec?: number;
+    stretch?: string;
+    colormap?: string;
+    smooth?: boolean;
+  }): Promise<TimeMachineManifestResponse> {
+    const res = await fetch(`${API_BASE_URL}/comparison/manifest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ra: params.ra,
+        dec: params.dec,
+        target_name: params.targetName || 'Target Field',
+        cutout_size_arcsec: params.cutoutSizeArcsec || 180.0,
+        stretch: params.stretch || 'asinh',
+        colormap: params.colormap || 'inferno',
+        smooth: params.smooth || false,
+      }),
+    });
+    if (!res.ok) throw new Error('Failed to fetch Time Machine manifest');
+    return res.json();
+  },
+
+  async getHipsMetadata() {
+    const res = await fetch(`${API_BASE_URL}/spectra/hips/metadata`);
+    if (!res.ok) throw new Error('Failed to fetch HiPS metadata');
+    return res.json();
+  },
+
+  async extractSpectrum(params: { ra: number; dec: number; targetName?: string }) {
+    const search = new URLSearchParams({
+      ra: params.ra.toString(),
+      dec: params.dec.toString(),
+    });
+    if (params.targetName) search.append('target_name', params.targetName);
+    const res = await fetch(`${API_BASE_URL}/spectra/extract?${search.toString()}`);
+    if (!res.ok) throw new Error('Failed to extract spectrum');
     return res.json();
   },
 

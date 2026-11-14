@@ -1,89 +1,158 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
-  Clock, Play, Pause, Split, Layers, Sparkles,
-  Sliders, ArrowRight, AlertCircle, RefreshCw, CheckCircle2, ChevronRight
+  Clock, Play, Pause, SkipBack, SkipForward, Repeat,
+  Split, Layers, Sparkles, Sliders, ArrowRight, AlertCircle,
+  RefreshCw, CheckCircle2, ChevronRight, Compass, Eye,
+  Maximize2, Info, Search, MapPin
 } from 'lucide-react';
-import { api, ComparisonResponse, CandidateDetection, ObservationRecord } from '../services/api';
+import {
+  api,
+  ComparisonResponse,
+  CandidateDetection,
+  ObservationRecord,
+  TimeMachineManifestResponse,
+  TimeMachineFrame
+} from '../services/api';
 import { FEATURED_OBJECTS } from '../constants/objects';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { InfoPanel } from '../components/ui/InfoPanel';
 
-type ViewMode = 'side-by-side' | 'slider' | 'blink' | 'difference';
+type ViewMode = 'timelapse' | 'side-by-side' | 'slider' | 'blink' | 'difference';
 
 export const TimeMachine: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Object selection
+  // Selected Target or Custom Coordinates
   const objectParam = searchParams.get('object') || 'barnards-star';
   const selectedObject = FEATURED_OBJECTS.find((o) => o.slug === objectParam) || FEATURED_OBJECTS[0];
 
-  // Comparison mode
-  const [viewMode, setViewMode] = useState<ViewMode>('side-by-side');
+  const [customRa, setCustomRa] = useState<number>(selectedObject.ra);
+  const [customDec, setCustomDec] = useState<number>(selectedObject.dec);
+  const [isCustomMode, setIsCustomMode] = useState<boolean>(false);
 
-  // Observations available from NASA archive
-  const [availableObs, setAvailableObs] = useState<ObservationRecord[]>([]);
+  // Synchronize when query param changes
+  useEffect(() => {
+    if (!isCustomMode) {
+      setCustomRa(selectedObject.ra);
+      setCustomDec(selectedObject.dec);
+    }
+  }, [selectedObject, isCustomMode]);
 
-  // Observations pair
+  // Comparison & View Mode
+  const [viewMode, setViewMode] = useState<ViewMode>('timelapse');
+
+  // Scientific FOV & Display Preferences
+  const [fovArcsec, setFovArcsec] = useState<number>(900.0); // 15 arcminutes default (avoids Minecraft pixelation)
+  const [stretch, setStretch] = useState<string>('asinh');
+  const [colormap, setColormap] = useState<string>('gray'); // Grayscale default as requested
+  const [smooth, setSmooth] = useState<boolean>(true);
+  const [showCompass, setShowCompass] = useState<boolean>(true);
+
+  // Time Machine Multi-Epoch Manifest & Playback state
+  const [manifest, setManifest] = useState<TimeMachineManifestResponse | null>(null);
+  const [currentFrameIndex, setCurrentFrameIndex] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [playbackSpeedMs, setPlaybackSpeedMs] = useState<number>(800);
+  const [loopPlayback, setLoopPlayback] = useState<boolean>(true);
+  const [loadingManifest, setLoadingManifest] = useState<boolean>(true);
+
+  // Comparison pairwise state (for Side-by-Side, Slider, Blink, Difference)
   const [epoch1Id, setEpoch1Id] = useState<string>('2025W35_1A_0444_3');
   const [epoch2Id, setEpoch2Id] = useState<string>('2026W34_2A_0249_1');
-
-  // Comparison data
   const [comparison, setComparison] = useState<ComparisonResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [stretch, setStretch] = useState<string>('asinh');
-  const [colormap, setColormap] = useState<string>('inferno');
+  const [loadingComparison, setLoadingComparison] = useState<boolean>(false);
 
-  // Slider mode state
-  const [sliderPosition, setSliderPosition] = useState<number>(50); // percentage
+  // Slider mode position (0-100%)
+  const [sliderPosition, setSliderPosition] = useState<number>(50);
 
   // Blink mode state
   const [blinkIndex, setBlinkIndex] = useState<number>(0);
   const [isBlinking, setIsBlinking] = useState<boolean>(true);
-  const [blinkSpeedMs, setBlinkSpeedMs] = useState<number>(500);
+  const [blinkSpeedMs, setBlinkSpeedMs] = useState<number>(400);
 
-  // Fetch authentic observations for target from NASA IRSA archive
+  // Fetch authentic Time Machine Manifest (all chronological SPHEREx frames)
   useEffect(() => {
-    api.getObservations({ objectId: selectedObject.id, limit: 30 })
-      .then((res) => {
-        if (res.observations && res.observations.length > 0) {
-          setAvailableObs(res.observations);
-          // Pick two distinct observation IDs if available
-          const distinctObsIds = Array.from(new Set(res.observations.map((o) => o.obs_id)));
-          if (distinctObsIds.length >= 2) {
-            setEpoch1Id(distinctObsIds[0]);
-            setEpoch2Id(distinctObsIds[1]);
-          } else if (distinctObsIds.length === 1) {
-            setEpoch1Id(distinctObsIds[0]);
-            setEpoch2Id(distinctObsIds[0]);
+    let isCancelled = false;
+    setLoadingManifest(true);
+
+    api.getTimeMachineManifest({
+      ra: customRa,
+      dec: customDec,
+      targetName: isCustomMode ? `Custom (${customRa.toFixed(4)}°, ${customDec.toFixed(4)}°)` : selectedObject.name,
+      cutoutSizeArcsec: fovArcsec,
+      stretch: stretch,
+      colormap: colormap,
+      smooth: smooth,
+    })
+      .then((data) => {
+        if (!isCancelled) {
+          setManifest(data);
+          setCurrentFrameIndex(0);
+          if (data.frames.length >= 2) {
+            setEpoch1Id(data.frames[0].obs_id);
+            setEpoch2Id(data.frames[data.frames.length - 1].obs_id);
           }
         }
       })
-      .catch((err) => console.warn('Could not fetch observations list:', err));
-  }, [selectedObject.id]);
+      .catch((err) => console.error('Manifest fetch error:', err))
+      .finally(() => {
+        if (!isCancelled) setLoadingManifest(false);
+      });
 
-  // Run alignment and comparison on real FITS products
+    return () => {
+      isCancelled = true;
+    };
+  }, [customRa, customDec, fovArcsec, stretch, colormap, smooth, selectedObject, isCustomMode]);
+
+  // Fetch pairwise Comparison when pairwise modes are active
   useEffect(() => {
-    setLoading(true);
+    if (viewMode === 'timelapse') return;
+
+    let isCancelled = false;
+    setLoadingComparison(true);
+
     api.compareObservations({
       obsId1: epoch1Id,
       obsId2: epoch2Id,
-      targetName: selectedObject.name,
-      centerRa: selectedObject.ra,
-      centerDec: selectedObject.dec,
+      targetName: isCustomMode ? 'Custom Sky Region' : selectedObject.name,
+      centerRa: customRa,
+      centerDec: customDec,
+      cutoutSizeArcsec: fovArcsec,
       stretch: stretch,
       colormap: colormap,
+      smooth: smooth,
     })
       .then((data) => {
-        setComparison(data);
+        if (!isCancelled) setComparison(data);
       })
-      .catch((err) => {
-        console.error('Comparison error:', err);
-      })
-      .finally(() => setLoading(false));
-  }, [selectedObject.name, selectedObject.ra, selectedObject.dec, epoch1Id, epoch2Id, stretch, colormap]);
+      .catch((err) => console.error('Comparison error:', err))
+      .finally(() => {
+        if (!isCancelled) setLoadingComparison(false);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [viewMode, epoch1Id, epoch2Id, customRa, customDec, fovArcsec, stretch, colormap, smooth, selectedObject, isCustomMode]);
+
+  // Video Timelapse animation interval
+  useEffect(() => {
+    if (viewMode !== 'timelapse' || !isPlaying || !manifest || manifest.frames.length <= 1) return;
+
+    const timer = setInterval(() => {
+      setCurrentFrameIndex((prev) => {
+        if (prev >= manifest.frames.length - 1) {
+          return loopPlayback ? 0 : prev;
+        }
+        return prev + 1;
+      });
+    }, playbackSpeedMs);
+
+    return () => clearInterval(timer);
+  }, [viewMode, isPlaying, manifest, playbackSpeedMs, loopPlayback]);
 
   // Blink interval timer
   useEffect(() => {
@@ -94,196 +163,369 @@ export const TimeMachine: React.FC = () => {
     return () => clearInterval(interval);
   }, [viewMode, isBlinking, blinkSpeedMs]);
 
-  // Calculate genuine observation dates and baseline
-  const date1Str = comparison?.observation_1?.date_obs || '2025-08-27';
-  const date2Str = comparison?.observation_2?.date_obs || '2026-08-21';
-  let deltaDays = 359;
-  try {
-    const t1 = new Date(date1Str.slice(0, 10)).getTime();
-    const t2 = new Date(date2Str.slice(0, 10)).getTime();
-    if (!isNaN(t1) && !isNaN(t2)) {
-      deltaDays = Math.round(Math.abs(t2 - t1) / (1000 * 3600 * 24));
-    }
-  } catch (e) {
-    // fallback
-  }
+  const activeFrame: TimeMachineFrame | undefined = manifest?.frames[currentFrameIndex];
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
-      {/* Page Title */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Clock className="w-5 h-5 text-[#6EA8FE]" />
-            <h1 className="text-2xl font-bold text-[#E8EDF5]">Time Machine</h1>
+            <h1 className="text-2xl font-bold text-[#E8EDF5]">SPHEREx Time Machine</h1>
+            <Badge variant="blue">NASA Planet X Challenge</Badge>
           </div>
           <p className="text-sm text-[#94A3B8]">
-            Compare observations taken at different dates to identify moving or variable objects
+            Multi-epoch time-domain astronomical observation player across actual NASA SPHEREx observation dates
           </p>
         </div>
 
-        {/* Target Object Selector */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-[#94A3B8]">Target:</span>
+        {/* Target Presets & Coordinate Input */}
+        <div data-tour="target-selector" className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-[#94A3B8]">Target Preset:</span>
           <select
-            value={selectedObject.slug}
-            onChange={(e) => navigate(`/time-machine?object=${e.target.value}`)}
-            className="bg-[#151E30] border border-[#263247] text-[#E8EDF5] text-sm rounded px-3 py-1.5 focus:outline-none focus:border-[#6EA8FE]"
+            value={isCustomMode ? 'custom' : selectedObject.slug}
+            onChange={(e) => {
+              if (e.target.value === 'custom') {
+                setIsCustomMode(true);
+              } else {
+                setIsCustomMode(false);
+                navigate(`/time-machine?object=${e.target.value}`);
+              }
+            }}
+            className="bg-[#151E30] border border-[#263247] text-[#E8EDF5] text-xs rounded px-3 py-1.5 focus:outline-none focus:border-[#6EA8FE]"
           >
             {FEATURED_OBJECTS.map((obj) => (
               <option key={obj.id} value={obj.slug}>
                 {obj.name} ({obj.type})
               </option>
             ))}
+            <option value="custom">⚙️ Custom Coordinates (RA / Dec)…</option>
           </select>
         </div>
       </div>
 
-      {/* Observation Timeline Bar */}
-      <div className="bg-[#151E30] border border-[#263247] rounded p-4 mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider">
-              Authentic NASA Epoch Pair:
-            </span>
-            {availableObs.length > 0 && (
-              <div className="flex items-center gap-2">
-                <select
-                  value={epoch1Id}
-                  onChange={(e) => setEpoch1Id(e.target.value)}
-                  className="bg-[#0B1020] border border-[#263247] text-[#6EA8FE] text-xs rounded px-2 py-1 max-w-[190px] truncate"
-                >
-                  {Array.from(new Set(availableObs.map((o) => o.obs_id))).map((oid) => {
-                    const ob = availableObs.find((o) => o.obs_id === oid);
-                    return (
-                      <option key={`ep1-${oid}`} value={oid}>
-                        E1: {oid} ({ob?.date_obs ? ob.date_obs.slice(0, 10) : 'IRSA'}) [{ob?.bandpass}]
-                      </option>
-                    );
-                  })}
-                </select>
-                <span className="text-[#94A3B8]">vs</span>
-                <select
-                  value={epoch2Id}
-                  onChange={(e) => setEpoch2Id(e.target.value)}
-                  className="bg-[#0B1020] border border-[#263247] text-[#F3B85B] text-xs rounded px-2 py-1 max-w-[190px] truncate"
-                >
-                  {Array.from(new Set(availableObs.map((o) => o.obs_id))).map((oid) => {
-                    const ob = availableObs.find((o) => o.obs_id === oid);
-                    return (
-                      <option key={`ep2-${oid}`} value={oid}>
-                        E2: {oid} ({ob?.date_obs ? ob.date_obs.slice(0, 10) : 'IRSA'}) [{ob?.bandpass}]
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-            )}
+      {/* Custom Coordinates Bar (when custom selected) */}
+      {isCustomMode && (
+        <div className="bg-[#151E30] border border-[#263247] rounded-lg p-3.5 mb-6 flex flex-wrap items-center gap-4 text-xs">
+          <div className="flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-[#6EA8FE]" />
+            <span className="font-semibold text-[#E8EDF5]">Custom Celestial Coordinates:</span>
           </div>
-          <div className="flex items-center gap-3 text-xs font-mono">
-            <span className="text-[#6EA8FE]">Epoch 1: {date1Str.slice(0, 10)}</span>
-            <span className="text-[#94A3B8]">➔</span>
-            <span className="text-[#F3B85B]">Epoch 2: {date2Str.slice(0, 10)}</span>
-            <span className="text-[#94A3B8]">· Δt = {deltaDays} days</span>
+          <div className="flex items-center gap-2">
+            <label className="text-[#94A3B8]">RA (deg):</label>
+            <input
+              type="number"
+              step="0.0001"
+              min="0"
+              max="360"
+              value={customRa}
+              onChange={(e) => setCustomRa(parseFloat(e.target.value) || 0)}
+              className="bg-[#0B1020] border border-[#263247] text-[#E8EDF5] px-2 py-1 rounded w-28 focus:outline-none focus:border-[#6EA8FE]"
+            />
           </div>
+          <div className="flex items-center gap-2">
+            <label className="text-[#94A3B8]">Dec (deg):</label>
+            <input
+              type="number"
+              step="0.0001"
+              min="-90"
+              max="90"
+              value={customDec}
+              onChange={(e) => setCustomDec(parseFloat(e.target.value) || 0)}
+              className="bg-[#0B1020] border border-[#263247] text-[#E8EDF5] px-2 py-1 rounded w-28 focus:outline-none focus:border-[#6EA8FE]"
+            />
+          </div>
+          <span className="text-[11px] text-[#94A3B8] font-mono">
+            Searching genuine SPHEREx DR1 Level 2 footprint coverage…
+          </span>
         </div>
+      )}
 
-        {/* Display modes buttons */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#263247]">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-[#94A3B8] mr-1">Mode:</span>
+      {/* Control Strip: Modes, FOV, Palettes, Stretches */}
+      <div className="bg-[#151E30] border border-[#263247] rounded-t-lg p-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Mode Selector */}
+          <div data-tour="comparison-modes" className="flex items-center gap-1.5 flex-wrap">
             <button
-              onClick={() => setViewMode('side-by-side')}
-              className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors cursor-pointer ${
+              onClick={() => { setViewMode('timelapse'); setIsPlaying(true); }}
+              className={`px-3 py-1.5 text-xs font-medium rounded border transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === 'timelapse'
+                  ? 'bg-[#2563EB] text-white border-[#3B82F6] shadow-sm'
+                  : 'bg-[#0B1020] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+              }`}
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              <span>Time-Lapse Movie</span>
+            </button>
+            <button
+              onClick={() => { setViewMode('side-by-side'); setIsPlaying(false); }}
+              className={`px-3 py-1.5 text-xs font-medium rounded border transition-all cursor-pointer ${
                 viewMode === 'side-by-side'
-                  ? 'bg-[#6EA8FE] text-[#0B1020] border-[#6EA8FE]'
-                  : 'bg-transparent text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+                  ? 'bg-[#2563EB] text-white border-[#3B82F6]'
+                  : 'bg-[#0B1020] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
               }`}
             >
               Side-by-Side
             </button>
             <button
-              onClick={() => setViewMode('slider')}
-              className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors cursor-pointer ${
+              onClick={() => { setViewMode('slider'); setIsPlaying(false); }}
+              className={`px-3 py-1.5 text-xs font-medium rounded border transition-all cursor-pointer ${
                 viewMode === 'slider'
-                  ? 'bg-[#6EA8FE] text-[#0B1020] border-[#6EA8FE]'
-                  : 'bg-transparent text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+                  ? 'bg-[#2563EB] text-white border-[#3B82F6]'
+                  : 'bg-[#0B1020] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
               }`}
             >
-              Comparison Slider
+              Split Slider
             </button>
             <button
-              onClick={() => setViewMode('blink')}
-              className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors cursor-pointer ${
+              onClick={() => { setViewMode('blink'); setIsPlaying(false); }}
+              className={`px-3 py-1.5 text-xs font-medium rounded border transition-all cursor-pointer ${
                 viewMode === 'blink'
-                  ? 'bg-[#6EA8FE] text-[#0B1020] border-[#6EA8FE]'
-                  : 'bg-transparent text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+                  ? 'bg-[#2563EB] text-white border-[#3B82F6]'
+                  : 'bg-[#0B1020] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
               }`}
             >
               Blink Mode
             </button>
             <button
-              onClick={() => setViewMode('difference')}
-              className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors cursor-pointer ${
+              onClick={() => { setViewMode('difference'); setIsPlaying(false); }}
+              className={`px-3 py-1.5 text-xs font-medium rounded border transition-all cursor-pointer ${
                 viewMode === 'difference'
-                  ? 'bg-[#6EA8FE] text-[#0B1020] border-[#6EA8FE]'
-                  : 'bg-transparent text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+                  ? 'bg-[#2563EB] text-white border-[#3B82F6]'
+                  : 'bg-[#0B1020] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
               }`}
             >
-              Difference Image (Later − Earlier)
+              Difference Map
             </button>
           </div>
 
-          {/* Controls: stretch & colormap */}
-          <div className="flex items-center gap-2">
-            <select
-              value={stretch}
-              onChange={(e) => setStretch(e.target.value)}
-              className="bg-[#0B1020] border border-[#263247] text-[#94A3B8] text-xs rounded px-2 py-1 focus:outline-none focus:border-[#6EA8FE]"
-            >
-              <option value="asinh">Asinh Stretch</option>
-              <option value="linear">Linear</option>
-              <option value="sqrt">Square Root</option>
-              <option value="log">Log</option>
-            </select>
-            <select
-              value={colormap}
-              onChange={(e) => setColormap(e.target.value)}
-              className="bg-[#0B1020] border border-[#263247] text-[#94A3B8] text-xs rounded px-2 py-1 focus:outline-none focus:border-[#6EA8FE]"
-            >
-              <option value="inferno">Inferno</option>
-              <option value="viridis">Viridis</option>
-              <option value="magma">Magma</option>
-              <option value="gray">Grayscale</option>
-            </select>
+          {/* Scientific FOV, Palette, Stretch & Smoothing Controls */}
+          <div className="flex items-center gap-3 text-xs flex-wrap">
+            {/* FOV Dropdown */}
+            <div data-tour="fov-selector" className="flex items-center gap-1.5">
+              <span className="text-[#94A3B8]">FOV:</span>
+              <select
+                value={fovArcsec}
+                onChange={(e) => setFovArcsec(Number(e.target.value))}
+                className="bg-[#0B1020] border border-[#263247] text-[#6EA8FE] font-mono text-xs rounded px-2 py-1 focus:outline-none focus:border-[#6EA8FE]"
+              >
+                <option value={120}>2′ (120″) High Zoom</option>
+                <option value={300}>5′ (300″) Star Field</option>
+                <option value={600}>10′ (600″) Medium</option>
+                <option value={900}>15′ (900″) Recommended</option>
+                <option value={1800}>30′ (1800″) Wide Field</option>
+              </select>
+            </div>
+
+            {/* Display Stretch & Colormap */}
+            <div data-tour="display-stretch" className="flex items-center gap-1.5">
+              <select
+                value={stretch}
+                onChange={(e) => setStretch(e.target.value)}
+                className="bg-[#0B1020] border border-[#263247] text-[#94A3B8] text-xs rounded px-2 py-1 focus:outline-none focus:border-[#6EA8FE]"
+              >
+                <option value="asinh">Asinh Stretch</option>
+                <option value="linear">Linear</option>
+                <option value="sqrt">Square Root</option>
+                <option value="log">Log</option>
+              </select>
+              <select
+                value={colormap}
+                onChange={(e) => setColormap(e.target.value)}
+                className="bg-[#0B1020] border border-[#263247] text-[#94A3B8] text-xs rounded px-2 py-1 focus:outline-none focus:border-[#6EA8FE]"
+              >
+                <option value="gray">Grayscale (Standard)</option>
+                <option value="inferno">Inferno</option>
+                <option value="viridis">Viridis</option>
+                <option value="magma">Magma</option>
+              </select>
+            </div>
+
+            {/* Smooth Display Toggle */}
+            <label className="flex items-center gap-1.5 text-[#94A3B8] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={smooth}
+                onChange={(e) => setSmooth(e.target.checked)}
+                className="accent-[#6EA8FE] rounded"
+              />
+              <span>Smooth</span>
+            </label>
           </div>
         </div>
       </div>
 
-      {/* Interactive Viewer Canvas */}
-      <div className="bg-[#151E30] border border-[#263247] rounded p-6 mb-6">
-        {loading ? (
-          <div className="aspect-[16/9] flex flex-col items-center justify-center text-center">
+      {/* Main Astronomical Canvas Container */}
+      <div className="bg-[#111927] border-x border-[#263247] p-6 relative">
+        {loadingManifest && viewMode === 'timelapse' ? (
+          <div className="aspect-[4/3] max-w-2xl mx-auto flex flex-col items-center justify-center text-center">
             <RefreshCw className="w-8 h-8 text-[#6EA8FE] animate-spin mb-3" />
-            <h4 className="text-sm font-semibold text-[#E8EDF5] mb-1">Aligning Observations with Astropy WCS…</h4>
+            <h4 className="text-sm font-semibold text-[#E8EDF5] mb-1">
+              Loading Authentic NASA SPHEREx Observations…
+            </h4>
             <p className="text-xs text-[#94A3B8] max-w-sm">
-              Reprojecting epochs onto common tangent coordinate grid and computing background statistics.
+              Retrieving calibrated Level 2 FITS arrays and aligning onto fixed tangent celestial grid.
             </p>
           </div>
-        ) : comparison ? (
+        ) : (
           <div>
-            {/* Mode A: Side-by-Side */}
-            {viewMode === 'side-by-side' && (
+            {/* MODE 1: TIME-LAPSE MOVIE (Mandatory Core NASA Challenge) */}
+            {viewMode === 'timelapse' && activeFrame && (
+              <div className="max-w-2xl mx-auto">
+                {/* HUD Top Bar */}
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="blue">
+                      Epoch {activeFrame.frame_index + 1} of {manifest?.total_frames || 1}
+                    </Badge>
+                    <span className="font-semibold text-[#E8EDF5]">{activeFrame.date_display}</span>
+                    <span className="text-[#94A3B8] font-mono text-[11px]">[{activeFrame.bandpass}]</span>
+                  </div>
+                  <div className="text-[11px] font-mono text-[#6EA8FE]">
+                    ObsID: {activeFrame.obs_id}
+                  </div>
+                </div>
+
+                {/* Astronomical Viewport */}
+                <div className="relative aspect-square bg-[#0B1020] border border-[#263247] rounded-lg overflow-hidden shadow-2xl flex items-center justify-center">
+                  <img
+                    src={activeFrame.image_base64}
+                    alt={`Observation ${activeFrame.date_display}`}
+                    className="w-full h-full object-contain"
+                  />
+
+                  {/* Celestial Compass (North / East) */}
+                  {showCompass && (
+                    <div className="absolute top-3 left-3 bg-[#0B1020]/80 border border-[#263247] rounded px-2 py-1 text-[10px] text-[#94A3B8] flex items-center gap-1.5 shadow backdrop-blur-sm pointer-events-none">
+                      <Compass className="w-3.5 h-3.5 text-[#6EA8FE]" />
+                      <span>N ↑ &nbsp; E ←</span>
+                    </div>
+                  )}
+
+                  {/* Physical Angular Scale Bar */}
+                  <div className="absolute bottom-3 right-3 bg-[#0B1020]/85 border border-[#263247] rounded px-2.5 py-1 text-[10px] font-mono text-[#94A3B8] flex flex-col items-end gap-0.5 shadow backdrop-blur-sm pointer-events-none">
+                    <div className="w-16 h-0.5 bg-[#6EA8FE]" />
+                    <span>~{Math.round(fovArcsec / 4)}"</span>
+                  </div>
+                </div>
+
+                {/* Video Playback Controls Bar */}
+                <div data-tour="timelapse-player" className="mt-4 bg-[#151E30] border border-[#263247] rounded-lg p-3">
+                  <div className="flex items-center justify-between gap-4 mb-2.5">
+                    {/* Play/Pause & Step Buttons */}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant={isPlaying ? 'secondary' : 'primary'}
+                        onClick={() => setIsPlaying(!isPlaying)}
+                        leftIcon={isPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                      >
+                        {isPlaying ? 'Pause' : 'Play Time-Lapse'}
+                      </Button>
+
+                      <button
+                        onClick={() => {
+                          setIsPlaying(false);
+                          setCurrentFrameIndex((prev) => Math.max(0, prev - 1));
+                        }}
+                        disabled={currentFrameIndex === 0}
+                        className="p-1.5 rounded bg-[#0B1020] border border-[#263247] text-[#94A3B8] hover:text-[#E8EDF5] disabled:opacity-40"
+                        title="Previous Epoch"
+                      >
+                        <SkipBack className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setIsPlaying(false);
+                          setCurrentFrameIndex((prev) => Math.min((manifest?.frames.length || 1) - 1, prev + 1));
+                        }}
+                        disabled={!manifest || currentFrameIndex === manifest.frames.length - 1}
+                        className="p-1.5 rounded bg-[#0B1020] border border-[#263247] text-[#94A3B8] hover:text-[#E8EDF5] disabled:opacity-40"
+                        title="Next Epoch"
+                      >
+                        <SkipForward className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        onClick={() => setLoopPlayback(!loopPlayback)}
+                        className={`p-1.5 rounded border text-xs transition-colors ${
+                          loopPlayback
+                            ? 'bg-[#1a2540] border-[#6EA8FE] text-[#6EA8FE]'
+                            : 'bg-[#0B1020] border-[#263247] text-[#94A3B8]'
+                        }`}
+                        title="Loop Playback"
+                      >
+                        <Repeat className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Playback Speed Selector */}
+                    <div className="flex items-center gap-1.5 text-xs text-[#94A3B8]">
+                      <span>Speed:</span>
+                      <select
+                        value={playbackSpeedMs}
+                        onChange={(e) => setPlaybackSpeedMs(Number(e.target.value))}
+                        className="bg-[#0B1020] border border-[#263247] text-[#E8EDF5] text-xs rounded px-2 py-1"
+                      >
+                        <option value={1200}>0.5× Slow</option>
+                        <option value={800}>1.0× Normal</option>
+                        <option value={400}>2.0× Fast</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Scrubber Timeline */}
+                  <div className="space-y-1">
+                    <input
+                      type="range"
+                      min="0"
+                      max={(manifest?.frames.length || 1) - 1}
+                      value={currentFrameIndex}
+                      onChange={(e) => {
+                        setIsPlaying(false);
+                        setCurrentFrameIndex(Number(e.target.value));
+                      }}
+                      className="w-full accent-[#6EA8FE] cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[11px] font-mono text-[#94A3B8]">
+                      {manifest?.frames.map((f, i) => (
+                        <button
+                          key={f.obs_id}
+                          onClick={() => {
+                            setIsPlaying(false);
+                            setCurrentFrameIndex(i);
+                          }}
+                          className={`hover:text-[#6EA8FE] transition-colors ${
+                            i === currentFrameIndex ? 'text-[#6EA8FE] font-bold underline' : ''
+                          }`}
+                        >
+                          {f.date_display}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* MODE 2: SIDE-BY-SIDE PAIRWISE COMPARISON */}
+            {viewMode === 'side-by-side' && comparison && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-[#6EA8FE]">Earlier Observation (Epoch 1)</span>
-                    <span className="text-[11px] font-mono text-[#94A3B8]">{epoch1Id}</span>
+                    <span className="text-xs font-semibold text-[#6EA8FE]">
+                      Earlier Epoch: {comparison.observation_1?.date_obs?.slice(0, 10)}
+                    </span>
+                    <span className="text-[11px] font-mono text-[#94A3B8]">
+                      {comparison.observation_1?.obs_id}
+                    </span>
                   </div>
-                  <div className="aspect-square bg-[#0B1020] border border-[#263247] rounded overflow-hidden">
+                  <div className="aspect-square bg-[#0B1020] border border-[#263247] rounded-lg overflow-hidden">
                     <img
                       src={comparison.epoch1_image_base64}
-                      alt="Earlier epoch"
+                      alt="Earlier Epoch"
                       className="w-full h-full object-contain"
                     />
                   </div>
@@ -291,13 +533,17 @@ export const TimeMachine: React.FC = () => {
 
                 <div className="flex flex-col">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-[#F3B85B]">Later Observation (Epoch 2)</span>
-                    <span className="text-[11px] font-mono text-[#94A3B8]">{epoch2Id}</span>
+                    <span className="text-xs font-semibold text-[#F3B85B]">
+                      Later Epoch: {comparison.observation_2?.date_obs?.slice(0, 10)}
+                    </span>
+                    <span className="text-[11px] font-mono text-[#94A3B8]">
+                      {comparison.observation_2?.obs_id}
+                    </span>
                   </div>
-                  <div className="aspect-square bg-[#0B1020] border border-[#263247] rounded overflow-hidden">
+                  <div className="aspect-square bg-[#0B1020] border border-[#263247] rounded-lg overflow-hidden">
                     <img
                       src={comparison.epoch2_image_base64}
-                      alt="Later epoch"
+                      alt="Later Epoch"
                       className="w-full h-full object-contain"
                     />
                   </div>
@@ -305,14 +551,14 @@ export const TimeMachine: React.FC = () => {
               </div>
             )}
 
-            {/* Mode B: Comparison Slider */}
-            {viewMode === 'slider' && (
-              <div>
+            {/* MODE 3: SPLIT SLIDER COMPARISON */}
+            {viewMode === 'slider' && comparison && (
+              <div className="max-w-xl mx-auto">
                 <div className="flex items-center justify-between mb-2 text-xs text-[#94A3B8]">
                   <span>Drag slider to reveal Earlier (left) vs Later (right)</span>
-                  <span className="font-mono">{sliderPosition}%</span>
+                  <span className="font-mono text-[#6EA8FE]">{sliderPosition}%</span>
                 </div>
-                <div className="relative aspect-square max-w-xl mx-auto bg-[#0B1020] border border-[#263247] rounded overflow-hidden select-none">
+                <div className="relative aspect-square bg-[#0B1020] border border-[#263247] rounded-lg overflow-hidden select-none">
                   {/* Later image full background */}
                   <img
                     src={comparison.epoch2_image_base64}
@@ -341,8 +587,7 @@ export const TimeMachine: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                {/* Range input controller */}
-                <div className="max-w-xl mx-auto mt-4 px-2">
+                <div className="mt-4 px-2">
                   <input
                     type="range"
                     min="0"
@@ -355,8 +600,8 @@ export const TimeMachine: React.FC = () => {
               </div>
             )}
 
-            {/* Mode C: Blink Mode */}
-            {viewMode === 'blink' && (
+            {/* MODE 4: BLINK MODE */}
+            {viewMode === 'blink' && comparison && (
               <div className="max-w-xl mx-auto text-center">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -370,8 +615,8 @@ export const TimeMachine: React.FC = () => {
                     </Button>
                     <Badge variant={blinkIndex === 0 ? 'blue' : 'amber'}>
                       {blinkIndex === 0
-                        ? `Epoch 1: ${date1Str.slice(0, 10)} (${comparison?.observation_1?.obs_id || epoch1Id})`
-                        : `Epoch 2: ${date2Str.slice(0, 10)} (${comparison?.observation_2?.obs_id || epoch2Id})`}
+                        ? `Epoch 1: ${comparison.observation_1?.date_obs?.slice(0, 10)}`
+                        : `Epoch 2: ${comparison.observation_2?.date_obs?.slice(0, 10)}`}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-[#94A3B8]">
@@ -381,14 +626,14 @@ export const TimeMachine: React.FC = () => {
                       onChange={(e) => setBlinkSpeedMs(Number(e.target.value))}
                       className="bg-[#0B1020] border border-[#263247] text-[#94A3B8] text-xs rounded px-2 py-1"
                     >
-                      <option value={300}>Fast (300ms)</option>
-                      <option value={500}>Normal (500ms)</option>
-                      <option value={800}>Slow (800ms)</option>
+                      <option value={250}>Fast (250ms)</option>
+                      <option value={400}>Normal (400ms)</option>
+                      <option value={700}>Slow (700ms)</option>
                     </select>
                   </div>
                 </div>
 
-                <div className="aspect-square bg-[#0B1020] border border-[#263247] rounded overflow-hidden">
+                <div className="aspect-square bg-[#0B1020] border border-[#263247] rounded-lg overflow-hidden">
                   <img
                     src={blinkIndex === 0 ? comparison.epoch1_image_base64 : comparison.epoch2_image_base64}
                     alt="Blink view"
@@ -396,35 +641,37 @@ export const TimeMachine: React.FC = () => {
                   />
                 </div>
                 <p className="text-xs text-[#94A3B8] mt-3">
-                  Astronomers use blink comparators to easily detect motion: stationary stars remain steady while moving asteroids or stars jump back and forth!
+                  Astronomers use blink comparators to identify cosmic change: stationary stars remain steady while moving asteroids or variable stars jump!
                 </p>
               </div>
             )}
 
-            {/* Mode D: Difference Image */}
-            {viewMode === 'difference' && (
+            {/* MODE 5: DIFFERENCE MAP */}
+            {viewMode === 'difference' && comparison && (
               <div className="max-w-2xl mx-auto">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold text-[#E8EDF5]">
                     Scientific Difference Image: Epoch 2 − Epoch 1
                   </span>
-                  <Badge variant="purple">Sigma-clipped background subtraction</Badge>
+                  <Badge variant="purple">Coolwarm Diverging Normalization</Badge>
                 </div>
 
-                <div className="aspect-square bg-[#0B1020] border border-[#263247] rounded overflow-hidden mb-4">
+                <div className="aspect-square bg-[#0B1020] border border-[#263247] rounded-lg overflow-hidden mb-4">
                   {comparison.difference_image_base64 ? (
                     <img
                       src={comparison.difference_image_base64}
                       alt="Difference image"
                       className="w-full h-full object-contain"
                     />
-                  ) : null}
+                  ) : (
+                    <p className="text-xs text-[#94A3B8] p-6 text-center">Calculating difference...</p>
+                  )}
                 </div>
 
                 <div className="text-xs text-[#94A3B8] space-y-1">
                   <div className="flex items-center gap-1.5 text-green-400">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Difference calculation: stationary background sources successfully subtracted to zero signal.</span>
+                    <span>Stationary celestial background is subtracted out cleanly to zero signal.</span>
                   </div>
                   <p>
                     A moving source produces a dipole signature: a negative deficit at the earlier coordinate and a positive excess at the later coordinate.
@@ -433,7 +680,29 @@ export const TimeMachine: React.FC = () => {
               </div>
             )}
           </div>
-        ) : null}
+        )}
+      </div>
+
+      {/* Scientific Metadata & Provenance Drawer */}
+      <div className="bg-[#151E30] border border-t-0 border-[#263247] rounded-b-lg p-4 mb-6 text-xs text-[#94A3B8]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div>
+            <span className="block text-[10px] uppercase font-semibold text-[#64748B]">Telescope & Level</span>
+            <span className="text-[#E8EDF5] font-mono">NASA SPHEREx (Level 2)</span>
+          </div>
+          <div>
+            <span className="block text-[10px] uppercase font-semibold text-[#64748B]">Native Pixel Scale</span>
+            <span className="text-[#E8EDF5] font-mono">6.15 arcsec / pixel</span>
+          </div>
+          <div>
+            <span className="block text-[10px] uppercase font-semibold text-[#64748B]">Calibration Units</span>
+            <span className="text-[#E8EDF5] font-mono">MJy / sr (Calibrated)</span>
+          </div>
+          <div>
+            <span className="block text-[10px] uppercase font-semibold text-[#64748B]">Archive Provenance</span>
+            <span className="text-[#6EA8FE] font-mono">NASA/IPAC IRSA TAP</span>
+          </div>
+        </div>
       </div>
 
       {/* Candidate Detections Section */}
@@ -443,7 +712,7 @@ export const TimeMachine: React.FC = () => {
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#F3B85B]" />
               <h3 className="text-base font-semibold text-[#E8EDF5]">
-                Candidate Astronomical Detections ({comparison.candidates.length})
+                Detected Candidate Changes ({comparison.candidates.length})
               </h3>
             </div>
             <Button
@@ -451,7 +720,7 @@ export const TimeMachine: React.FC = () => {
               size="sm"
               onClick={() => navigate(`/discovery-lab?object=${selectedObject.slug}`)}
             >
-              Analyze in Discovery Lab
+              Inspect in Discovery Lab →
             </Button>
           </div>
 
@@ -476,18 +745,18 @@ export const TimeMachine: React.FC = () => {
       )}
 
       {/* Educational info panel */}
-      <InfoPanel title="How does cross-epoch change detection work?">
+      <InfoPanel title="How does time-domain astronomical discovery work?">
         <p>
-          Astronomers compare telescope observations taken weeks, months, or years apart to discover dynamic phenomena.
+          NASA’s SPHEREx mission visits every patch of sky approximately every six months. By comparing observations taken on different dates, astronomers track what moves and what changes:
         </p>
         <p>
-          <strong className="text-[#E8EDF5]">Moving Objects:</strong> Asteroids, comets, and high-proper-motion stars change their celestial coordinates (RA/Dec) over time relative to distant background stars.
+          <strong className="text-[#E8EDF5]">Moving Objects:</strong> Nearby stars with high proper motion (like Barnard’s Star) and cold brown dwarfs (like WISE 0855) shift their celestial coordinates across months and years.
         </p>
         <p>
-          <strong className="text-[#E8EDF5]">Variable Stars:</strong> Stars that pulsate, flare, or are eclipsed by orbiting companions change in brightness while remaining at the exact same sky position.
+          <strong className="text-[#E8EDF5]">Variable Sources:</strong> Young stellar systems (like RW Aurigae) and pulsating Mira stars (like R Draconis) change brightness while remaining stationary on the celestial sphere.
         </p>
         <p>
-          <strong className="text-[#E8EDF5]">Scientific Limitations:</strong> Changes in atmospheric conditions, detector gain, optical alignment, and pointing jitter can mimic astronomical changes. All detections are marked as <em className="text-[#F3B85B]">candidate features</em> until verified against calibration standards.
+          <strong className="text-[#E8EDF5]">Scientific Integrity:</strong> All images are extracted from authentic NASA Level 2 SPHEREx FITS products with celestial WCS reprojection. No synthetic Gaussian stars or simulated motions are used.
         </p>
       </InfoPanel>
     </div>

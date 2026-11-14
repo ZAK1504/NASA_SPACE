@@ -7,18 +7,18 @@ import {
 } from 'lucide-react';
 
 const PRIMARY = [
-  { to: '/',            icon: Telescope,    label: 'Home',             exact: true },
-  { to: '/explore',     icon: Map,          label: 'Explore Sky' },
-  { to: '/objects',     icon: Star,         label: 'Object Explorer' },
-  { to: '/time-machine',icon: Clock,        label: 'Time Machine' },
+  { to: '/',            icon: Telescope,    label: 'Home',             exact: true, tourId: 'nav-home' },
+  { to: '/explore',     icon: Map,          label: 'Explore Sky',                   tourId: 'nav-explore' },
+  { to: '/objects',     icon: Star,         label: 'Object Explorer',               tourId: 'nav-objects' },
+  { to: '/time-machine',icon: Clock,        label: 'Time Machine',                  tourId: 'nav-timemachine' },
 ];
 
 const SECONDARY = [
-  { to: '/discovery-lab', icon: FlaskConical, label: 'Discovery Lab' },
-  { to: '/spectra',       icon: BarChart2,    label: 'Spectral Explorer' },
-  { to: '/light-curves',  icon: Activity,     label: 'Light Curves' },
-  { to: '/missions',      icon: Target,       label: 'Missions' },
-  { to: '/discoveries',   icon: BookOpen,     label: 'My Discoveries' },
+  { to: '/discovery-lab', icon: FlaskConical, label: 'Discovery Lab',               tourId: 'nav-discovery' },
+  { to: '/spectra',       icon: BarChart2,    label: 'Spectral Explorer',           tourId: 'nav-spectral' },
+  { to: '/light-curves',  icon: Activity,     label: 'Light Curves',                tourId: 'nav-lightcurves' },
+  { to: '/missions',      icon: Target,       label: 'Missions',                    tourId: 'nav-missions' },
+  { to: '/discoveries',   icon: BookOpen,     label: 'My Discoveries',              tourId: 'nav-discoveries' },
 ];
 
 export const Sidebar: React.FC = () => {
@@ -49,12 +49,13 @@ export const Sidebar: React.FC = () => {
         <div className="text-[10px] font-bold text-[#94A3B8]/70 uppercase tracking-widest px-3 mb-2 flex items-center justify-between">
           <span>Observation</span>
         </div>
-        {PRIMARY.map(({ to, icon: Icon, label, exact }) => {
+        {PRIMARY.map(({ to, icon: Icon, label, exact, tourId }) => {
           const active = exact ? pathname === to : pathname.startsWith(to);
           return (
             <NavLink
               key={to}
               to={to}
+              data-tour={tourId}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 active
                   ? 'text-[#6EA8FE] bg-[#1a2540] border-l-2 border-[#6EA8FE] pl-[10px] shadow-sm'
@@ -70,12 +71,13 @@ export const Sidebar: React.FC = () => {
         <div className="text-[10px] font-bold text-[#94A3B8]/70 uppercase tracking-widest px-3 mt-6 mb-2 flex items-center justify-between">
           <span>Investigation</span>
         </div>
-        {SECONDARY.map(({ to, icon: Icon, label }) => {
+        {SECONDARY.map(({ to, icon: Icon, label, tourId }) => {
           const active = pathname.startsWith(to);
           return (
             <NavLink
               key={to}
               to={to}
+              data-tour={tourId}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 active
                   ? 'text-[#6EA8FE] bg-[#1a2540] border-l-2 border-[#6EA8FE] pl-[10px] shadow-sm'

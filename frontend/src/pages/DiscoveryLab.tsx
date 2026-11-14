@@ -298,7 +298,7 @@ export const DiscoveryLab: React.FC = () => {
             </div>
           ) : (
             <>
-          <div className="bg-[#151E30] border border-[#263247] rounded p-5">
+          <div data-tour="difference-map" className="bg-[#151E30] border border-[#263247] rounded p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-[#E8EDF5]">
                 Aligned Cross-Epoch Difference Map
@@ -330,7 +330,7 @@ export const DiscoveryLab: React.FC = () => {
           </div>
 
           {/* Detected Candidate Sources */}
-          <div className="bg-[#151E30] border border-[#263247] rounded p-5">
+          <div data-tour="candidate-list" className="bg-[#151E30] border border-[#263247] rounded p-5">
             <div className="flex items-center gap-2 mb-3">
               <Sparkles className="w-4 h-4 text-[#F3B85B]" />
               <h3 className="text-sm font-semibold text-[#E8EDF5]">
@@ -412,7 +412,7 @@ export const DiscoveryLab: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSaveDiscovery} className="space-y-4">
+              <form data-tour="journal-form" onSubmit={handleSaveDiscovery} className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-[#94A3B8] mb-1">
                     Discovery Title

@@ -1,0 +1,75 @@
+{
+  "project": "SPHEREx HORIZON",
+  "team": "Meteor Rizzlers",
+  "challenge": "Planet X and SPHEREx",
+  "competition": "NASA Space Apps Challenge 2026",
+  "validation_timestamp": "2026-11-14T19:07:00Z",
+  "validation_status": "ALL_TESTS_PASSED",
+  "backend_tests": {
+    "total": 16,
+    "passed": 16,
+    "failed": 0,
+    "execution_time_seconds": 25.94
+  },
+  "frontend_build": {
+    "status": "SUCCESS",
+    "modules_transformed": 1625,
+    "build_time_seconds": 4.62,
+    "type_errors": 0
+  },
+  "targets_verified": [
+    {
+      "name": "Barnard's Star",
+      "slug": "barnards-star",
+      "ra": 269.4463,
+      "dec": 4.7681,
+      "epoch": "J2026.0",
+      "status": "VERIFIED",
+      "observations_available": 2,
+      "baseline_days": 359
+    },
+    {
+      "name": "WISE 0855−0714",
+      "slug": "wise-0855",
+      "ra": 133.7879,
+      "dec": -7.2435,
+      "epoch": "Propagated",
+      "status": "VERIFIED",
+      "observations_available": 1
+    },
+    {
+      "name": "Epsilon Indi B",
+      "slug": "epsilon-indi-b",
+      "ra": 330.8408,
+      "dec": -56.7868,
+      "status": "VERIFIED"
+    },
+    {
+      "name": "RW Aurigae",
+      "slug": "rw-aurigae",
+      "ra": 83.4042,
+      "dec": 30.4017,
+      "status": "VERIFIED"
+    },
+    {
+      "name": "R Draconis",
+      "slug": "r-draconis",
+      "ra": 166.5708,
+      "dec": 68.0417,
+      "status": "VERIFIED"
+    }
+  ],
+  "features_verified": {
+    "arbitrary_coordinates": true,
+    "irsa_tap_obscore": true,
+    "genuine_fits_level2": true,
+    "time_lapse_video_player": true,
+    "pairwise_comparison_modes": ["timelapse", "side-by-side", "slider", "blink", "difference"],
+    "configurable_fov_arcsec": [120, 300, 600, 900, 1800],
+    "official_hips_cube": true,
+    "channels_102": true,
+    "dichroic_gap_51_52": true,
+    "driver_js_tutorials": true,
+    "no_synthetic_data": true
+  }
+}

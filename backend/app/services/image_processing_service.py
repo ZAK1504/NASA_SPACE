@@ -4,7 +4,8 @@ from typing import Tuple, Dict, Any, Optional
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 from astropy.visualization import (
     ImageNormalize,
     AsymmetricPercentileInterval,
@@ -36,13 +37,16 @@ class ImageProcessingService:
         colormap: str = "inferno",
         dpi: int = 100,
         show_grid: bool = False,
-        wcs: Optional[WCS] = None
+        wcs: Optional[WCS] = None,
+        smooth: bool = False
     ) -> Tuple[str, Dict[str, Any]]:
         """
         Render a calibrated FITS array using scientific percentile normalization
-        and astronomical stretch. Returns (base64_png, render_metadata).
+        and astronomical stretch using thread-safe Object-Oriented Matplotlib Figure.
+        Guarantees no pyplot state bleed, no blank box artifacts, and styled spines.
+        Returns (base64_png, render_metadata).
         """
-        # Ensure finite
+        # Ensure finite array
         clean_data = np.nan_to_num(image_data, nan=0.0, posinf=0.0, neginf=0.0)
 
         # Select stretch
@@ -58,34 +62,58 @@ class ImageProcessingService:
 
         norm = ImageNormalize(clean_data, interval=interval, stretch=stretch_obj, clip=True)
 
-        fig = plt.figure(figsize=(6, 6), dpi=dpi)
+        # Use purely Object-Oriented Figure and FigureCanvasAgg (no global pyplot state)
+        fig = Figure(figsize=(6, 6), dpi=dpi, facecolor='#0B1020')
+        canvas = FigureCanvasAgg(fig)
+
+        interpolation_mode = 'bicubic' if smooth else 'nearest'
+
         if wcs is not None and wcs.is_celestial:
-            ax = fig.add_subplot(111, projection=wcs)
-            ax.set_xlabel('Right Ascension (J2000)', color='#94A3B8', fontsize=8)
-            ax.set_ylabel('Declination (J2000)', color='#94A3B8', fontsize=8)
-            ax.coords.grid(color='#263247', alpha=0.5, linestyle='solid' if show_grid else 'none')
+            try:
+                ax = fig.add_subplot(111, projection=wcs)
+                ax.set_facecolor('#0B1020')
+                ax.set_xlabel('Right Ascension (J2000)', color='#94A3B8', fontsize=8)
+                ax.set_ylabel('Declination (J2000)', color='#94A3B8', fontsize=8)
+                ax.coords.grid(color='#263247', alpha=0.5, linestyle='solid' if show_grid else 'none')
+                
+                # Style WCS axes coordinates and spines to prevent harsh white outlines
+                for coord in ax.coords:
+                    coord.set_ticks(color='#64748B')
+                    coord.set_ticklabel(color='#94A3B8', size=7)
+                for spine in ax.spines.values():
+                    spine.set_color('#263247')
+                    spine.set_linewidth(1.0)
+            except Exception:
+                ax = fig.add_subplot(111)
+                ax.set_facecolor('#0B1020')
+                ax.axis('off')
         else:
             ax = fig.add_subplot(111)
+            ax.set_facecolor('#0B1020')
             ax.axis('off')
 
-        fig.patch.set_facecolor('#0B1020')
-        ax.set_facecolor('#0B1020')
-        ax.tick_params(colors='#94A3B8', labelsize=7)
+        im = ax.imshow(
+            clean_data,
+            norm=norm,
+            origin='lower',
+            cmap=colormap,
+            interpolation=interpolation_mode
+        )
 
-        im = ax.imshow(clean_data, norm=norm, origin='lower', cmap=colormap)
-
-        # Restrained minimal colorbar
-        cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-        cbar.ax.tick_params(colors='#94A3B8', labelsize=7)
-        cbar.outline.set_edgecolor('#263247')
-
-        buf = io.BytesIO()
+        # Subtle, restrained minimal colorbar
         try:
-            plt.tight_layout()
+            cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+            cbar.ax.tick_params(colors='#94A3B8', labelsize=7)
+            cbar.outline.set_edgecolor('#263247')
+            cbar.ax.set_facecolor('#0B1020')
         except Exception:
             pass
-        plt.savefig(buf, format='png', facecolor=fig.get_facecolor(), edgecolor='none', bbox_inches='tight')
-        plt.close(fig)
+
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', facecolor=fig.get_facecolor(), edgecolor='none', bbox_inches='tight')
+        fig.clf()
+        del canvas
+        del fig
 
         buf.seek(0)
         img_b64 = base64.b64encode(buf.read()).decode('utf-8')
@@ -97,7 +125,8 @@ class ImageProcessingService:
             "vmax": float(vmax),
             "lower_percentile": lower_percentile,
             "upper_percentile": upper_percentile,
-            "dimensions": list(image_data.shape)
+            "dimensions": list(image_data.shape),
+            "smooth": smooth
         }
 
         return f"data:image/png;base64,{img_b64}", metadata
@@ -109,7 +138,7 @@ class ImageProcessingService:
         wcs: WCS,
         center_ra: float,
         center_dec: float,
-        size_arcsec: float = 120.0
+        size_arcsec: float = 180.0
     ) -> Tuple[np.ndarray, WCS]:
         """Extract a centered cutout around sky coordinates using Astropy Cutout2D."""
         position = SkyCoord(ra=center_ra * u.deg, dec=center_dec * u.deg, frame='icrs')

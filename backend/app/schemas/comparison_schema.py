@@ -21,13 +21,18 @@ class CandidateDetection(BaseModel):
     scientific_limitations: str
 
 class ComparisonRequest(BaseModel):
-    observation_id_1: str = Field(..., description="Earlier observation ID")
-    observation_id_2: str = Field(..., description="Later observation ID")
-    center_ra: Optional[float] = None
-    center_dec: Optional[float] = None
-    cutout_size_arcsec: float = 120.0
-    colormap: str = "inferno"
-    stretch: str = "asinh" # asinh, linear, sqrt, log
+    obs_id_1: Optional[str] = Field(None, description="Earlier observation ID")
+    obs_id_2: Optional[str] = Field(None, description="Later observation ID")
+    observation_id_1: Optional[str] = Field(None, description="Earlier observation ID (alias)")
+    observation_id_2: Optional[str] = Field(None, description="Later observation ID (alias)")
+    target_name: Optional[str] = Field("Target Field")
+    center_ra: Optional[float] = Field(269.4521)
+    center_dec: Optional[float] = Field(4.6933)
+    cutout_size_arcsec: float = Field(180.0)
+    fov_arcsec: Optional[float] = Field(None)
+    colormap: str = Field("inferno")
+    stretch: str = Field("asinh") # asinh, linear, sqrt, log
+    smooth: bool = Field(False)
 
 class ComparisonResponse(BaseModel):
     observation_1: Dict[str, Any]
@@ -48,3 +53,25 @@ class ComparisonResponse(BaseModel):
         "Calculations performed using Astropy WCS and Reproject. "
         "Candidate detections are potential astronomical features, not confirmed discoveries."
     )
+
+class TimeMachineFrame(BaseModel):
+    frame_index: int
+    obs_id: str
+    date_obs: str
+    date_display: str
+    bandpass: str
+    detector: int
+    file_name: str
+    image_base64: str
+    pixel_scale_arcsec: float = 6.15
+    exposure_time_s: float = 120.0
+    bunit: str = "MJy / sr"
+
+class TimeMachineManifestResponse(BaseModel):
+    target_name: str
+    ra: float
+    dec: float
+    total_frames: int
+    baseline_days: int
+    frames: List[TimeMachineFrame]
+    processing_notes: List[str]

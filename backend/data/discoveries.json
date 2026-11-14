@@ -1,5 +1,21 @@
 [
   {
+    "id": "2b8320a1-0a25-47f8-9e04-2d19771c0cd2",
+    "title": "Candidate Detection in Barnard's Star",
+    "object_id": "barnards-star",
+    "object_name": "Barnard's Star",
+    "notes": "Inspected SPHEREx cross-epoch difference between 2025-08-27 and 2026-08-21. Astrometrically measured displacement of 2.74\" using photutils DAOStarFinder.",
+    "observation_ids": [
+      "2025W35_1A_0444_3",
+      "2026W34_2A_0249_1"
+    ],
+    "analysis_summary": "Source brightness changed by factor of 0.26 (+1.46 mag) with minimal positional shift (2.7\").",
+    "candidate_type": "variable_source",
+    "angular_displacement_arcsec": 2.74,
+    "confidence": "moderate",
+    "created_at": "2026-11-14T13:04:37.724274Z"
+  },
+  {
     "id": "e4b1a82c-7389-4a91-bc19-1234abcd5678",
     "title": "Astrometric Stability Benchmark in Barnard's Star",
     "object_id": "barnards-star",

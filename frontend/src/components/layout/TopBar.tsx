@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Sparkles, Command } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { TutorialMenu } from '../tutorial/TutorialMenu';
 
 const PAGE_TITLES: [string, string, boolean?][] = [
   ['/',               'Home',              true ],
@@ -60,6 +61,8 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenCommandPalette }) => {
 
       {/* Right status */}
       <div className="ml-auto flex items-center gap-3 flex-shrink-0">
+        <TutorialMenu />
+
         <button
           onClick={onOpenCommandPalette}
           className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border border-[#263247] text-[#94A3B8] hover:text-[#E8EDF5] hover:bg-[#151E30] transition-colors"

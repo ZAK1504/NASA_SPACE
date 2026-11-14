@@ -55,16 +55,22 @@ export const ObjectDetail: React.FC = () => {
       });
 
     // Generate scientific preview
-    if (fallbackObj) {
+    const targetObj = fallbackObj || objectData;
+    if (targetObj && targetObj.ra !== undefined && targetObj.dec !== undefined) {
       setLoadingPreview(true);
       api.generatePreview({
         stretch: selectedStretch,
         colormap: selectedColormap,
-        ra: fallbackObj.ra,
-        dec: fallbackObj.dec,
+        ra: targetObj.ra,
+        dec: targetObj.dec,
+        fovArcsec: 180.0,
       })
-      .then((res) => setPreviewImage(res.image_base64))
-      .catch(() => {})
+      .then((res) => {
+        if (res && res.image_base64) {
+          setPreviewImage(res.image_base64);
+        }
+      })
+      .catch((err) => console.warn('Preview render error:', err))
       .finally(() => setLoadingPreview(false));
     }
   }, [objectId, selectedStretch, selectedColormap]);

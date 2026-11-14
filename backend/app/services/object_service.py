@@ -6,11 +6,12 @@ FEATURED_OBJECTS_DATA = [
         "slug": "barnards-star",
         "name": "Barnard's Star",
         "type": "Red Dwarf Star",
-        "ra": 269.4521,
-        "dec": 4.6933,
-        "ra_hms": "17h 57m 48.5s",
-        "dec_dms": "+04° 41' 36\"",
-        "description": "The closest single star to our Solar System at 5.96 light-years. Famous for having the largest known proper motion of any star (10.3 arcsec/year) — moving visibly across sky surveys over months and years.",
+        "ra": 269.4463,
+        "dec": 4.7681,
+        "ra_hms": "17h 57m 47.1s",
+        "dec_dms": "+04° 46' 05\"",
+        "reference_epoch": "J2026.0 (propagated from Gaia DR3 J2016.0)",
+        "description": "The closest single star to our Solar System at 5.96 light-years. Famous for having the largest known proper motion of any star (10.33 arcsec/year) — moving visibly across sky surveys over months and years.",
         "tags": ["proper motion", "nearby star", "red dwarf", "high velocity"],
         "proper_motion_ra": -798.58,   # mas/yr
         "proper_motion_dec": 10328.12, # mas/yr

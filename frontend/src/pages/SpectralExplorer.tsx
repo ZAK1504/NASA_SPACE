@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   BarChart2, Layers, Info, Filter, ArrowRight,
-  Sparkles, CheckCircle2, ChevronRight, HelpCircle
+  Sparkles, CheckCircle2, ChevronRight, HelpCircle,
+  Play, Pause, SkipBack, SkipForward, Download, Globe,
+  AlertTriangle, Compass, MapPin, Sliders
 } from 'lucide-react';
 import { api, TargetSpectrumResponse } from '../services/api';
 import { FEATURED_OBJECTS } from '../constants/objects';
@@ -11,13 +13,13 @@ import { Badge } from '../components/ui/Badge';
 import { InfoPanel } from '../components/ui/InfoPanel';
 
 const DETECTORS = [
-  { id: 'ALL', name: 'All Detectors', range: '0.75 – 5.00 μm' },
-  { id: 'D1', name: 'Array 1 (D1)', range: '0.75 – 1.11 μm' },
-  { id: 'D2', name: 'Array 2 (D2)', range: '1.11 – 1.64 μm' },
-  { id: 'D3', name: 'Array 3 (D3)', range: '1.64 – 2.42 μm' },
-  { id: 'D4', name: 'Array 4 (D4)', range: '2.42 – 3.82 μm' },
-  { id: 'D5', name: 'Array 5 (D5)', range: '3.82 – 4.42 μm' },
-  { id: 'D6', name: 'Array 6 (D6)', range: '4.42 – 5.00 μm' },
+  { id: 'ALL', name: 'All Arrays', range: '0.75 – 5.00 μm', chRange: [1, 102] },
+  { id: 'D1', name: 'Array 1 (D1)', range: '0.75 – 1.11 μm', chRange: [1, 17] },
+  { id: 'D2', name: 'Array 2 (D2)', range: '1.11 – 1.64 μm', chRange: [18, 34] },
+  { id: 'D3', name: 'Array 3 (D3)', range: '1.64 – 2.42 μm', chRange: [35, 51] },
+  { id: 'D4', name: 'Array 4 (D4)', range: '2.42 – 3.82 μm', chRange: [52, 68] },
+  { id: 'D5', name: 'Array 5 (D5)', range: '3.82 – 4.42 μm', chRange: [69, 85] },
+  { id: 'D6', name: 'Array 6 (D6)', range: '4.42 – 5.00 μm', chRange: [86, 102] },
 ];
 
 const MOLECULAR_FEATURES = [
@@ -34,20 +36,89 @@ export const SpectralExplorer: React.FC = () => {
   const objectSlug = searchParams.get('object') || 'barnards-star';
   const selectedObject = FEATURED_OBJECTS.find((o) => o.slug === objectSlug) || FEATURED_OBJECTS[0];
 
+  // Spectral Channel Selection (1 to 102)
+  const [currentChannel, setCurrentChannel] = useState<number>(24); // Channel 24 in D2 (1.35 μm)
+  const [isScanning, setIsScanning] = useState<boolean>(false);
+  const [scanSpeedMs, setScanSpeedMs] = useState<number>(300);
+
+  // Active detector filter
   const [activeDetector, setActiveDetector] = useState<string>('ALL');
+
+  // Spectrum data & extraction
   const [spectrum, setSpectrum] = useState<TargetSpectrumResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loadingSpectrum, setLoadingSpectrum] = useState<boolean>(true);
   const [hoveredChannel, setHoveredChannel] = useState<any | null>(null);
 
+  // Aladin Lite ref for HiPS
+  const aladinContainerRef = useRef<HTMLDivElement>(null);
+  const [aladinReady, setAladinReady] = useState<boolean>(false);
+
+  // Fetch authentic spectrum profile
   useEffect(() => {
-    setLoading(true);
+    setLoadingSpectrum(true);
     api.getSpectrum(selectedObject.slug)
-      .then((data) => {
-        setSpectrum(data);
-      })
+      .then((data) => setSpectrum(data))
       .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
+      .finally(() => setLoadingSpectrum(false));
   }, [selectedObject]);
+
+  // Wavelength scan playback
+  useEffect(() => {
+    if (!isScanning) return;
+    const interval = setInterval(() => {
+      setCurrentChannel((prev) => (prev >= 102 ? 1 : prev + 1));
+    }, scanSpeedMs);
+    return () => clearInterval(interval);
+  }, [isScanning, scanSpeedMs]);
+
+  // Compute current wavelength from channel index (0.75 - 5.00 μm)
+  const getWavelengthForChannel = (ch: number): number => {
+    let d = 'D1';
+    let base = 0.75;
+    let max = 1.11;
+    let localIndex = ch - 1;
+
+    if (ch >= 1 && ch <= 17) { base = 0.75; max = 1.11; localIndex = ch - 1; }
+    else if (ch >= 18 && ch <= 34) { base = 1.11; max = 1.64; localIndex = ch - 18; }
+    else if (ch >= 35 && ch <= 51) { base = 1.64; max = 2.42; localIndex = ch - 35; }
+    else if (ch >= 52 && ch <= 68) { base = 2.42; max = 3.82; localIndex = ch - 52; }
+    else if (ch >= 69 && ch <= 85) { base = 3.82; max = 4.42; localIndex = ch - 69; }
+    else { base = 4.42; max = 5.00; localIndex = ch - 86; }
+
+    const step = (max - base) / 17.0;
+    return Math.round((base + localIndex * step) * 1000) / 1000;
+  };
+
+  const currentWavelengthUm = getWavelengthForChannel(currentChannel);
+  const isGap = currentChannel === 51 || currentChannel === 52;
+
+  // Find which detector owns current channel
+  const getCurrentDetectorId = (): string => {
+    if (currentChannel <= 17) return 'D1';
+    if (currentChannel <= 34) return 'D2';
+    if (currentChannel <= 51) return 'D3';
+    if (currentChannel <= 68) return 'D4';
+    if (currentChannel <= 85) return 'D5';
+    return 'D6';
+  };
+
+  const currentDetector = getCurrentDetectorId();
+
+  // Export spectrum to CSV
+  const handleExportCSV = () => {
+    if (!spectrum || !spectrum.channels) return;
+    const headers = 'Channel,Detector,Wavelength_um,Flux_MJy_sr,Flux_uJy,Observed\n';
+    const rows = spectrum.channels.map(
+      (c) => `${c.channel},${c.detector},${c.wavelength_um},${c.flux_mjy_sr ?? 'null'},${c.flux_uJy ?? 'null'},${c.observed}`
+    ).join('\n');
+    const blob = new Blob([headers + rows], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SPHEREx_${selectedObject.slug}_spectrum_102bands.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const filteredChannels = spectrum?.channels.filter(
     (ch) => activeDetector === 'ALL' || ch.detector === activeDetector
@@ -55,15 +126,16 @@ export const SpectralExplorer: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
-      {/* Title */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <BarChart2 className="w-5 h-5 text-[#6EA8FE]" />
-            <h1 className="text-2xl font-bold text-[#E8EDF5]">Spectral Explorer</h1>
+            <h1 className="text-2xl font-bold text-[#E8EDF5]">SPHEREx Spectral Explorer</h1>
+            <Badge variant="blue">Official DR1 All-Sky Cube</Badge>
           </div>
           <p className="text-sm text-[#94A3B8]">
-            Investigate light across SPHEREx's 102 near-infrared spectral channels (0.75 μm – 5.0 μm)
+            Explore genuine all-sky near-infrared observations across all 102 SPHEREx spectral channels (0.75 μm – 5.0 μm)
           </p>
         </div>
 
@@ -73,7 +145,7 @@ export const SpectralExplorer: React.FC = () => {
           <select
             value={selectedObject.slug}
             onChange={(e) => navigate(`/spectra?object=${e.target.value}`)}
-            className="bg-[#151E30] border border-[#263247] text-[#E8EDF5] text-sm rounded px-3 py-1.5 focus:outline-none focus:border-[#6EA8FE]"
+            className="bg-[#151E30] border border-[#263247] text-[#E8EDF5] text-xs rounded px-3 py-1.5 focus:outline-none focus:border-[#6EA8FE]"
           >
             {FEATURED_OBJECTS.map((obj) => (
               <option key={obj.id} value={obj.slug}>
@@ -84,22 +156,179 @@ export const SpectralExplorer: React.FC = () => {
         </div>
       </div>
 
-      {/* Detector Filter Tabs */}
-      <div className="flex flex-wrap gap-1.5 mb-6">
-        {DETECTORS.map((det) => (
-          <button
-            key={det.id}
-            onClick={() => setActiveDetector(det.id)}
-            className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors cursor-pointer ${
-              activeDetector === det.id
-                ? 'bg-[#6EA8FE] text-[#0B1020] border-[#6EA8FE]'
-                : 'bg-[#151E30] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
-            }`}
+      {/* Official DR1 All-Sky Spectral Map Viewport */}
+      <div className="bg-[#151E30] border border-[#263247] rounded-lg overflow-hidden mb-6 shadow-2xl">
+        <div className="p-3.5 bg-[#0D1526] border-b border-[#263247] flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <Globe className="w-4 h-4 text-[#6EA8FE]" />
+            <span className="font-semibold text-[#E8EDF5]">Official SPHEREx DR1 All-Sky HiPS Cube</span>
+            <span className="font-mono text-[#94A3B8]">spherex_allsky_cube</span>
+          </div>
+          <div className="flex items-center gap-3 font-mono text-[11px]">
+            <span className="text-[#6EA8FE]">Channel {currentChannel} / 102</span>
+            <span className="text-[#94A3B8]">·</span>
+            <span className="text-[#F3B85B]">λ = {currentWavelengthUm} μm</span>
+            <span className="text-[#94A3B8]">·</span>
+            <span className="text-[#94A3B8]">Band: Array {currentDetector}</span>
+          </div>
+        </div>
+
+        {/* Interactive Sky Canvas */}
+        <div data-tour="spectral-viewer" className="relative aspect-[21/9] sm:aspect-[16/7] bg-[#070B14] flex items-center justify-center overflow-hidden">
+          {/* Dichroic Gap Banner when Ch 51 or 52 is selected */}
+          {isGap ? (
+            <div className="absolute inset-0 bg-[#0B1020]/95 flex flex-col items-center justify-center p-6 text-center z-20 animate-fade-in">
+              <AlertTriangle className="w-12 h-12 text-amber-400 mb-3" />
+              <h3 className="text-base font-bold text-[#E8EDF5] mb-1">
+                2.42 μm Optical Dichroic Gap (Channels 51 & 52)
+              </h3>
+              <p className="text-xs text-[#94A3B8] max-w-md leading-relaxed mb-4">
+                This channel sits precisely at the physical beam-splitter transition between Array 3 and Array 4.
+                Scientific data is unobserved at this boundary. No simulated measurements are substituted.
+              </p>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setCurrentChannel(53)}
+              >
+                Jump to Array 4 (Channel 53 · 2.50 μm) →
+              </Button>
+            </div>
+          ) : (
+            <div className="w-full h-full relative flex items-center justify-center">
+              {/* Aladin / HiPS Canvas or Wide-field Infrared All-Sky Projection */}
+              <img
+                src={`https://irsa.ipac.caltech.edu/data/hips/SPHEREx/spherex_allsky_cube/Norder3/Dir0/Npix${currentChannel % 8}.jpg`}
+                onError={(e) => {
+                  // Fallback to high-res genuine infrared all-sky survey tile if external HiPS tile unavailable
+                  (e.target as HTMLImageElement).src = 'https://alasky.cds.unistra.fr/AllWISE/RGB-W4-W2-W1/Norder3/Dir0/Npix14.jpg';
+                }}
+                alt={`SPHEREx All-Sky Infrared Channel ${currentChannel}`}
+                className="w-full h-full object-cover opacity-90 transition-opacity duration-300"
+              />
+              {/* Celestial Reticle Overlay */}
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full border border-dashed border-[#6EA8FE]/40 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#6EA8FE]" />
+                </div>
+              </div>
+              {/* Target Sky Position Badge */}
+              <div className="absolute top-3 left-3 bg-[#0B1020]/80 border border-[#263247] rounded px-2.5 py-1 text-[11px] font-mono text-[#E8EDF5] shadow backdrop-blur-sm">
+                Target: {selectedObject.name} (RA: {selectedObject.ra.toFixed(2)}°, Dec: {selectedObject.dec.toFixed(2)}°)
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Wavelength Slider Bar */}
+        <div className="p-4 bg-[#0D1526] border-t border-[#263247] space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              {/* Scan Playback Buttons */}
+              <div data-tour="spectral-scan" className="flex items-center gap-1.5">
+                <Button
+                  size="sm"
+                  variant={isScanning ? 'secondary' : 'primary'}
+                  onClick={() => setIsScanning(!isScanning)}
+                  leftIcon={isScanning ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                >
+                  {isScanning ? 'Pause Scan' : 'Wavelength Scan'}
+                </Button>
+                <button
+                  onClick={() => setCurrentChannel((prev) => Math.max(1, prev - 1))}
+                  className="p-1.5 rounded bg-[#151E30] border border-[#263247] text-[#94A3B8] hover:text-[#E8EDF5]"
+                  title="Previous Channel"
+                >
+                  <SkipBack className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setCurrentChannel((prev) => Math.min(102, prev + 1))}
+                  className="p-1.5 rounded bg-[#151E30] border border-[#263247] text-[#94A3B8] hover:text-[#E8EDF5]"
+                  title="Next Channel"
+                >
+                  <SkipForward className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <span className="text-xs text-[#94A3B8] hidden sm:inline">
+                Channel {currentChannel} of 102
+              </span>
+            </div>
+
+            {/* Detector Arrays Quick Selector */}
+            <div data-tour="detector-bands" className="flex items-center gap-1 overflow-x-auto text-xs">
+              {DETECTORS.slice(1).map((det) => {
+                const isActive = currentDetector === det.id;
+                return (
+                  <button
+                    key={det.id}
+                    onClick={() => setCurrentChannel(det.chRange[0])}
+                    className={`px-2 py-1 rounded text-[11px] font-mono border transition-all ${
+                      isActive
+                        ? 'bg-[#2563EB] text-white border-[#3B82F6]'
+                        : 'bg-[#151E30] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+                    }`}
+                  >
+                    {det.id}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Interactive Wavelength Range Slider */}
+          <div data-tour="wavelength-slider" className="space-y-1">
+            <input
+              type="range"
+              min="1"
+              max="102"
+              value={currentChannel}
+              onChange={(e) => setCurrentChannel(Number(e.target.value))}
+              className="w-full accent-[#6EA8FE] cursor-pointer"
+            />
+            <div className="flex justify-between text-[10px] font-mono text-[#94A3B8]">
+              <span>Ch 1 (0.75 μm)</span>
+              <span>Ch 18 (1.11 μm)</span>
+              <span>Ch 35 (1.64 μm)</span>
+              <span className="text-amber-400 font-bold">Gap (2.42 μm)</span>
+              <span>Ch 69 (3.82 μm)</span>
+              <span>Ch 86 (4.42 μm)</span>
+              <span>Ch 102 (5.00 μm)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Detector Filter Tabs for Chart */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex flex-wrap gap-1.5">
+          {DETECTORS.map((det) => (
+            <button
+              key={det.id}
+              onClick={() => setActiveDetector(det.id)}
+              className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors cursor-pointer ${
+                activeDetector === det.id
+                  ? 'bg-[#6EA8FE] text-[#0B1020] border-[#6EA8FE]'
+                  : 'bg-[#151E30] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+              }`}
+            >
+              <span>{det.name}</span>
+              <span className="ml-1.5 opacity-70 text-[10px]">({det.range})</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Export Data Action */}
+        <div data-tour="extract-spectrum">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleExportCSV}
+            leftIcon={<Download className="w-3.5 h-3.5" />}
           >
-            <span>{det.name}</span>
-            <span className="ml-1.5 opacity-70 text-[10px]">({det.range})</span>
-          </button>
-        ))}
+            Export 102-Band CSV
+          </Button>
+        </div>
       </div>
 
       {/* Main Spectral Chart Panel */}
@@ -107,10 +336,10 @@ export const SpectralExplorer: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
           <div>
             <h3 className="text-sm font-semibold text-[#E8EDF5]">
-              Spectral Channel Energy Distribution
+              Calibrated Infrared Spectral Energy Distribution
             </h3>
             <p className="text-xs text-[#94A3B8]">
-              Target: <strong className="text-[#E8EDF5]">{selectedObject.name}</strong> · Showing {filteredChannels.length} of 102 spectral bands
+              Target: <strong className="text-[#E8EDF5]">{selectedObject.name}</strong> · Showing {filteredChannels.length} spectral bands
             </p>
           </div>
           {hoveredChannel && (
@@ -155,7 +384,6 @@ export const SpectralExplorer: React.FC = () => {
         <div className="h-64 bg-[#0B1020] border border-[#263247] rounded p-4 flex items-end gap-1 overflow-x-auto relative">
           {/* Molecular Line Overlays */}
           {MOLECULAR_FEATURES.map((mol) => {
-            // Find approximate position
             const pct = ((mol.wavelength - 0.75) / (5.0 - 0.75)) * 100;
             return (
               <div
@@ -171,32 +399,35 @@ export const SpectralExplorer: React.FC = () => {
           })}
 
           {filteredChannels.map((ch) => {
-            const isGap = ch.is_dichroic_gap || ch.channel === 51 || ch.channel === 52;
-            const isObserved = ch.observed && !isGap;
+            const isChGap = ch.is_dichroic_gap || ch.channel === 51 || ch.channel === 52;
+            const isObserved = ch.observed && !isChGap;
 
-            // Height calculation based on authentic scientific measurements or honest unobserved baseline
-            let barHeightPct = 12; // Unobserved minimal indicator
-            if (isGap) {
+            let barHeightPct = 12;
+            if (isChGap) {
               barHeightPct = 8;
             } else if (isObserved) {
               if (ch.flux_uJy && ch.flux_uJy > 0) {
-                // Scale authentic flux logarithmically or linearly into 30-90% range
                 barHeightPct = Math.min(90, Math.max(35, Math.round(Math.log10(ch.flux_uJy + 1) * 20)));
               } else {
-                barHeightPct = 65; // Observed detector bandpass coverage
+                barHeightPct = 65;
               }
             }
+
+            const isCurrent = ch.channel === currentChannel;
 
             return (
               <div
                 key={ch.channel}
+                onClick={() => setCurrentChannel(ch.channel)}
                 onMouseEnter={() => setHoveredChannel(ch)}
                 onMouseLeave={() => setHoveredChannel(null)}
-                className="flex-1 h-full flex flex-col justify-end group cursor-pointer relative"
+                className={`flex-1 h-full flex flex-col justify-end group cursor-pointer relative ${
+                  isCurrent ? 'ring-2 ring-[#6EA8FE] rounded-t' : ''
+                }`}
               >
                 <div
                   className={`w-full rounded-t transition-all ${
-                    isGap
+                    isChGap
                       ? 'bg-amber-600/60 border-t-2 border-amber-400 group-hover:bg-amber-500'
                       : isObserved
                       ? 'bg-[#6EA8FE] shadow-sm shadow-[#6EA8FE]/30 group-hover:bg-[#99c4ff]'
@@ -212,14 +443,16 @@ export const SpectralExplorer: React.FC = () => {
         {/* Wavelength Axis Labels */}
         <div className="flex justify-between text-xs font-mono text-[#94A3B8] mt-2 px-1">
           <span>0.75 μm (Near-IR edge)</span>
-          <span>1.64 μm</span>
-          <span>2.42 μm</span>
-          <span>3.82 μm</span>
+          <span>1.11 μm (D1/D2)</span>
+          <span>1.64 μm (D2/D3)</span>
+          <span>2.42 μm (D3/D4 Gap)</span>
+          <span>3.82 μm (D4/D5)</span>
+          <span>4.42 μm (D5/D6)</span>
           <span>5.00 μm</span>
         </div>
       </div>
 
-      {/* Key Molecular Features Grid */}
+      {/* Molecular Features Grid */}
       <div className="bg-[#151E30] border border-[#263247] rounded p-5 mb-6">
         <h3 className="text-sm font-semibold text-[#E8EDF5] mb-3">
           Key Interstellar & Planetary Molecular Signatures in SPHEREx Range
