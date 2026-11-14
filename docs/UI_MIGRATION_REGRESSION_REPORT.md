@@ -105,3 +105,23 @@ dist/assets/index-ax8UOQo9.js   3,846.90 kB │ gzip: 1,174.14 kB
   - `frontend/src/pages/` (`Home.tsx`, `ExplorerPage.tsx`, `TimePage.tsx`, `LabPage.tsx`, `MissionPage.tsx`)
   - `frontend/public/models/spherex.glb` (NASA SPHEREx 3D spacecraft model)
   - `docs/UI_MIGRATION_PLAN.md`, `docs/UI_MIGRATION_ROUTE_MAP.md`, `docs/UI_MIGRATION_REGRESSION_REPORT.md`
+
+---
+
+## 5. Continuous Single-Page Cinematic Architecture & Final Verification
+
+Following the initial component migration, the navigation architecture was unified into one continuous, vertically scrolling single-page website where the user travels through all 5 destinations by scrolling:
+
+1. **`#home` (Home):** Clean cinematic hero, 3D interactive satellite, real-time UTC/survey HUD, statistics, and 4 portal door cards. Removed bottom switcher and link menus.
+2. **`#explorer` (Explorer):** Consolidated stage with internal sub-tabs `[Sky | Object | Spectral]`, sticky contextual bottom nav, and "Continue to Time Machine ↓" action.
+3. **Time Warp Transition Bridge:** Scroll-linked relativistic starfield acceleration (`window.__horizonWarpFactor`) with warm amber tunnel glow between Explorer and Time Machine.
+4. **`#time-machine` (Time Machine):** Genuine Level 2 multi-epoch FITS workspace (5 canonical targets + live arbitrary SIA2 coordinates) with 5 comparison modes and ZERO bottom navigation bar.
+5. **`#labs` (Labs):** Consolidated stage with internal sub-tabs `[Discovery | Light Curves]`, nested `[Difference & Stacking | My Discoveries Journal]`, sticky contextual bottom nav, and "Continue to Mission ↓" action.
+6. **`#mission` (Mission):** 3D spacecraft model with OrbitControls, mission specification HUD, star-color anomaly training simulation, guided science missions, and concluding navigation actions. ZERO bottom navigation bar.
+
+### Verification Matrix
+- **Backend Scientific Pytest:** 43 passed, 0 failed in 31.61s (100% pass rate).
+- **Frontend Production Build:** Built in 6.94s with 0 errors (`dist/assets/index-ax8UOQo9.js`, `dist/assets/index-DAYDs76Q.css`).
+- **Interactive Headless Journey:** 10 full-resolution screenshots captured across all sections verifying clean typography, correct sticky bottom bar behaviors, active top nav tracking, and smooth transitions.
+- **Documentation:** Complete architectural guide saved in `docs/CONTINUOUS_SCROLL_ARCHITECTURE.md`.
+

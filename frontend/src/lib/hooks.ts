@@ -118,6 +118,17 @@ export function useSmoothScroll(enabled = true) {
       wheelMultiplier: 0.95,
       smoothWheel: true,
       autoRaf: false,
+      prevent: (node: HTMLElement) => {
+        return (
+          node.closest('.aladin-container') !== null ||
+          node.closest('.aladin-box') !== null ||
+          node.closest('[data-lenis-prevent]') !== null ||
+          node.closest('.sky-map') !== null ||
+          node.tagName === 'INPUT' ||
+          node.tagName === 'SELECT' ||
+          node.tagName === 'TEXTAREA'
+        );
+      },
     });
     window.__lenis = lenis;
 

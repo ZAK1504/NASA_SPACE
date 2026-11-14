@@ -18,7 +18,7 @@ export const TOURS: Record<string, TourDefinition> = {
         element: 'body',
         popover: {
           title: '🌌 Welcome to SPHEREx HORIZON',
-          description: 'SPHEREx is NASA’s revolutionary all-sky near-infrared space telescope mapping over 1 billion cosmic objects across 102 spectral bands. HORIZON puts this genuine data at your fingertips.',
+          description: 'SPHEREx is NASA’s revolutionary all-sky near-infrared space telescope mapping over 1 billion cosmic objects across 102 spectral bands. Experience the entire journey as one continuous cinematic voyage.',
           side: 'bottom',
           align: 'center',
         },
@@ -26,32 +26,32 @@ export const TOURS: Record<string, TourDefinition> = {
       {
         element: '[data-tour="nav-explore"]',
         popover: {
-          title: '🔭 1. Explore the Sky',
-          description: 'Navigate the real sky atlas, search astronomical targets or enter arbitrary RA/Dec coordinates, and discover available SPHEREx Level 2 observations.',
-          side: 'bottom',
-        },
-      },
-      {
-        element: '[data-tour="nav-spectral"]',
-        popover: {
-          title: '🌈 2. Spectral Explorer',
-          description: 'Explore the official NASA/IPAC SPHEREx DR1 All-Sky HiPS Cube. Slide through 102 spectral channels from 0.75 μm to 5.0 μm and extract genuine calibrated spectra.',
+          title: '🔭 1. All-Sky & Spectral Explorer',
+          description: 'Navigate the real sky atlas with Aladin Lite, search challenge targets, inspect Gaia DR3 vectors, and slide through 102 near-infrared channels.',
           side: 'bottom',
         },
       },
       {
         element: '[data-tour="nav-timemachine"]',
         popover: {
-          title: '⏳ 3. Time Machine (Core Challenge)',
-          description: 'Play multi-date observations like a movie, compare epochs side-by-side or in blink mode, and watch high proper motion objects move across genuine NASA exposures.',
+          title: '⏳ 2. Time Machine (Core Challenge)',
+          description: 'Travel through two years of SPHEREx passes. Play multi-date observations like a movie, compare epochs side-by-side or in blink mode, and watch high-proper-motion targets move.',
           side: 'bottom',
         },
       },
       {
         element: '[data-tour="nav-discovery"]',
         popover: {
-          title: '🔬 4. Discovery Lab & Journal',
-          description: 'Run automated source centroiding and image subtraction, verify astrometric stability, and log your findings to your personal Discovery Journal.',
+          title: '🔬 3. Discovery Lab & Light Curves',
+          description: 'Run automated DAOStarFinder point-source centroiding, perform image subtraction, analyze Mira variable light curves, and record verified finds to your personal Discovery Journal.',
+          side: 'bottom',
+        },
+      },
+      {
+        element: '[data-tour="nav-mission"]',
+        popover: {
+          title: '🚀 4. Observatory & Missions',
+          description: 'Inspect the 3D SPHEREx spacecraft model, launch guided astronomy missions, and train your eyes to spot spectral color oddities in the interactive simulation.',
           side: 'bottom',
         },
       },

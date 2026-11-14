@@ -20,9 +20,21 @@ interface ShootingStar {
   life: number;
 }
 
-/** Fixed full-screen background: three parallax star layers plus shooting stars. */
-export const Starfield: React.FC = () => {
+interface StarfieldProps {
+  warpFactor?: number;
+}
+
+declare global {
+  interface Window {
+    __horizonWarpFactor?: number;
+  }
+}
+
+/** Fixed full-screen background: three parallax star layers, shooting stars, and scroll-linked warp transition. */
+export const Starfield: React.FC<StarfieldProps> = ({ warpFactor = 0 }) => {
   const ref = useRef<HTMLCanvasElement | null>(null);
+  const warpPropRef = useRef(warpFactor);
+  warpPropRef.current = warpFactor;
 
   useEffect(() => {
     const c = ref.current;
@@ -36,7 +48,8 @@ export const Starfield: React.FC = () => {
       stars: Star[] = [],
       raf = 0,
       shoot: ShootingStar | null = null,
-      nextShoot = 2500;
+      nextShoot = 2500,
+      smoothedWarp = 0;
 
     const init = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -63,17 +76,57 @@ export const Starfield: React.FC = () => {
     const draw = (t: number) => {
       ctx.clearRect(0, 0, w, h);
       const sy = window.scrollY;
+
+      // Calculate effective warp factor from props or global scroll controller
+      const targetWarp = reduce ? 0 : Math.max(warpPropRef.current, window.__horizonWarpFactor || 0);
+      smoothedWarp += (targetWarp - smoothedWarp) * 0.1;
+      const warp = Math.max(0, Math.min(1, smoothedWarp));
+
+      const cx = w / 2;
+      const cy = h / 2;
+
+      // Subtle warm amber radial tunnel glow during spacetime warp
+      if (warp > 0.02) {
+        const tunnel = ctx.createRadialGradient(cx, cy, 10, cx, cy, Math.max(w, h) * 0.55);
+        tunnel.addColorStop(0, `rgba(255, 123, 61, ${0.14 * warp})`);
+        tunnel.addColorStop(0.35, `rgba(244, 162, 114, ${0.07 * warp})`);
+        tunnel.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = tunnel;
+        ctx.fillRect(0, 0, w, h);
+      }
+
+      // Draw stars and streaks
       for (const s of stars) {
         const y = (((s.y - sy * s.f) % h) + h) % h;
         const tw = 0.55 + 0.45 * Math.sin(t * s.s * 6 + s.p);
-        ctx.globalAlpha = (0.25 + 0.75 * s.z) * tw;
-        ctx.fillStyle = `rgb(${s.c})`;
         const size = 0.7 + s.z * 1.7;
-        ctx.fillRect(s.x, y, size, size);
+
+        if (warp > 0.04) {
+          const dx = s.x - cx;
+          const dy = y - cy;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          const streakLen = (dist / Math.max(w, h)) * warp * 90 * (s.z + 0.35);
+          const nx = dx / dist;
+          const ny = dy / dist;
+
+          ctx.beginPath();
+          ctx.moveTo(s.x, y);
+          ctx.lineTo(s.x + nx * streakLen, y + ny * streakLen);
+
+          const alpha = (0.3 + 0.7 * s.z) * tw;
+          ctx.strokeStyle = warp > 0.3 ? `rgba(255, 218, 185, ${alpha})` : `rgba(${s.c}, ${alpha})`;
+          ctx.lineWidth = size * (1 + warp * 0.4);
+          ctx.stroke();
+        } else {
+          ctx.globalAlpha = (0.25 + 0.75 * s.z) * tw;
+          ctx.fillStyle = `rgb(${s.c})`;
+          ctx.fillRect(s.x, y, size, size);
+        }
       }
       ctx.globalAlpha = 1;
 
-      if (!reduce) {
+      // Shooting stars when not in high warp
+      if (!reduce && warp < 0.3) {
         if (!shoot && t > nextShoot) {
           shoot = {
             x: Math.random() * w * 0.7 + w * 0.2,
@@ -105,24 +158,29 @@ export const Starfield: React.FC = () => {
           ctx.stroke();
           if (shoot.life > 50) shoot = null;
         }
-        raf = requestAnimationFrame(draw);
       }
+
+      raf = requestAnimationFrame(draw);
     };
 
     init();
     raf = requestAnimationFrame(draw);
-    const onScroll = () => draw(0);
-    if (reduce) window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", init);
 
     return () => {
       cancelAnimationFrame(raf);
-      if (reduce) window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", init);
     };
   }, []);
 
-  return <canvas ref={ref} aria-hidden="true" className="starfield" />;
+  return (
+    <canvas
+      ref={ref}
+      className="fixed inset-0 pointer-events-none z-0"
+      style={{ opacity: 0.95 }}
+      aria-hidden="true"
+    />
+  );
 };
 
 export default Starfield;

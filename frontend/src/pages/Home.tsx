@@ -1,46 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 import Satellite3D from "../components/ui/Satellite3D";
-import PillSwitch, { PillItem } from "../components/ui/PillSwitch";
 import Ribbon from "../components/ui/Ribbon";
-import LinkMenu from "../components/ui/LinkMenu";
 import Pic from "../components/ui/Pic";
 import { ClockCard, ChannelsCard, StatCard } from "../components/ui/Glass";
-import { useGo } from "../components/ui/Transition";
 import { useScrollVars, useCountUp } from "../lib/hooks";
-import { firstPath, pageById } from "../types/site";
 import Icon from "../components/ui/Icon";
 
-interface DestItem extends PillItem {
-  h: (string | { b: string })[];
-  p: string;
+interface HomeProps {
+  onNavigateSection?: (sectionId: string) => void;
 }
-
-const DEST: DestItem[] = [
-  {
-    id: "explorer",
-    label: "Explorer",
-    h: ["the beginning of a story between you and", { b: "the sky" }, "."],
-    p: "Pan across the whole sky and tune it to any of 102 infrared colours with official NASA DR1 imagery.",
-  },
-  {
-    id: "time",
-    label: "Time Machine",
-    h: ["a sky that is never", { b: "standing still" }, "."],
-    p: "Scrub through multiple dated surveys and watch genuine brown dwarfs and stars move and fade.",
-  },
-  {
-    id: "lab",
-    label: "Lab",
-    h: ["this is where you make a", { b: "discovery" }, "."],
-    p: "Detect candidate changes with DAOStarFinder, save verified finds, and inspect genuine light curves.",
-  },
-  {
-    id: "mission",
-    label: "Mission",
-    h: ["fly the", { b: "mission" }, "that maps it all."],
-    p: "Meet the observatory, inspect technical systems, then put your eyes to work in the training game.",
-  },
-];
 
 function Headline({ parts }: { parts: (string | { b: string })[] }) {
   return (
@@ -75,14 +43,26 @@ function Fact({
   );
 }
 
-export const Home: React.FC = () => {
-  const go = useGo();
-  const [i, setI] = useState(0);
-  const d = DEST[i] || DEST[0];
+export const Home: React.FC<HomeProps> = ({ onNavigateSection }) => {
   useScrollVars("home");
 
+  const scrollTo = (id: string) => {
+    if (onNavigateSection) {
+      onNavigateSection(id);
+    } else {
+      const el = document.getElementById(id);
+      if (el) {
+        if (window.__lenis) {
+          window.__lenis.scrollTo(el, { offset: -70, duration: 1.2 });
+        } else {
+          el.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    }
+  };
+
   return (
-    <>
+    <div className="home-container">
       {/* 1 — Cinematic Hero */}
       <section className="hero" data-tour="home-hero">
         <div className="horizon" aria-hidden="true">
@@ -91,37 +71,42 @@ export const Home: React.FC = () => {
         </div>
 
         <div className="sat" data-par="0.12">
-          <Satellite3D yaw={i * 1.1} />
+          <Satellite3D yaw={0.4} />
         </div>
 
-        <div className="hero-copy" key={d.id}>
+        <div className="hero-copy">
           <p className="mono tag">[SPHEREx · DR1 & QR3 · NASA / IPAC IRSA]</p>
-          <Headline parts={d.h} />
-          <p className="hero-p">{d.p}</p>
-          <button
-            className="btn white"
-            onClick={() => {
-              const targetPage = pageById(d.id);
-              if (targetPage) go(firstPath(targetPage), d.label);
-            }}
-          >
-            Go to {d.label} <span>↗</span>
-          </button>
+          <Headline
+            parts={[
+              "the beginning of a story between you and",
+              { b: "the sky" },
+              ".",
+            ]}
+          />
+          <p className="hero-p">
+            Pan across the whole sky and tune it to any of 102 infrared colours with official NASA
+            DR1 imagery, genuine Level 2 FITS archives, and multi-epoch time-domain astronomy.
+          </p>
+          <div className="flex items-center gap-3 mt-4">
+            <button
+              className="btn white cursor-pointer"
+              onClick={() => scrollTo("explorer")}
+            >
+              Explore the Sky <span>↓</span>
+            </button>
+            <button
+              className="btn orange cursor-pointer"
+              onClick={() => scrollTo("time-machine")}
+            >
+              Time Machine <span>↓</span>
+            </button>
+          </div>
         </div>
 
-        <PillSwitch
-          className="hero-pill"
-          items={DEST}
-          value={d.id}
-          onChange={(id) => {
-            const nextIdx = DEST.findIndex((x) => x.id === id);
-            if (nextIdx !== -1) setI(nextIdx);
-          }}
-        />
-
+        {/* Scroll indicator prompt */}
         <div className="scroll-hint mono">
           <i />
-          Scroll
+          Scroll to explore
         </div>
       </section>
 
@@ -176,39 +161,73 @@ export const Home: React.FC = () => {
         <p className="mono tag rv">[Pick a door]</p>
         <div className="doors-grid">
           {[
-            { d: DEST[0], k: "sky", s: 3, t: "Explore the sky", p: "Sky · Object · Spectral" },
-            { d: DEST[1], k: "galaxy", s: 8, t: "Travel in time", p: "Two years of passes" },
-            { d: DEST[2], k: "nebula", s: 5, t: "Make a discovery", p: "Discovery · Light curves" },
-            { d: DEST[3], k: "band", s: 2, t: "Join the mission", p: "Observatory · Game" },
-          ].map((c, n) => {
-            const targetPage = pageById(c.d.id);
-            const path = targetPage ? firstPath(targetPage) : "/";
-
-            return (
-              <a
-                key={c.d.id}
-                className="door rv"
-                style={{ "--d": `${n * 80}ms` } as React.CSSProperties}
-                href={path}
-                onClick={(e) => {
-                  e.preventDefault();
-                  go(path, c.d.label);
-                }}
-              >
-                <Pic kind={c.k} seed={c.s} w={480} h={600} alt="" />
-                <i className="door-shade" />
-                <span className="mono door-n">0{n + 1}</span>
-                <span className="door-t">{c.t}</span>
-                <span className="door-p mono">{c.p}</span>
-                <span className="door-a">↗</span>
-              </a>
-            );
-          })}
+            {
+              id: "explorer",
+              target: "explorer",
+              k: "sky",
+              s: 3,
+              t: "Explore the sky",
+              p: "Sky · Object · Spectral",
+            },
+            {
+              id: "time",
+              target: "time-machine",
+              k: "galaxy",
+              s: 8,
+              t: "Travel in time",
+              p: "Two years of passes",
+            },
+            {
+              id: "lab",
+              target: "labs",
+              k: "nebula",
+              s: 5,
+              t: "Make a discovery",
+              p: "Discovery · Light curves",
+            },
+            {
+              id: "mission",
+              target: "mission",
+              k: "band",
+              s: 2,
+              t: "Join the mission",
+              p: "Observatory · Training",
+            },
+          ].map((c, n) => (
+            <a
+              key={c.id}
+              className="door rv cursor-pointer"
+              style={{ "--d": `${n * 80}ms` } as React.CSSProperties}
+              href={`#${c.target}`}
+              onClick={(e) => {
+                e.preventDefault();
+                scrollTo(c.target);
+              }}
+            >
+              <Pic kind={c.k} seed={c.s} w={480} h={600} alt="" />
+              <i className="door-shade" />
+              <span className="mono door-n">0{n + 1}</span>
+              <span className="door-t">{c.t}</span>
+              <span className="door-p mono">{c.p}</span>
+              <span className="door-a">↓</span>
+            </a>
+          ))}
         </div>
       </section>
 
-      <LinkMenu title="Or jump straight in" />
-    </>
+      {/* 5 — Transition bridge into Explorer */}
+      <div className="py-14 text-center flex flex-col items-center justify-center">
+        <p className="mono tag mb-2">[Continue scrolling]</p>
+        <p className="text-sm text-[var(--mut)] mb-3">Next: All-Sky Survey & 102 Spectral Bands</p>
+        <button
+          onClick={() => scrollTo("explorer")}
+          className="text-xs font-mono text-[var(--accent)] hover:text-white flex items-center gap-1 cursor-pointer"
+        >
+          <span>Jump to Explorer</span>
+          <span>↓</span>
+        </button>
+      </div>
+    </div>
   );
 };
 

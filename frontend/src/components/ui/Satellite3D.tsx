@@ -161,13 +161,24 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
       }
     );
 
-    // 7. Animation Loop
+    // 7. Visibility tracking & Animation Loop
+    let isVisible = true;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+      },
+      { rootMargin: "100px" }
+    );
+    io.observe(container);
+
     const clock = new THREE.Clock();
     let curYaw = 0;
 
     const animate = () => {
       if (destroyed) return;
       rafId = requestAnimationFrame(animate);
+
+      if (!isVisible) return; // Pause expensive rendering when scrolled out of view
 
       const targetYaw = yawRef.current;
       curYaw += (targetYaw - curYaw) * 0.05;
@@ -197,6 +208,7 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
     // 9. Cleanup
     return () => {
       destroyed = true;
+      io.disconnect();
       cancelAnimationFrame(rafId);
       window.removeEventListener("resize", handleResize);
       controls.dispose();
