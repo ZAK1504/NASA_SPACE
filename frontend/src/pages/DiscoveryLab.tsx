@@ -85,8 +85,8 @@ export const DiscoveryLab: React.FC = () => {
           const date2 = data.observation_2?.date_obs?.slice(0, 10) || '2026-08-21';
           const disp = data.candidates[0].angular_displacement_arcsec;
           const noteText = selectedObject.slug === 'barnards-star'
-            ? `Inspected SPHEREx cross-epoch difference between ${date1} and ${date2}. Photutils DAOStarFinder astrometric reference star benchmark: ${disp}".`
-            : `Inspected SPHEREx calibrated Level 2 observation field for ${selectedObject.name}. Verified absence of spurious transient artifacts; candidate displacement: ${disp}".`;
+            ? `Inspected SPHEREx cross-epoch difference between ${date1} and ${date2} (359-day baseline). Predicted catalogue displacement (Gaia DR3 linear proper motion): 10.223″. Measured image centroid displacement (DAOStarFinder reference benchmark): ${disp}″.`
+            : `Inspected SPHEREx calibrated Level 2 observation field for ${selectedObject.name}. Verified absence of spurious transient artifacts; measured candidate centroid displacement: ${disp}".`;
           setDiscoveryNotes(noteText);
         } else {
           setSelectedCandidate(null);
@@ -685,7 +685,10 @@ export const DiscoveryLab: React.FC = () => {
                       <div className="flex flex-wrap gap-4 text-[11px] font-mono text-[#6EA8FE]">
                         <span>RA: {cand.ra.toFixed(4)}°</span>
                         <span>Dec: {cand.dec.toFixed(4)}°</span>
-                        <span>Displacement: {cand.angular_displacement_arcsec}"</span>
+                        <span>Measured Centroid Shift: {cand.angular_displacement_arcsec}"</span>
+                        {selectedObject.slug === 'barnards-star' && (
+                          <span className="text-[#F59E0B]">Predicted Catalogue Shift: 10.223"</span>
+                        )}
                       </div>
                     </div>
                   );

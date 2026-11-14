@@ -282,6 +282,24 @@ export const TimeMachine: React.FC = () => {
         </div>
       </div>
 
+      {/* Astrometric Proper Motion Distinction Banner (Barnard's Star) */}
+      {selectedObject?.slug === 'barnards-star' && manifest && manifest.total_frames >= 2 && (
+        <div className="bg-[#151E30] border border-[#263247] rounded-lg p-3 mb-4 flex items-start gap-2.5 text-xs">
+          <Info className="w-4 h-4 text-[#F59E0B] flex-shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-semibold text-[#E8EDF5]">Astrometric Motion Distinction:</span>
+              <Badge variant="amber">Predicted Catalogue Displacement: 10.223″</Badge>
+              <Badge variant="blue">Gaia DR3 Proper Motion</Badge>
+              <Badge variant="muted">Baseline: {manifest.baseline_days} days</Badge>
+            </div>
+            <p className="text-[#94A3B8] text-[11px] leading-relaxed">
+              Between the 2025-08-27 and 2026-08-21 observation visits (359-day baseline), Barnard's Star has a <strong className="text-[#E8EDF5]">predicted catalogue displacement of 10.223″</strong> (predominantly northward along +Dec) computed from Gaia DR3 linear proper motion astrometry (μ_α* = -801.55 mas/yr, μ_δ = +10362.55 mas/yr). This astronomical catalog prediction is distinct from empirical image-level centroid displacements measured by DAOStarFinder on SPHEREx 6.15″/px pixels.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Companion Star / Target Annotation Banner (e.g. Epsilon Indi A & B) */}
       {selectedObject?.companion && (
         <div className="bg-[#151E30] border border-[#263247] rounded-lg p-3 mb-4 flex items-start gap-2.5 text-xs">
@@ -827,8 +845,11 @@ export const TimeMachine: React.FC = () => {
                   </Badge>
                 </div>
                 <p className="text-[#94A3B8] mb-2">{cand.explanation}</p>
-                <div className="flex justify-between text-[11px] font-mono text-[#6EA8FE]">
-                  <span>Displacement: {cand.angular_displacement_arcsec}"</span>
+                <div className="flex flex-wrap justify-between gap-2 text-[11px] font-mono text-[#6EA8FE]">
+                  <span>Measured Centroid Shift: {cand.angular_displacement_arcsec}"</span>
+                  {selectedObject.slug === 'barnards-star' && (
+                    <span className="text-[#F59E0B]">Predicted Catalogue Shift: 10.223"</span>
+                  )}
                   <span>Confidence: {cand.confidence}</span>
                 </div>
               </div>

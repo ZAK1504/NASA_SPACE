@@ -28,6 +28,7 @@ class IrsaService:
         self.tap_url = settings.IRSA_TAP_URL
         self.cache_dir = settings.QUERY_CACHE_DIR
         self._tap_service = None
+        self.last_query_diagnostic: Dict[str, Any] = {}
 
     @property
     def tap_service(self):
@@ -45,11 +46,13 @@ class IrsaService:
         dec: float,
         radius_deg: float = 0.5,
         limit: int = 50,
-        bandpass: Optional[str] = None
+        bandpass: Optional[str] = None,
+        bypass_cache: bool = False
     ) -> List[Dict[str, Any]]:
         """
         Query official NASA/IPAC IRSA SPHEREx archive (spherex.obscore)
         using IVOA TAP spatial cone search with strict astronomical coordinate bounds.
+        Supports controlled metadata-cache bypass for live archive regression testing.
         """
         if not (0.0 <= ra <= 360.0):
             raise ValueError(f"Right Ascension {ra} out of valid astronomical range [0.0, 360.0] degrees.")
@@ -82,26 +85,44 @@ class IrsaService:
         """
 
         cache_file = self._get_cache_key(adql)
-        if cache_file.exists():
-            try:
-                with open(cache_file, "r") as f:
-                    return json.load(f)
-            except Exception:
-                pass
+        
+        # When cache bypass is not requested, check local caches first for instant response
+        if not bypass_cache:
+            if cache_file.exists():
+                try:
+                    with open(cache_file, "r") as f:
+                        data = json.load(f)
+                        self.last_query_diagnostic = {
+                            "live_query_attempted": False,
+                            "cached_query": True,
+                            "products_found": len(data),
+                            "status": "success",
+                            "bypass_cache": False
+                        }
+                        return data
+                except Exception:
+                    pass
 
-        # Check local TAP query cache inventory before live remote request
-        cached_inventory = self._search_cached_tap_inventory(
-            ra=ra,
-            dec=dec,
-            radius_deg=max(radius_deg, 1.2),
-            bandpass=bandpass,
-            limit=limit
-        )
-        if cached_inventory:
-            return cached_inventory
+            # Check local TAP query cache inventory before live remote request
+            cached_inventory = self._search_cached_tap_inventory(
+                ra=ra,
+                dec=dec,
+                radius_deg=max(radius_deg, 1.2),
+                bandpass=bandpass,
+                limit=limit
+            )
+            if cached_inventory:
+                self.last_query_diagnostic = {
+                    "live_query_attempted": False,
+                    "cached_inventory_match": True,
+                    "products_found": len(cached_inventory),
+                    "status": "success",
+                    "bypass_cache": False
+                }
+                return cached_inventory
 
+        # Live IRSA TAP Execution (either cache miss or explicit bypass_cache=True)
         try:
-            # Use async TAP job to ensure complete execution without http read timeouts
             job = self.tap_service.submit_job(adql)
             job.run()
             # Wait up to 4s for live response
@@ -172,29 +193,52 @@ class IrsaService:
             with open(cache_file, "w") as f:
                 json.dump(records, f)
 
+            self.last_query_diagnostic = {
+                "live_query_attempted": True,
+                "endpoint": self.tap_url,
+                "adql": adql,
+                "products_found": len(records),
+                "status": "success",
+                "bypass_cache": bypass_cache
+            }
             return records
 
         except Exception as e:
-            # 1. Exact ADQL hash match
-            if cache_file.exists():
-                try:
-                    with open(cache_file, "r") as f:
-                        return json.load(f)
-                except Exception:
-                    pass
+            err_msg = str(e)
+            self.last_query_diagnostic = {
+                "live_query_attempted": True,
+                "endpoint": self.tap_url,
+                "adql": adql,
+                "error": err_msg,
+                "status": "failed",
+                "bypass_cache": bypass_cache
+            }
 
-            # 2. Resilient spatial cone search across local genuine TAP archive cache
-            fallback_records = self._search_cached_tap_inventory(
-                ra=ra,
-                dec=dec,
-                radius_deg=max(radius_deg, 1.2),
-                bandpass=bandpass,
-                limit=limit
-            )
-            if fallback_records:
-                return fallback_records
+            if not bypass_cache:
+                # 1. Exact ADQL hash match
+                if cache_file.exists():
+                    try:
+                        with open(cache_file, "r") as f:
+                            return json.load(f)
+                    except Exception:
+                        pass
 
-            raise RuntimeError(f"IRSA archive query failed: {str(e)}")
+                # 2. Resilient spatial cone search across local genuine TAP archive cache
+                fallback_records = self._search_cached_tap_inventory(
+                    ra=ra,
+                    dec=dec,
+                    radius_deg=max(radius_deg, 1.2),
+                    bandpass=bandpass,
+                    limit=limit
+                )
+                if fallback_records:
+                    self.last_query_diagnostic["fallback_used"] = True
+                    self.last_query_diagnostic["products_found"] = len(fallback_records)
+                    return fallback_records
+
+            # If bypass_cache is requested or no fallback inventory covers it:
+            # Return empty list rather than crashing, while preserving diagnostic failure provenance
+            return []
 
     def _search_cached_tap_inventory(
         self,
@@ -257,9 +301,28 @@ class IrsaService:
         if cache_file.exists():
             try:
                 with open(cache_file, "r") as f:
-                    return json.load(f).get("fits_url")
+                    u = json.load(f).get("fits_url")
+                    if u:
+                        return u
             except Exception:
                 pass
+
+        # Check known cached datalink index by matching obs_id and bandpass/detector in URL
+        for df in self.cache_dir.glob("dl_*.json"):
+            try:
+                with open(df, "r") as f:
+                    entry = json.load(f)
+                    fu = entry.get("fits_url", "")
+                    if fu:
+                        # Extract obs_id and detector tokens from datalink_url
+                        tokens = datalink_url.replace("?", "/").replace("&", "/").split("/")
+                        if len(tokens) >= 2:
+                            obs_token = tokens[-2]
+                            det_token = tokens[-1]
+                            if obs_token in fu and det_token in fu:
+                                return fu
+            except Exception:
+                continue
 
         try:
             dl = vo.dal.adhoc.DatalinkResults.from_result_url(datalink_url)

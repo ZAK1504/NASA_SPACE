@@ -52,11 +52,15 @@ def _resolve_fits_file_for_obs(
                     h = fits.getheader(f, 1)
                     w = WCS(h)
                     if w.is_celestial:
-                        c_center = w.pixel_to_world(1020, 1020)
-                        sep = target_c.separation(c_center).deg
-                        if sep < min_sep and sep <= 1.8:
-                            min_sep = sep
-                            best_f = f
+                        px, py = w.world_to_pixel(target_c)
+                        naxis1 = int(h.get("NAXIS1", 2040))
+                        naxis2 = int(h.get("NAXIS2", 2040))
+                        if 0 <= px < naxis1 and 0 <= py < naxis2:
+                            c_center = w.pixel_to_world(1020, 1020)
+                            sep = target_c.separation(c_center).deg
+                            if sep < min_sep:
+                                min_sep = sep
+                                best_f = f
                 except Exception:
                     continue
             if best_f is not None:
@@ -73,9 +77,10 @@ def _resolve_fits_file_for_obs(
                 if target_ra is not None and target_dec is not None:
                     w = WCS(h)
                     if w.is_celestial:
-                        c_center = w.pixel_to_world(1020, 1020)
-                        target_c = SkyCoord(ra=target_ra * u.deg, dec=target_dec * u.deg, frame="icrs")
-                        if target_c.separation(c_center).deg <= 1.8:
+                        px, py = w.world_to_pixel(target_c)
+                        naxis1 = int(h.get("NAXIS1", 2040))
+                        naxis2 = int(h.get("NAXIS2", 2040))
+                        if 0 <= px < naxis1 and 0 <= py < naxis2:
                             return f
                 else:
                     return f
@@ -91,8 +96,10 @@ def _resolve_fits_file_for_obs(
                 h = fits.getheader(f, 1)
                 w = WCS(h)
                 if w.is_celestial:
-                    c_center = w.pixel_to_world(1020, 1020)
-                    if target_c.separation(c_center).deg <= 1.8:
+                    px, py = w.world_to_pixel(target_c)
+                    naxis1 = int(h.get("NAXIS1", 2040))
+                    naxis2 = int(h.get("NAXIS2", 2040))
+                    if 0 <= px < naxis1 and 0 <= py < naxis2:
                         covering_files.append(f)
             except Exception:
                 continue
@@ -158,8 +165,10 @@ def compare_observations(req: ComparisonRequest = Body(...)):
                 h = fits.getheader(f, 1)
                 w = WCS(h)
                 if w.is_celestial:
-                    c_center = w.pixel_to_world(1020, 1020)
-                    if target_sky.separation(c_center).deg <= 1.8:
+                    px, py = w.world_to_pixel(target_sky)
+                    naxis1 = int(h.get("NAXIS1", 2040))
+                    naxis2 = int(h.get("NAXIS2", 2040))
+                    if 0 <= px < naxis1 and 0 <= py < naxis2:
                         covering_files.append(f)
             except Exception:
                 continue
@@ -355,7 +364,8 @@ def get_time_machine_manifest(
     cutout_size_arcsec: float = Body(900.0),
     stretch: str = Body("asinh"),
     colormap: str = Body("gray"),
-    smooth: bool = Body(True)
+    smooth: bool = Body(True),
+    bypass_cache: bool = Body(False)
 ):
     """
     Generate an authentic multi-date observation sequence manifest for Time Machine playback.
@@ -363,8 +373,8 @@ def get_time_machine_manifest(
     exposure timestamps, and prepares chronological SPHEREx frames on a fixed celestial
     comparison grid to preserve actual astronomical proper motion.
     """
-    cache_key = f"manifest_{round(ra, 4)}_{round(dec, 4)}_{round(cutout_size_arcsec, 1)}_{stretch}_{colormap}_{smooth}_{target_name}"
-    if cache_key in MANIFEST_CACHE:
+    cache_key = f"manifest_{round(ra, 4)}_{round(dec, 4)}_{round(cutout_size_arcsec, 1)}_{stretch}_{colormap}_{smooth}_{target_name}_{bypass_cache}"
+    if not bypass_cache and cache_key in MANIFEST_CACHE:
         return MANIFEST_CACHE[cache_key]
 
     response = archive_discovery_service.discover_and_prepare_manifest(
@@ -374,7 +384,9 @@ def get_time_machine_manifest(
         cutout_size_arcsec=cutout_size_arcsec,
         stretch=stretch,
         colormap=colormap,
-        smooth=smooth
+        smooth=smooth,
+        bypass_cache=bypass_cache
     )
-    MANIFEST_CACHE[cache_key] = response
+    if not bypass_cache:
+        MANIFEST_CACHE[cache_key] = response
     return response
