@@ -1,0 +1,288 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Map, Search, Navigation, Crosshair, Layers,
+  ExternalLink, ArrowRight, Info
+} from 'lucide-react';
+import { FEATURED_OBJECTS } from '../constants/objects';
+import { api } from '../services/api';
+import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
+import { InfoPanel } from '../components/ui/InfoPanel';
+
+export const ExploreSky: React.FC = () => {
+  const navigate = useNavigate();
+  const [selectedTarget, setSelectedTarget] = useState<any>(FEATURED_OBJECTS[0]);
+  const [surveyLayer, setSurveyLayer] = useState<string>('P/DSS2/color');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searching, setSearching] = useState<boolean>(false);
+  const [searchMessage, setSearchMessage] = useState<string | null>(null);
+  const [aladinFailed, setAladinFailed] = useState<boolean>(false);
+
+  const aladinContainerRef = useRef<HTMLDivElement>(null);
+  const aladinInstanceRef = useRef<any>(null);
+
+  // Initialize Aladin Lite
+  useEffect(() => {
+    // Dynamically load Aladin Lite v3 script if not present
+    const loadAladin = () => {
+      if ((window as any).A) {
+        initAladin();
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js';
+      script.async = true;
+      script.onload = () => {
+        initAladin();
+      };
+      script.onerror = () => {
+        console.warn('Aladin Lite external script unavailable, activating celestial context fallback.');
+        setAladinFailed(true);
+      };
+      document.body.appendChild(script);
+    };
+
+    const initAladin = () => {
+      if (!aladinContainerRef.current || !(window as any).A) return;
+      try {
+        if (!aladinInstanceRef.current) {
+          aladinInstanceRef.current = (window as any).A.aladin(aladinContainerRef.current, {
+            survey: surveyLayer,
+            fov: 0.8,
+            target: `${selectedTarget.ra} ${selectedTarget.dec}`,
+            cooFrame: 'J2000',
+            showReticle: true,
+            showZoomControl: true,
+            showFullscreenControl: false,
+            showLayersControl: false,
+            showGotoControl: false,
+          });
+
+          // Add markers for featured objects
+          const cat = (window as any).A.catalog({ name: 'SPHEREx Targets', sourceSize: 18, color: '#6EA8FE' });
+          aladinInstanceRef.current.addCatalog(cat);
+
+          FEATURED_OBJECTS.forEach((obj) => {
+            const marker = (window as any).A.marker(obj.ra, obj.dec, {
+              popupTitle: obj.name,
+              popupDesc: `${obj.type} · RA ${obj.ra.toFixed(4)}°, Dec ${obj.dec.toFixed(4)}°`,
+            });
+            cat.addSources([marker]);
+          });
+        }
+      } catch (e) {
+        console.error('Aladin Lite init error:', e);
+      }
+    };
+
+    loadAladin();
+  }, []);
+
+  // Update Aladin position when selectedTarget changes
+  useEffect(() => {
+    if (aladinInstanceRef.current && selectedTarget) {
+      try {
+        aladinInstanceRef.current.gotoRaDec(selectedTarget.ra, selectedTarget.dec);
+      } catch (e) {
+        console.error('Aladin goto error:', e);
+      }
+    }
+  }, [selectedTarget]);
+
+  // Update survey layer
+  const handleLayerChange = (layer: string) => {
+    setSurveyLayer(layer);
+    if (aladinInstanceRef.current) {
+      try {
+        aladinInstanceRef.current.setImageSurvey(layer);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    setSearching(true);
+    setSearchMessage(null);
+    try {
+      const res = await api.resolveCoordinates(searchQuery);
+      if (res.resolved && res.ra !== undefined && res.dec !== undefined) {
+        const newTarget = {
+          id: 'custom',
+          name: searchQuery,
+          type: res.source === 'SIMBAD' ? 'Resolved Celestial Object' : 'Sky Position',
+          ra: res.ra,
+          dec: res.dec,
+          ra_hms: res.ra_hms || `${res.ra.toFixed(4)}°`,
+          dec_dms: res.dec_dms || `${res.dec.toFixed(4)}°`,
+          description: `Resolved via ${res.source}. Position on celestial sphere.`,
+          tags: ['resolved target'],
+        };
+        setSelectedTarget(newTarget);
+        setSearchMessage(`Resolved to RA ${res.ra.toFixed(4)}°, Dec ${res.dec.toFixed(4)}° (${res.source})`);
+      } else {
+        setSearchMessage(res.error || 'Object not found');
+      }
+    } catch (err: any) {
+      setSearchMessage('Search request failed');
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto px-6 py-8">
+      {/* Title */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Map className="w-5 h-5 text-[#6EA8FE]" />
+            <h1 className="text-2xl font-bold text-[#E8EDF5]">Explore Sky</h1>
+          </div>
+          <p className="text-sm text-[#94A3B8]">
+            Interactive celestial map powered by Aladin Lite with SPHEREx target footprints
+          </p>
+        </div>
+
+        {/* Survey Layer Picker */}
+        <div className="flex items-center gap-2">
+          <Layers className="w-4 h-4 text-[#94A3B8]" />
+          <span className="text-xs text-[#94A3B8]">Background Survey:</span>
+          <select
+            value={surveyLayer}
+            onChange={(e) => handleLayerChange(e.target.value)}
+            className="bg-[#151E30] border border-[#263247] text-[#E8EDF5] text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-[#6EA8FE]"
+          >
+            <option value="P/DSS2/color">DSS2 Color (Optical)</option>
+            <option value="P/2MASS/color">2MASS Color (Near-Infrared J/H/Ks)</option>
+            <option value="P/allWISE/color">AllWISE Color (Mid-Infrared)</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Target Quick Jump and Search */}
+      <div className="bg-[#151E30] border border-[#263247] rounded p-4 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* Quick jump buttons */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-[#94A3B8] mr-1">Quick Jump:</span>
+            {FEATURED_OBJECTS.map((obj) => (
+              <button
+                key={obj.id}
+                onClick={() => setSelectedTarget(obj)}
+                className={`px-2.5 py-1 text-xs rounded border transition-colors cursor-pointer ${
+                  selectedTarget?.slug === obj.slug
+                    ? 'bg-[#6EA8FE] text-[#0B1020] border-[#6EA8FE]'
+                    : 'bg-[#0B1020] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+                }`}
+              >
+                {obj.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Coordinate / Object Search Form */}
+          <form onSubmit={handleSearch} className="flex gap-2 min-w-[280px]">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94A3B8]" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Resolve name (e.g. Vega) or RA, Dec"
+                className="w-full bg-[#0B1020] border border-[#263247] rounded pl-8 pr-2 py-1 text-xs text-[#E8EDF5] focus:outline-none focus:border-[#6EA8FE]"
+              />
+            </div>
+            <Button variant="primary" size="sm" loading={searching}>
+              Go
+            </Button>
+          </form>
+        </div>
+
+        {searchMessage && (
+          <div className="mt-2 text-xs font-mono text-[#6EA8FE]">
+            {searchMessage}
+          </div>
+        )}
+      </div>
+
+      {/* Main Aladin Map Container */}
+      <div className="bg-[#0B1020] border border-[#263247] rounded overflow-hidden relative mb-6" style={{ height: '62vh' }}>
+        <div ref={aladinContainerRef} className="w-full h-full" />
+
+        {aladinFailed && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0B1020]/90 backdrop-blur-sm p-6 text-center z-10">
+            <div className="relative w-48 h-48 rounded-full border border-[#6EA8FE]/30 flex items-center justify-center mb-4 bg-gradient-to-b from-[#1a2540]/40 to-transparent shadow-glow-blue animate-pulse">
+              <div className="absolute inset-2 rounded-full border border-dashed border-[#263247]" />
+              <div className="w-3 h-3 rounded-full bg-[#6EA8FE] shadow-glow-blue" />
+              <div className="absolute -top-2 px-2 py-0.5 rounded bg-[#151E30] border border-[#263247] text-[10px] font-mono text-[#6EA8FE]">
+                Target: {selectedTarget?.name}
+              </div>
+            </div>
+            <div className="text-sm font-bold text-[#E8EDF5] mb-1">
+              Celestial Sphere Contextual View ({surveyLayer})
+            </div>
+            <p className="text-xs text-[#94A3B8] max-w-md mb-4 font-mono">
+              RA {selectedTarget?.ra.toFixed(4)}° · Dec {selectedTarget?.dec.toFixed(4)}° · Coordinate Frame: ICRS / J2000
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => navigate(`/objects/${selectedTarget?.slug || selectedTarget?.id}`)}
+              >
+                Inspect Target in Object Explorer
+                <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Selected Target HUD Overlay */}
+        {selectedTarget && (
+          <div className="absolute top-4 left-4 z-20 bg-[#151E30]/90 backdrop-blur-md border border-[#263247] rounded p-4 max-w-xs shadow-xl text-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-[#E8EDF5]">{selectedTarget.name}</span>
+              <Badge variant="blue">{selectedTarget.type}</Badge>
+            </div>
+            <div className="font-mono text-[#6EA8FE] space-y-0.5 text-[11px]">
+              <div>RA: {selectedTarget.ra.toFixed(4)}° ({selectedTarget.ra_hms || selectedTarget.raHms})</div>
+              <div>Dec: {selectedTarget.dec.toFixed(4)}° ({selectedTarget.dec_dms || selectedTarget.decDms})</div>
+            </div>
+            <div className="pt-2 border-t border-[#263247] flex gap-2">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => navigate(`/objects/${selectedTarget.slug || selectedTarget.id}`)}
+                className="w-full text-xs"
+                rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+              >
+                Inspect in Explorer
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Layer Attribution Badge */}
+        <div className="absolute bottom-3 right-3 z-20 bg-[#0B1020]/80 border border-[#263247] rounded px-2.5 py-1 text-[10px] text-[#94A3B8]">
+          Layer: <span className="text-[#E8EDF5]">{surveyLayer}</span> · CDS Strasbourg
+        </div>
+      </div>
+
+      <InfoPanel title="About the Aladin Lite Sky Map">
+        <p>
+          <strong className="text-[#E8EDF5]">Aladin Lite</strong> is an interactive sky viewer developed by the Centre de Données astronomiques de Strasbourg (CDS).
+          It displays hierarchical celestial all-sky surveys (HiPS) projected onto the celestial sphere.
+        </p>
+        <p>
+          <strong className="text-[#E8EDF5]">Data Attribution:</strong> The background imagery is sourced from optical (DSS2) and infrared surveys (2MASS, AllWISE).
+          This provides the astronomical context and coordinate grid. Click on any target to load actual SPHEREx observations in the Object Explorer.
+        </p>
+      </InfoPanel>
+    </div>
+  );
+};
