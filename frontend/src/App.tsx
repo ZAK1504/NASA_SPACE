@@ -1,38 +1,66 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Layout }           from './components/layout/Layout';
-import { Home }             from './pages/Home';
-import { ExploreSky }       from './pages/ExploreSky';
-import { ObjectExplorer }   from './pages/ObjectExplorer';
-import { ObjectDetail }     from './pages/ObjectDetail';
-import { TimeMachine }      from './pages/TimeMachine';
-import { DiscoveryLab }     from './pages/DiscoveryLab';
-import { SpectralExplorer } from './pages/SpectralExplorer';
-import { LightCurves }      from './pages/LightCurves';
-import { Missions }         from './pages/Missions';
-import { MyDiscoveries }    from './pages/MyDiscoveries';
-import { About }            from './pages/About';
-import { Settings }         from './pages/Settings';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Layout } from './components/layout/Layout';
+import { TransitionProvider } from './components/ui/Transition';
+import { Home } from './pages/Home';
+import { ExplorerPage } from './pages/ExplorerPage';
+import { TimePage } from './pages/TimePage';
+import { LabPage } from './pages/LabPage';
+import { MissionPage } from './pages/MissionPage';
+import { About } from './pages/About';
+import { Settings } from './pages/Settings';
+
+// Helper component that preserves query parameters during redirection
+const RedirectWithQuery: React.FC<{ to: string }> = ({ to }) => {
+  const location = useLocation();
+  return <Navigate to={`${to}${location.search}`} replace />;
+};
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route index                       element={<Home />} />
-          <Route path="explore"              element={<ExploreSky />} />
-          <Route path="objects"              element={<ObjectExplorer />} />
-          <Route path="objects/:objectId"    element={<ObjectDetail />} />
-          <Route path="time-machine"         element={<TimeMachine />} />
-          <Route path="discovery-lab"        element={<DiscoveryLab />} />
-          <Route path="spectra"              element={<SpectralExplorer />} />
-          <Route path="light-curves"         element={<LightCurves />} />
-          <Route path="missions"             element={<Missions />} />
-          <Route path="missions/:missionId"  element={<Missions />} />
-          <Route path="discoveries"          element={<MyDiscoveries />} />
-          <Route path="about"                element={<About />} />
-          <Route path="settings"             element={<Settings />} />
-        </Route>
-      </Routes>
+      <TransitionProvider>
+        <Routes>
+          <Route element={<Layout />}>
+            {/* 1. Cinematic Homepage */}
+            <Route index element={<Home />} />
+
+            {/* 2. Explorer Workspace (All-sky, Object, Spectral) */}
+            <Route path="explorer" element={<Navigate to="/explorer/sky" replace />} />
+            <Route path="explorer/:sub" element={<ExplorerPage />} />
+            <Route path="explorer/object/:objectId" element={<ExplorerPage defaultSub="object" />} />
+
+            {/* 3. Time Machine Workspace (Time-domain multi-epoch analysis) */}
+            <Route path="time" element={<TimePage />} />
+
+            {/* 4. Lab Workspace (Discovery, Light curves, My discovery) */}
+            <Route path="lab" element={<Navigate to="/lab/discovery" replace />} />
+            <Route path="lab/:sub" element={<LabPage />} />
+
+            {/* 5. Mission Workspace (3D Observatory, facts, simulation & guided missions) */}
+            <Route path="mission" element={<MissionPage />} />
+
+            {/* 6. General / Information Pages */}
+            <Route path="about" element={<About />} />
+            <Route path="settings" element={<Settings />} />
+
+            {/* 7. Backward-Compatible Scientific Route Aliases (Preserving all deep-links & search query parameters) */}
+            <Route path="explore" element={<RedirectWithQuery to="/explorer/sky" />} />
+            <Route path="objects" element={<RedirectWithQuery to="/explorer/object" />} />
+            <Route path="objects/:objectId" element={<ExplorerPage defaultSub="object" />} />
+            <Route path="spectra" element={<RedirectWithQuery to="/explorer/spectral" />} />
+            <Route path="time-machine" element={<RedirectWithQuery to="/time" />} />
+            <Route path="discovery-lab" element={<RedirectWithQuery to="/lab/discovery" />} />
+            <Route path="light-curves" element={<RedirectWithQuery to="/lab/light-curves" />} />
+            <Route path="discoveries" element={<RedirectWithQuery to="/lab/my-discovery" />} />
+            <Route path="missions" element={<RedirectWithQuery to="/mission" />} />
+            <Route path="missions/:missionId" element={<MissionPage />} />
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </TransitionProvider>
     </BrowserRouter>
   );
 }

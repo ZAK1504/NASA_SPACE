@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Sidebar }   from './Sidebar';
-import { MobileNav } from './MobileNav';
-import { TopBar }    from './TopBar';
+import { Navbar } from '../Navbar';
+import { Starfield } from '../ui/Starfield';
+import { Backdrop } from '../ui/Backdrop';
 import { CommandPalette } from '../navigation/CommandPalette';
-import { CosmicCopilot }  from '../assistant/CosmicCopilot';
+import { CosmicCopilot } from '../assistant/CosmicCopilot';
+import { useGuidedTour } from '../../hooks/useGuidedTour';
+import { useSmoothScroll } from '../../lib/hooks';
 
 export const Layout: React.FC = () => {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const { startTour } = useGuidedTour();
+
+  // Initialize Lenis smooth scroll
+  useSmoothScroll();
 
   // Global hotkey: Ctrl+K or Cmd+K
   useEffect(() => {
@@ -22,22 +28,20 @@ export const Layout: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0B1020]">
-      {/* Desktop sidebar */}
-      <div className="hidden md:block">
-        <Sidebar />
-      </div>
+    <div className="cinematic-shell min-h-screen bg-black text-[#f3efe8] relative flex flex-col selection:bg-[#f4a272] selection:text-black">
+      {/* Deep-space cosmic backdrop */}
+      <Backdrop />
 
-      {/* Main Content */}
-      <div className="md:ml-60 min-h-screen flex flex-col">
-        <TopBar onOpenCommandPalette={() => setCommandPaletteOpen(true)} />
-        <main className="flex-1 pb-16 md:pb-0">
-          <Outlet />
-        </main>
-      </div>
+      {/* 3-layer parallax starfield with shooting stars */}
+      <Starfield />
 
-      {/* Mobile nav */}
-      <MobileNav />
+      {/* Cinematic Top Navigation Header */}
+      <Navbar onStartTour={() => startTour('getting-started')} />
+
+      {/* Main Content Area */}
+      <main className="flex-1 w-full relative z-10 flex flex-col">
+        <Outlet />
+      </main>
 
       {/* Global Quick Command Palette (Ctrl+K / ⌘K) */}
       <CommandPalette
@@ -50,3 +54,5 @@ export const Layout: React.FC = () => {
     </div>
   );
 };
+
+export default Layout;
