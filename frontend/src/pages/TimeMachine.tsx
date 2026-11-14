@@ -44,7 +44,7 @@ export const TimeMachine: React.FC = () => {
         'wise-0855': { obs1: '2025W50_2A_0254_1', obs2: '2025W50_2A_0254_1' },
         'epsilon-indi-b': { obs1: '2026W40_1A_0692_1', obs2: '2026W40_1A_0692_1' },
         'r-draconis': { obs1: '2026W29_1A_0430_1', obs2: '2026W29_1A_0430_1' },
-        'rw-aurigae': { obs1: '2025W35_1A_0444_3', obs2: '2026W34_2A_0249_1' },
+        'rw-aurigae': { obs1: '2026W35_1A_0079_4', obs2: '2026W35_1A_0079_4' },
       };
       const pair = targetObsPairs[selectedObject.slug] || targetObsPairs['barnards-star'];
       setEpoch1Id(pair.obs1);
@@ -173,6 +173,7 @@ export const TimeMachine: React.FC = () => {
   }, [viewMode, isBlinking, blinkSpeedMs]);
 
   const activeFrame: TimeMachineFrame | undefined = manifest?.frames[currentFrameIndex];
+  const isSingleEpoch = !manifest || manifest.frames.length <= 1;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
@@ -183,6 +184,9 @@ export const TimeMachine: React.FC = () => {
             <Clock className="w-5 h-5 text-[#6EA8FE]" />
             <h1 className="text-2xl font-bold text-[#E8EDF5]">SPHEREx Time Machine</h1>
             <Badge variant="blue">NASA Planet X Challenge</Badge>
+            {isSingleEpoch && (
+              <Badge variant="amber">Single Epoch Available</Badge>
+            )}
           </div>
           <p className="text-sm text-[#94A3B8]">
             Multi-epoch time-domain astronomical observation player across actual NASA SPHEREx observation dates
@@ -430,9 +434,10 @@ export const TimeMachine: React.FC = () => {
                         size="sm"
                         variant={isPlaying ? 'secondary' : 'primary'}
                         onClick={() => setIsPlaying(!isPlaying)}
+                        disabled={isSingleEpoch}
                         leftIcon={isPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
                       >
-                        {isPlaying ? 'Pause' : 'Play Time-Lapse'}
+                        {isSingleEpoch ? 'Single Epoch (Playback Disabled)' : isPlaying ? 'Pause' : 'Play Time-Lapse'}
                       </Button>
 
                       <button
@@ -533,30 +538,50 @@ export const TimeMachine: React.FC = () => {
                       {comparison.observation_1?.obs_id}
                     </span>
                   </div>
-                  <div className="aspect-square bg-[#0B1020] border border-[#263247] rounded-lg overflow-hidden">
-                    <img
-                      src={comparison.epoch1_image_base64}
-                      alt="Earlier Epoch"
-                      className="w-full h-full object-contain"
-                    />
+                  <div className="aspect-square bg-[#070B14] border border-[#263247] rounded-lg overflow-hidden flex items-center justify-center">
+                    {comparison.epoch1_image_base64 ? (
+                      <img
+                        src={comparison.epoch1_image_base64}
+                        alt="Earlier Epoch"
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-xs text-[#94A3B8]">Observation unavailable</span>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex flex-col">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-semibold text-[#F3B85B]">
-                      Later Epoch: {comparison.observation_2?.date_obs?.slice(0, 10)}
+                      {isSingleEpoch ? 'Second Epoch (Pending Release)' : `Later Epoch: ${comparison.observation_2?.date_obs?.slice(0, 10)}`}
                     </span>
                     <span className="text-[11px] font-mono text-[#94A3B8]">
-                      {comparison.observation_2?.obs_id}
+                      {isSingleEpoch ? 'Single Visit Available' : comparison.observation_2?.obs_id}
                     </span>
                   </div>
-                  <div className="aspect-square bg-[#0B1020] border border-[#263247] rounded-lg overflow-hidden">
-                    <img
-                      src={comparison.epoch2_image_base64}
-                      alt="Later Epoch"
-                      className="w-full h-full object-contain"
-                    />
+                  <div className="aspect-square bg-[#070B14] border border-[#263247] rounded-lg overflow-hidden flex items-center justify-center">
+                    {isSingleEpoch ? (
+                      <div className="text-center p-6 space-y-2 max-w-xs">
+                        <Clock className="w-8 h-8 text-[#F3B85B] mx-auto opacity-70" />
+                        <p className="text-xs font-semibold text-[#E8EDF5]">Single Observation Epoch Available</p>
+                        <p className="text-[11px] text-[#94A3B8] leading-relaxed">
+                          Only 1 calibrated Level 2 observation visit is currently available in the archive for {selectedObject.name}.
+                          Multi-epoch cross-comparison requires subsequent visits.
+                        </p>
+                        <p className="text-[10px] text-[#6EA8FE]">
+                          Select <button onClick={() => { setSearchParams({ object: 'barnards-star' }); }} className="underline font-bold">Barnard's Star</button> to compare two genuine observation dates (2025 vs 2026).
+                        </p>
+                      </div>
+                    ) : comparison.epoch2_image_base64 ? (
+                      <img
+                        src={comparison.epoch2_image_base64}
+                        alt="Later Epoch"
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-xs text-[#94A3B8]">Observation unavailable</span>
+                    )}
                   </div>
                 </div>
               </div>

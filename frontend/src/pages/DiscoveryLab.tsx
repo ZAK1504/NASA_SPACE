@@ -11,7 +11,7 @@ import { Badge } from '../components/ui/Badge';
 import { InfoPanel } from '../components/ui/InfoPanel';
 
 export const DiscoveryLab: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const objectSlug = searchParams.get('object') || 'barnards-star';
@@ -42,18 +42,18 @@ export const DiscoveryLab: React.FC = () => {
     setSavedSuccess(false);
 
     // Target-specific authentic SPHEREx observation pairs
-    const targetObsPairs: Record<string, { obs1: string; obs2: string }> = {
+    const targetObsPairs: Record<string, { obs1: string; obs2?: string }> = {
       'barnards-star': { obs1: '2025W35_1A_0444_3', obs2: '2026W34_2A_0249_1' },
       'wise-0855': { obs1: '2025W50_2A_0254_1', obs2: '2025W50_2A_0254_1' },
       'epsilon-indi-b': { obs1: '2026W40_1A_0692_1', obs2: '2026W40_1A_0692_1' },
       'r-draconis': { obs1: '2026W29_1A_0430_1', obs2: '2026W29_1A_0430_1' },
-      'rw-aurigae': { obs1: '2025W35_1A_0444_3', obs2: '2026W34_2A_0249_1' },
+      'rw-aurigae': { obs1: '2026W35_1A_0079_4', obs2: '2026W35_1A_0079_4' },
     };
     const pair = targetObsPairs[selectedObject.slug] || targetObsPairs['barnards-star'];
 
     api.compareObservations({
       obsId1: pair.obs1,
-      obsId2: pair.obs2,
+      obsId2: pair.obs2 || pair.obs1,
       targetName: selectedObject.name,
       centerRa: selectedObject.ra,
       centerDec: selectedObject.dec,
@@ -319,7 +319,7 @@ export const DiscoveryLab: React.FC = () => {
               <Badge variant="blue">Epoch 2 − Epoch 1</Badge>
             </div>
 
-            <div className="aspect-[4/3] bg-[#0B1020] border border-[#263247] rounded overflow-hidden flex items-center justify-center relative">
+            <div className="aspect-[4/3] bg-[#070B14] border border-[#263247] rounded overflow-hidden flex items-center justify-center relative">
               {loading ? (
                 <div className="text-center p-4">
                   <RefreshCw className="w-6 h-6 text-[#6EA8FE] animate-spin mx-auto mb-2" />
@@ -332,7 +332,16 @@ export const DiscoveryLab: React.FC = () => {
                   className="w-full h-full object-contain"
                 />
               ) : (
-                <p className="text-xs text-[#94A3B8]">Image unavailable</p>
+                <div className="text-center p-6 space-y-2 max-w-sm">
+                  <Info className="w-6 h-6 text-[#6EA8FE] mx-auto opacity-80" />
+                  <p className="text-xs font-semibold text-[#E8EDF5]">Single Observation Visit Available</p>
+                  <p className="text-[11px] text-[#94A3B8] leading-relaxed">
+                    Image subtraction requires at least 2 distinct observation visits. {selectedObject.name} currently has 1 calibrated Level 2 observation visit in the local archive.
+                  </p>
+                  <p className="text-[10px] text-[#F3B85B]">
+                    Select <button onClick={() => setSearchParams({ object: 'barnards-star' })} className="underline font-bold">Barnard's Star</button> to explore active cross-epoch difference imaging (2025 vs 2026).
+                  </p>
+                </div>
               )}
             </div>
 

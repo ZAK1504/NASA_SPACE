@@ -45,6 +45,13 @@ export const ExploreSky: React.FC = () => {
               showGotoControl: false,
             });
 
+            try {
+              aladinInstanceRef.current.setBackgroundColor('#070B14');
+              aladinInstanceRef.current.setImageSurvey(surveyLayer);
+            } catch (layerErr) {
+              console.warn('Initial survey configuration notice:', layerErr);
+            }
+
             // Add markers for featured objects
             try {
               const cat = A.catalog({ name: 'SPHEREx Targets', sourceSize: 18, color: '#6EA8FE' });

@@ -138,36 +138,26 @@ def generate_preview(req: PreviewRequest = Body(...)):
     # Load genuine science data and WCS
     data, wcs, header = fits_service.get_image_data_and_wcs(fits_path)
 
-    # Determine cutout center safely without TAN divergence
-    cutout_data = data
-    cutout_wcs = wcs
-    if wcs is not None and wcs.is_celestial:
-        try:
+    # Extract standardized North-up, East-left tangential cutout
+    target_ra = ra
+    target_dec = dec
+    if target_ra is None or target_dec is None:
+        if wcs is not None and getattr(wcs, 'is_celestial', False):
             c_center = wcs.pixel_to_world(data.shape[-1] / 2.0, data.shape[-2] / 2.0)
-            if ra is not None and dec is not None:
-                target_coord = SkyCoord(ra=ra * u.deg, dec=dec * u.deg, frame="icrs")
-                if target_coord.separation(c_center).deg < 1.2:
-                    c_ra, c_dec = ra, dec
-                else:
-                    c_ra, c_dec = float(c_center.ra.deg), float(c_center.dec.deg)
-            else:
-                c_ra, c_dec = float(c_center.ra.deg), float(c_center.dec.deg)
+            target_ra = float(c_center.ra.deg)
+            target_dec = float(c_center.dec.deg)
+        else:
+            target_ra = 269.4463
+            target_dec = 4.7681
 
-            cutout_data, cutout_wcs = image_processing_service.extract_cutout(
-                image_data=data,
-                wcs=wcs,
-                center_ra=c_ra,
-                center_dec=c_dec,
-                size_arcsec=max(fov_arcsec, 30.0)
-            )
-        except Exception:
-            pass
-
-    # If full frame is too large (>512x512) and no cutout was made, take center cutout
-    if cutout_data.shape[0] > 512 or cutout_data.shape[1] > 512:
-        cy, cx = cutout_data.shape[0] // 2, cutout_data.shape[1] // 2
-        half = 128
-        cutout_data = cutout_data[max(0, cy - half): cy + half, max(0, cx - half): cx + half]
+    cutout_data, cutout_wcs, valid_frac = image_processing_service.extract_standard_northup_cutout(
+        image_data=data,
+        wcs=wcs,
+        center_ra=target_ra,
+        center_dec=target_dec,
+        size_arcsec=max(fov_arcsec, 60.0),
+        pixel_scale_arcsec=6.15
+    )
 
     # Render genuine calibrated FITS array
     b64_img, meta = image_processing_service.render_image_to_base64(
@@ -199,6 +189,7 @@ def generate_preview(req: PreviewRequest = Body(...)):
             "bunit": bunit,
             "bandpass": bandpass,
             "pixel_scale_arcsec": 6.15,
+            "dimensions": list(cutout_data.shape),
             "calib_level": 2,
             "is_real_data": True,
             "archive_source": "NASA/IPAC IRSA",

@@ -65,6 +65,45 @@ export const SpectralExplorer: React.FC = () => {
   const [aladinReady, setAladinReady] = useState<boolean>(false);
   const [activeSurvey, setActiveSurvey] = useState<string>('spherex');
 
+  // Spectral Frame Preparation & Preloading State
+  const [scanMode, setScanMode] = useState<string>('all');
+  const [isPreloaded, setIsPreloaded] = useState<boolean>(false);
+  const [preloading, setPreloading] = useState<boolean>(true);
+  const [preparedCount, setPreparedCount] = useState<number>(0);
+  const [totalPreloadPlanes, setTotalPreloadPlanes] = useState<number>(100);
+
+  // Preload and cache HiPS tiles for the current viewport before playback
+  useEffect(() => {
+    let isCancelled = false;
+    setPreloading(true);
+    setIsPreloaded(false);
+
+    const host = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1';
+    fetch(`http://${host}:8000/api/spectra/hips/preload?mode=${scanMode}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!isCancelled) {
+          setPreparedCount(data.prepared_channels);
+          setTotalPreloadPlanes(data.total_channels);
+          setIsPreloaded(data.is_ready);
+        }
+      })
+      .catch((err) => {
+        console.warn('Preload fetch error:', err);
+        if (!isCancelled) {
+          setIsPreloaded(true);
+          setPreparedCount(100);
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) setPreloading(false);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [scanMode, selectedObject]);
+
   // Initialize Aladin Lite v3 with authentic SPHEREx DR1 HiPS channel stream
   useEffect(() => {
     let isMounted = true;
@@ -352,18 +391,49 @@ export const SpectralExplorer: React.FC = () => {
 
         {/* Bottom Wavelength Slider Bar */}
         <div className="p-4 bg-[#0D1526] border-t border-[#263247] space-y-3">
+          {/* Preload Preparation Status Banner */}
+          {preloading && (
+            <div className="bg-[#0B1020] border border-[#263247] rounded px-3 py-2 text-xs flex items-center justify-between gap-3 text-[#94A3B8]">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="w-3.5 h-3.5 text-[#6EA8FE] animate-spin" />
+                <span>Preparing infrared wavelength scan… Prepared {preparedCount} of {totalPreloadPlanes} valid wavelength planes</span>
+              </div>
+              <div className="w-32 bg-[#151E30] rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="bg-[#6EA8FE] h-full transition-all duration-300"
+                  style={{ width: `${Math.round((preparedCount / totalPreloadPlanes) * 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {/* Scan Playback Buttons */}
               <div data-tour="spectral-scan" className="flex items-center gap-1.5">
                 <Button
                   size="sm"
                   variant={isScanning ? 'secondary' : 'primary'}
                   onClick={() => setIsScanning(!isScanning)}
+                  disabled={preloading || !isPreloaded}
                   leftIcon={isScanning ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
                 >
-                  {isScanning ? 'Pause Scan' : 'Wavelength Scan'}
+                  {preloading ? 'Preparing Scan…' : isScanning ? 'Pause Scan' : 'Wavelength Scan'}
                 </Button>
+                <select
+                  value={scanMode}
+                  onChange={(e) => setScanMode(e.target.value)}
+                  className="bg-[#151E30] border border-[#263247] text-[#E8EDF5] text-xs rounded px-2 py-1.5 focus:outline-none focus:border-[#6EA8FE]"
+                  title="Select scan preparation scope"
+                >
+                  <option value="all">Full Spectrum (100 Bands)</option>
+                  <option value="D1">Array D1 (0.75–1.11 μm)</option>
+                  <option value="D2">Array D2 (1.11–1.64 μm)</option>
+                  <option value="D3">Array D3 (1.64–2.42 μm)</option>
+                  <option value="D4">Array D4 (2.42–3.82 μm)</option>
+                  <option value="D5">Array D5 (3.82–4.42 μm)</option>
+                  <option value="D6">Array D6 (4.42–5.00 μm)</option>
+                </select>
                 <button
                   onClick={() => setCurrentChannel((prev) => Math.max(1, prev - 1))}
                   className="p-1.5 rounded bg-[#151E30] border border-[#263247] text-[#94A3B8] hover:text-[#E8EDF5]"

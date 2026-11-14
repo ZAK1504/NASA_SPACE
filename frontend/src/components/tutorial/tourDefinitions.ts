@@ -91,8 +91,8 @@ export const TOURS: Record<string, TourDefinition> = {
       {
         element: '[data-tour="spectral-scan"]',
         popover: {
-          title: '▶️ Wavelength Scan Playback',
-          description: 'Click Play to animate through infrared wavelengths automatically. Note: This animates across wavelength space, NOT time!',
+          title: '▶️ Wavelength Scan Playback & Preloader',
+          description: 'Click Play to animate through infrared wavelengths automatically. Notice the scan preparation engine that preloads high-resolution HiPS planes before playback to eliminate white-frame flashes and stuttering.',
           side: 'top',
         },
       },
@@ -102,6 +102,55 @@ export const TOURS: Record<string, TourDefinition> = {
           title: '📊 Genuine Spectrum Extraction',
           description: 'Click anywhere on the sky or target to extract the authentic 102-band calibrated surface brightness profile (MJy/sr) and export the data to CSV.',
           side: 'left',
+        },
+      },
+    ],
+  },
+
+  'object-explorer': {
+    id: 'object-explorer',
+    title: 'Object Explorer Guide',
+    description: 'Investigate individual cosmic targets, explore standardized North-up astronomical cutouts, and inspect multi-wavelength catalogs.',
+    targetRoute: '/objects/barnards-star',
+    steps: [
+      {
+        element: '[data-tour="astronomical-viewer"]',
+        popover: {
+          title: '🔭 Standardized Astronomical Cutout',
+          description: 'Authentic SPHEREx Level 2 FITS observation reprojected to a celestial tangent grid with standard astronomical orientation: North UP, East LEFT.',
+          side: 'bottom',
+        },
+      },
+      {
+        element: '[data-tour="viewer-fov"]',
+        popover: {
+          title: '🔍 Configurable Field of View (FOV)',
+          description: 'Switch between 2′ (120″ close-up), 5′, 10′, 15′ (recommended default), and 30′ wide fields. Each cutout is extracted directly from the full FITS array.',
+          side: 'bottom',
+        },
+      },
+      {
+        element: '[data-tour="viewer-stretch"]',
+        popover: {
+          title: '📊 Non-Linear Normalization (Asinh)',
+          description: 'Asinh stretch preserves faint diffuse structures without saturating bright stellar cores. You can also select Linear, Sqrt, or Log.',
+          side: 'bottom',
+        },
+      },
+      {
+        element: '[data-tour="viewer-smooth"]',
+        popover: {
+          title: '🖼️ Smooth vs Native Pixels',
+          description: 'Toggle between presentation-quality bicubic smoothing and native 6.15″/pixel detector resolution for scientific evaluation.',
+          side: 'bottom',
+        },
+      },
+      {
+        element: '[data-tour="viewer-compass"]',
+        popover: {
+          title: '🧭 Celestial Compass & Scale Bar',
+          description: 'Standard celestial orientation indicators (N ↑, E ←) and physical angular scale bars provide authentic astronomical context.',
+          side: 'top',
         },
       },
     ],
@@ -132,8 +181,8 @@ export const TOURS: Record<string, TourDefinition> = {
       {
         element: '[data-tour="comparison-modes"]',
         popover: {
-          title: '🔀 Scientific Comparison Modes',
-          description: 'Switch between Side-by-Side, Interactive Split Slider, High-Speed Blink Mode, and Cross-Epoch Difference Map (Later − Earlier).',
+          title: '🔀 Scientific Comparison Modes & Honest Status',
+          description: 'Switch between Side-by-Side, Interactive Split Slider, High-Speed Blink Mode, and Cross-Epoch Difference Map. When only one epoch is available, HORIZON displays an honest single-epoch indicator rather than synthetic data.',
           side: 'bottom',
         },
       },

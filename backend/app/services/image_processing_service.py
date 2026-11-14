@@ -126,10 +126,54 @@ class ImageProcessingService:
             "lower_percentile": lower_percentile,
             "upper_percentile": upper_percentile,
             "dimensions": list(image_data.shape),
-            "smooth": smooth
+            "smooth": smooth,
+            "is_valid": bool(np.count_nonzero(clean_data) > 0)
         }
 
         return f"data:image/png;base64,{img_b64}", metadata
+
+    @classmethod
+    def extract_standard_northup_cutout(
+        cls,
+        image_data: np.ndarray,
+        wcs: WCS,
+        center_ra: float,
+        center_dec: float,
+        size_arcsec: float = 900.0,
+        pixel_scale_arcsec: float = 6.15
+    ) -> Tuple[np.ndarray, WCS, float]:
+        """
+        Extract a standard celestial tangential cutout centered on (center_ra, center_dec)
+        with North strictly UP (CDELT2 > 0) and East strictly LEFT (CDELT1 < 0).
+        Uses Astropy reproject_interp to standardize arbitrary detector orientations.
+        Returns: (reprojected_data, target_wcs, valid_fraction)
+        """
+        from reproject import reproject_interp
+
+        npix = max(16, int(round(size_arcsec / pixel_scale_arcsec)))
+        target_wcs = WCS(naxis=2)
+        target_wcs.wcs.crpix = [(npix + 1) / 2.0, (npix + 1) / 2.0]
+        target_wcs.wcs.cdelt = [-pixel_scale_arcsec / 3600.0, pixel_scale_arcsec / 3600.0]
+        target_wcs.wcs.crval = [center_ra, center_dec]
+        target_wcs.wcs.ctype = ['RA---TAN', 'DEC--TAN']
+
+        if wcs is None or not getattr(wcs, 'is_celestial', False):
+            return np.zeros((npix, npix), dtype=np.float32), target_wcs, 0.0
+
+        try:
+            reproj_data, footprint = reproject_interp(
+                (image_data, wcs),
+                target_wcs,
+                shape_out=(npix, npix)
+            )
+            valid_mask = np.isfinite(reproj_data) & (footprint > 0.5)
+            valid_count = int(valid_mask.sum())
+            valid_frac = float(valid_count) / float(npix * npix)
+            
+            clean_reproj = np.nan_to_num(reproj_data, nan=0.0)
+            return clean_reproj, target_wcs, valid_frac
+        except Exception:
+            return np.zeros((npix, npix), dtype=np.float32), target_wcs, 0.0
 
     @classmethod
     def extract_cutout(

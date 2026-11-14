@@ -7,6 +7,7 @@ import {
 import { api, ObservationRecord, TargetSpectrumResponse } from '../services/api';
 import { FEATURED_OBJECTS } from '../constants/objects';
 import { CoordDisplay } from '../components/ui/CoordDisplay';
+import { AstronomicalImageViewer } from '../components/astronomy/AstronomicalImageViewer';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { InfoPanel } from '../components/ui/InfoPanel';
@@ -41,7 +42,10 @@ export const ObjectDetail: React.FC = () => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [loadingPreview, setLoadingPreview] = useState<boolean>(false);
   const [selectedStretch, setSelectedStretch] = useState<string>('asinh');
-  const [selectedColormap, setSelectedColormap] = useState<string>('inferno');
+  const [selectedColormap, setSelectedColormap] = useState<string>('gray');
+  const [fovArcsec, setFovArcsec] = useState<number>(900.0);
+  const [smoothDisplay, setSmoothDisplay] = useState<boolean>(true);
+  const [previewMeta, setPreviewMeta] = useState<any>(null);
 
   // Fetch object details from API
   useEffect(() => {
@@ -73,17 +77,22 @@ export const ObjectDetail: React.FC = () => {
       colormap: selectedColormap,
       ra: targetObj.ra,
       dec: targetObj.dec,
-      fovArcsec: 180.0,
+      fovArcsec: fovArcsec,
+      smooth: smoothDisplay,
       objectName: targetObj.name || targetObj.id || objectId,
     })
       .then((res) => {
         if (!isCancelled && res && res.image_base64) {
           setPreviewImage(res.image_base64);
+          setPreviewMeta(res.scientific_metadata || null);
         }
       })
       .catch((err) => {
         console.warn('Preview render error:', err);
-        if (!isCancelled) setPreviewImage(null);
+        if (!isCancelled) {
+          setPreviewImage(null);
+          setPreviewMeta(null);
+        }
       })
       .finally(() => {
         if (!isCancelled) setLoadingPreview(false);
@@ -92,7 +101,7 @@ export const ObjectDetail: React.FC = () => {
     return () => {
       isCancelled = true;
     };
-  }, [objectId, objectData?.ra, objectData?.dec, selectedStretch, selectedColormap]);
+  }, [objectId, objectData?.ra, objectData?.dec, selectedStretch, selectedColormap, fovArcsec, smoothDisplay]);
 
   // Fetch observations when tab is switched
   useEffect(() => {
@@ -225,71 +234,32 @@ export const ObjectDetail: React.FC = () => {
       {tab === 'overview' && (
         <div className="space-y-6 animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {/* Scientific Preview */}
-            <div className="bg-[#151E30] border border-[#263247] rounded p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Eye className="w-4 h-4 text-[#6EA8FE]" />
-                  <h3 className="text-sm font-semibold text-[#E8EDF5]">Scientific Visualization</h3>
-                </div>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={selectedStretch}
-                    onChange={(e) => setSelectedStretch(e.target.value)}
-                    className="bg-[#0B1020] border border-[#263247] text-[#94A3B8] text-xs rounded px-2 py-1 focus:outline-none focus:border-[#6EA8FE]"
-                  >
-                    <option value="asinh">Asinh Stretch</option>
-                    <option value="linear">Linear Stretch</option>
-                    <option value="sqrt">Sqrt Stretch</option>
-                    <option value="log">Log Stretch</option>
-                  </select>
-                  <select
-                    value={selectedColormap}
-                    onChange={(e) => setSelectedColormap(e.target.value)}
-                    className="bg-[#0B1020] border border-[#263247] text-[#94A3B8] text-xs rounded px-2 py-1 focus:outline-none focus:border-[#6EA8FE]"
-                  >
-                    <option value="inferno">Inferno</option>
-                    <option value="viridis">Viridis</option>
-                    <option value="magma">Magma</option>
-                    <option value="gray">Grayscale</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="aspect-square bg-[#0B1020] border border-[#263247] rounded overflow-hidden flex items-center justify-center relative">
-                {loadingPreview ? (
-                  <div className="text-center p-4">
-                    <RefreshCw className="w-6 h-6 text-[#6EA8FE] animate-spin mx-auto mb-2" />
-                    <p className="text-xs text-[#94A3B8]">Rendering with Astropy {selectedStretch} stretch…</p>
-                  </div>
-                ) : previewImage ? (
-                  <img
-                    src={previewImage}
-                    alt={`${objectData.name} observation preview`}
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <div className="text-center p-6 space-y-2">
-                    <p className="text-xs font-medium text-[#E8EDF5]">Calibrated Level 2 Tile</p>
-                    <p className="text-[11px] text-[#94A3B8] max-w-xs mx-auto">
-                      Single-exposure tile for these coordinates is scheduled in public NASA release. View all-sky 102-band data in Spectral Explorer.
-                    </p>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => navigate(`/spectral-explorer?ra=${(objectData || fallbackObj)?.ra}&dec=${(objectData || fallbackObj)?.dec}`)}
-                    >
-                      View in Spectral Explorer →
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-3 flex items-center justify-between text-[11px] text-[#94A3B8]">
-                <span>Percentile: 0.5% – 99.5%</span>
-                <span className="font-mono text-[#6EA8FE]">Astropy WCS & Visualization</span>
-              </div>
-            </div>
+            {/* Shared Scientific Astronomical Image Viewer */}
+            <AstronomicalImageViewer
+              imageSrc={previewImage}
+              loading={loadingPreview}
+              targetName={objectData.name}
+              ra={objectData.ra}
+              dec={objectData.dec}
+              fovArcsec={fovArcsec}
+              onFovChange={setFovArcsec}
+              stretch={selectedStretch}
+              onStretchChange={setSelectedStretch}
+              colormap={selectedColormap}
+              onColormapChange={setSelectedColormap}
+              smooth={smoothDisplay}
+              onSmoothToggle={setSmoothDisplay}
+              scientificMetadata={{
+                obsId: previewMeta?.obsid || (objectData.slug === 'barnards-star' ? '2025W35_1A_0444_3' : undefined),
+                dateObs: previewMeta?.date_obs,
+                bunit: previewMeta?.bunit,
+                pixelScale: 6.15,
+                fileName: previewMeta?.obsid ? `level2_${previewMeta.obsid}.fits` : undefined,
+              }}
+              onOpenInTimeMachine={() => navigate(`/time-machine?object=${objectData.slug || objectData.id}`)}
+              showTimeMachineAction={true}
+              unavailableReason="Calibrated Level 2 single-exposure product scheduled in next public IRSA delivery"
+            />
 
             {/* Scientific Properties Panel */}
             <div className="space-y-4">

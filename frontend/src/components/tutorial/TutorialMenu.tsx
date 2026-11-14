@@ -27,6 +27,7 @@ export const TutorialMenu: React.FC = () => {
     if (location.pathname.includes('/spectral')) return 'spectral-explorer';
     if (location.pathname.includes('/time-machine')) return 'time-machine';
     if (location.pathname.includes('/discovery-lab')) return 'discovery-lab';
+    if (location.pathname.includes('/objects')) return 'object-explorer';
     return 'getting-started';
   };
 
@@ -83,7 +84,9 @@ export const TutorialMenu: React.FC = () => {
                     <span className="text-xs font-semibold text-[#E8EDF5] flex items-center gap-1.5">
                       {tour.id === 'getting-started' && <Sparkles className="w-3.5 h-3.5 text-[#F3B85B]" />}
                       {tour.id === 'spectral-explorer' && <Layers className="w-3.5 h-3.5 text-[#6EA8FE]" />}
+                      {tour.id === 'object-explorer' && <Compass className="w-3.5 h-3.5 text-[#A78BFA]" />}
                       {tour.id === 'time-machine' && <Clock className="w-3.5 h-3.5 text-[#38BDF8]" />}
+                      {tour.id === 'discovery-lab' && <Compass className="w-3.5 h-3.5 text-[#34D399]" />}
                       {tour.title}
                     </span>
                     {completed ? (
