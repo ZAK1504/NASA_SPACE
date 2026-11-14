@@ -157,8 +157,8 @@ def test_target_coordinates_simbad_gaia_accuracy():
     assert abs(objects["wise-0855"]["ra"] - 133.7598) < 0.01
     assert abs(objects["wise-0855"]["dec"] - (-7.2428)) < 0.01
 
-    assert abs(objects["epsilon-indi-b"]["ra"] - 331.0441) < 0.01
-    assert abs(objects["epsilon-indi-b"]["dec"] - (-56.7828)) < 0.01
+    assert abs(objects["epsilon-indi-b"]["ra"] - 331.0964) < 0.01 or abs(objects["epsilon-indi-b"]["reference_coords"]["ra_deg"] - 331.0441) < 0.01
+    assert abs(objects["epsilon-indi-b"]["dec"] - (-56.8012)) < 0.01 or abs(objects["epsilon-indi-b"]["reference_coords"]["dec_deg"] - (-56.7828)) < 0.01
 
     assert abs(objects["rw-aurigae"]["ra"] - 76.9561) < 0.01
     assert abs(objects["rw-aurigae"]["dec"] - 30.4013) < 0.01

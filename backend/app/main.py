@@ -13,7 +13,8 @@ from app.routers import (
     discoveries,
     assistant,
     lightcurves,
-    catalogs
+    catalogs,
+    targets
 )
 
 app = FastAPI(
@@ -43,6 +44,7 @@ app.include_router(discoveries.router, prefix=settings.API_PREFIX)
 app.include_router(assistant.router, prefix=settings.API_PREFIX)
 app.include_router(lightcurves.router, prefix=settings.API_PREFIX)
 app.include_router(catalogs.router, prefix=settings.API_PREFIX)
+app.include_router(targets.router, prefix=settings.API_PREFIX)
 
 @app.get("/api/health")
 def health_check():

@@ -15,6 +15,7 @@ from app.services.image_processing_service import image_processing_service
 from app.services.alignment_service import alignment_service
 from app.services.difference_service import difference_service
 from app.services.object_service import object_service
+from app.services.archive_discovery_service import archive_discovery_service
 from app.schemas.comparison_schema import (
     ComparisonRequest,
     ComparisonResponse,
@@ -208,6 +209,7 @@ def compare_observations(req: ComparisonRequest = Body(...)):
             meta2 = meta1
             b64_diff = None
             candidates = []
+            detection_metrics = None
             overlap_area_arcmin2 = round(c1.size * (6.15 / 60.0) ** 2, 2)
             notes = [
                 f"Single authentic SPHEREx Level 2 observation visit ({f1.name}) available in local cache (ObsDate: {date1[:10]}).",
@@ -246,14 +248,16 @@ def compare_observations(req: ComparisonRequest = Body(...)):
             )
 
             try:
-                candidates = difference_service.detect_candidate_changes(
+                candidates, detection_metrics = difference_service.detect_candidate_changes(
                     earlier_data=c1,
                     later_data=c2,
                     wcs=wc1,
-                    target_name=target_name
+                    target_name=target_name,
+                    return_metrics=True
                 )
             except Exception:
                 candidates = []
+                detection_metrics = None
 
             notes = [
                 f"Epoch 1 loaded from authentic SPHEREx Level 2 product: {f1.name} (ObsDate: {date1[:10]}).",
@@ -289,6 +293,7 @@ def compare_observations(req: ComparisonRequest = Body(...)):
             "min_percentile": 0.5,
             "max_percentile": 99.5,
             "candidates": candidates,
+            "detection_metrics": detection_metrics,
             "processing_notes": notes,
             "scientific_disclaimer": (
                 "Observations extracted from calibrated SPHEREx FITS data with standard North-up, East-left tangential projection. "
@@ -308,126 +313,32 @@ def compare_observations(req: ComparisonRequest = Body(...)):
 
 @router.post("/manifest", response_model=TimeMachineManifestResponse)
 def get_time_machine_manifest(
-    ra: float = Body(269.4521),
-    dec: float = Body(4.6933),
+    ra: float = Body(269.4463),
+    dec: float = Body(4.7682),
     target_name: Optional[str] = Body("Target Field"),
-    cutout_size_arcsec: float = Body(180.0),
+    cutout_size_arcsec: float = Body(900.0),
     stretch: str = Body("asinh"),
-    colormap: str = Body("inferno"),
-    smooth: bool = Body(False)
+    colormap: str = Body("gray"),
+    smooth: bool = Body(True)
 ):
     """
     Generate an authentic multi-date observation sequence manifest for Time Machine playback.
-    Returns chronological SPHEREx frames with pre-rendered base64 cutouts for seamless video playback.
+    Performs live & cached multi-collection archive discovery (DR1/QR3), groups by genuine
+    exposure timestamps, and prepares chronological SPHEREx frames on a fixed celestial
+    comparison grid to preserve actual astronomical proper motion.
     """
-    cache_key = f"manifest_{round(ra, 4)}_{round(dec, 4)}_{round(cutout_size_arcsec, 1)}_{stretch}_{colormap}_{smooth}"
+    cache_key = f"manifest_{round(ra, 4)}_{round(dec, 4)}_{round(cutout_size_arcsec, 1)}_{stretch}_{colormap}_{smooth}_{target_name}"
     if cache_key in MANIFEST_CACHE:
         return MANIFEST_CACHE[cache_key]
 
-    cache_dir = settings.FITS_CACHE_DIR
-    cached_fits = sorted(list(cache_dir.glob("*.fits")), key=lambda p: p.stat().st_size, reverse=True)
-    target_sky = SkyCoord(ra=ra * u.deg, dec=dec * u.deg, frame="icrs")
-
-    # Collect all cached FITS products genuinely covering this coordinate
-    matching_files = []
-    for f in cached_fits:
-        try:
-            h = fits.getheader(f, 1)
-            w = WCS(h)
-            if w.is_celestial:
-                c_center = w.pixel_to_world(1020, 1020)
-                if target_sky.separation(c_center).deg <= 1.8:
-                    d_obs = str(h.get("DATE-OBS", h.get("DATE", "")))
-                    matching_files.append((d_obs, f, h, w))
-        except Exception:
-            continue
-
-    # Sort chronologically by observation date
-    matching_files.sort(key=lambda t: t[0])
-
-    frames: List[TimeMachineFrame] = []
-    for idx, (d_obs, f_path, h, w) in enumerate(matching_files):
-        try:
-            data, _, _ = fits_service.get_image_data_and_wcs(f_path)
-            cutout_data, cutout_w, valid_frac = image_processing_service.extract_standard_northup_cutout(
-                image_data=data,
-                wcs=w,
-                center_ra=ra,
-                center_dec=dec,
-                size_arcsec=max(cutout_size_arcsec, 60.0),
-                pixel_scale_arcsec=6.15
-            )
-
-            if valid_frac < 0.05:
-                continue
-
-            b64_img, _ = image_processing_service.render_image_to_base64(
-                image_data=cutout_data,
-                stretch=stretch,
-                colormap=colormap,
-                wcs=cutout_w,
-                smooth=smooth
-            )
-
-            obs_id = str(h.get("OBSID", f_path.stem))
-            det = int(h.get("DETECTOR", 2))
-            band = str(h.get("FILTER", h.get("BANDPASS", f"D{det}")))
-            date_display = d_obs[:10] if d_obs else "2025-08-27"
-
-            frames.append(
-                TimeMachineFrame(
-                    frame_index=idx,
-                    obs_id=obs_id,
-                    date_obs=d_obs or "2025-08-27T00:00:00",
-                    date_display=date_display,
-                    bandpass=band,
-                    detector=det,
-                    file_name=f_path.name,
-                    image_base64=b64_img,
-                    pixel_scale_arcsec=6.15,
-                    exposure_time_s=120.0,
-                    bunit=str(h.get("BUNIT", "MJy / sr"))
-                )
-            )
-        except Exception:
-            continue
-
-    # Calculate time baseline in days
-    baseline_days = 0
-    if len(frames) >= 2:
-        try:
-            from datetime import datetime
-            t0 = datetime.fromisoformat(frames[0].date_obs.replace("Z", "").split(".")[0])
-            t1 = datetime.fromisoformat(frames[-1].date_obs.replace("Z", "").split(".")[0])
-            baseline_days = abs((t1 - t0).days)
-        except Exception:
-            baseline_days = 359
-
-    if len(frames) == 0:
-        notes = [
-            f"No calibrated Level 2 SPHEREx products in local cache covering coordinates (RA {ra:.4f}°, Dec {dec:.4f}°).",
-            "Public data release coverage scheduled for future archive delivery."
-        ]
-    elif len(frames) == 1:
-        notes = [
-            f"1 authentic SPHEREx Level 2 observation visit available ({frames[0].file_name}, ObsDate: {frames[0].date_display}).",
-            "Multi-epoch time-domain playback requires at least 2 distinct observation visits."
-        ]
-    else:
-        notes = [
-            f"Prepared {len(frames)} authentic SPHEREx Level 2 observations across {baseline_days} days baseline.",
-            f"Standardized on North-up, East-left tangential coordinate grid ({max(cutout_size_arcsec, 60.0)}\" FOV, 6.15\"/px)."
-        ]
-
-    response = TimeMachineManifestResponse(
-        target_name=target_name or "Target Field",
+    response = archive_discovery_service.discover_and_prepare_manifest(
         ra=ra,
         dec=dec,
-        total_frames=len(frames),
-        baseline_days=baseline_days,
-        frames=frames,
-        processing_notes=notes
+        target_name=target_name,
+        cutout_size_arcsec=cutout_size_arcsec,
+        stretch=stretch,
+        colormap=colormap,
+        smooth=smooth
     )
-
     MANIFEST_CACHE[cache_key] = response
     return response

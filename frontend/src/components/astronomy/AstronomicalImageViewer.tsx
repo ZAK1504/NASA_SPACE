@@ -84,8 +84,9 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
   const scaleBarArcmin = fovArcsec >= 1200 ? 5 : fovArcsec >= 600 ? 2 : 1;
   const scaleBarPixelsPercent = ((scaleBarArcmin * 60) / fovArcsec) * 100;
 
-  // Determine if core saturation warning should be highlighted (e.g. Barnard's star)
+  // Determine if core saturation warning should be highlighted (e.g. Barnard's star, Epsilon Indi A)
   const isBarnard = targetName.toLowerCase().includes('barnard');
+  const isEpsInd = targetName.toLowerCase().includes('epsilon indi') || targetName.toLowerCase().includes('eps ind');
 
   return (
     <div data-tour="astronomical-viewer" className="bg-[#151E30] border border-[#263247] rounded-lg p-5 space-y-4">
@@ -221,17 +222,44 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
             </div>
 
             {/* Center Reticle Marker */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
-              <div className="w-6 h-6 border border-[#6EA8FE] rounded-full flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60">
+              <div className="w-6 h-6 border border-[#6EA8FE] rounded-full flex items-center justify-center relative">
                 <div className="w-1 h-1 bg-[#6EA8FE] rounded-full" />
+                {isEpsInd && (
+                  <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#0B1020]/90 px-1.5 py-0.5 rounded text-[9px] font-mono text-[#38BDF8] border border-[#38BDF8]/40">
+                    Epsilon Indi B (Brown Dwarf)
+                  </span>
+                )}
               </div>
             </div>
+
+            {/* Epsilon Indi A & B Distinction Overlay */}
+            {isEpsInd && (
+              <div className="absolute top-12 left-3 bg-[#0B1020]/90 backdrop-blur-sm border border-[#38BDF8]/40 rounded p-2 text-[10px] space-y-1 shadow-lg max-w-[210px] pointer-events-none">
+                <div className="font-semibold text-[#E8EDF5] flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-[#F3B85B]" />
+                  <span>Epsilon Indi System Breakdown</span>
+                </div>
+                <p className="text-[10px] text-[#94A3B8] leading-tight">
+                  <strong className="text-[#F3B85B]">Primary A:</strong> Saturated K5V star (V=4.69, masked core).
+                </p>
+                <p className="text-[10px] text-[#94A3B8] leading-tight">
+                  <strong className="text-[#38BDF8]">Target B:</strong> T1+T6 sub-stellar binary at center reticle (~90″ ENE separation).
+                </p>
+              </div>
+            )}
 
             {/* Saturation / Physical Core Warning */}
             {isBarnard && (
               <div className="absolute top-3 right-3 bg-[#0B1020]/90 backdrop-blur-sm border border-[#F3B85B]/50 rounded px-2.5 py-1 text-[11px] text-[#F3B85B] flex items-center gap-1.5 shadow-md">
                 <AlertTriangle className="w-3.5 h-3.5" />
                 <span>Detector Saturation Masked (H2RG Core)</span>
+              </div>
+            )}
+            {isEpsInd && (
+              <div className="absolute top-3 right-3 bg-[#0B1020]/90 backdrop-blur-sm border border-[#F3B85B]/50 rounded px-2.5 py-1 text-[11px] text-[#F3B85B] flex items-center gap-1.5 shadow-md">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>Epsilon Indi A Core Saturation Masked</span>
               </div>
             )}
           </>

@@ -164,14 +164,77 @@ class IrsaService:
             return records
 
         except Exception as e:
-            # Check if cached results exist
+            # 1. Exact ADQL hash match
             if cache_file.exists():
                 try:
                     with open(cache_file, "r") as f:
                         return json.load(f)
                 except Exception:
                     pass
+
+            # 2. Resilient spatial cone search across local genuine TAP archive cache
+            fallback_records = self._search_cached_tap_inventory(
+                ra=ra,
+                dec=dec,
+                radius_deg=max(radius_deg, 1.2),
+                bandpass=bandpass,
+                limit=limit
+            )
+            if fallback_records:
+                return fallback_records
+
             raise RuntimeError(f"IRSA archive query failed: {str(e)}")
+
+    def _search_cached_tap_inventory(
+        self,
+        ra: float,
+        dec: float,
+        radius_deg: float = 1.2,
+        bandpass: Optional[str] = None,
+        limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """
+        Search local repository TAP query cache for authentic SPHEREx products
+        covering the requested coordinates when live IRSA TAP service is offline.
+        """
+        import glob
+        from astropy.coordinates import SkyCoord
+        import astropy.units as u
+
+        norm_bp = ALLOWED_BANDPASSES.get(bandpass.strip()) if bandpass else None
+        target_sky = SkyCoord(ra=ra * u.deg, dec=dec * u.deg, frame="icrs")
+        
+        matched_dict = {}
+        for qf in self.cache_dir.glob("tap_*.json"):
+            try:
+                with open(qf, "r", encoding="utf-8") as f:
+                    rows = json.load(f)
+                    if not isinstance(rows, list):
+                        continue
+                    for r in rows:
+                        s_ra = r.get("s_ra") or r.get("ra")
+                        s_dec = r.get("s_dec") or r.get("dec")
+                        if s_ra is None or s_dec is None:
+                            continue
+                        
+                        rec_bp = r.get("bandpass", "")
+                        if norm_bp and rec_bp != norm_bp:
+                            continue
+                            
+                        # Separation check
+                        rec_coord = SkyCoord(float(s_ra) * u.deg, float(s_dec) * u.deg, frame="icrs")
+                        sep_deg = target_sky.separation(rec_coord).deg
+                        if sep_deg <= radius_deg:
+                            uid = f"{r.get('obs_id')}_{r.get('bandpass')}"
+                            if uid not in matched_dict:
+                                matched_dict[uid] = r
+            except Exception:
+                continue
+
+        records = list(matched_dict.values())
+        # Sort by date/t_min descending
+        records.sort(key=lambda r: str(r.get("date_obs", "")), reverse=True)
+        return records[:limit]
 
     def resolve_fits_url_from_datalink(self, datalink_url: str) -> Optional[str]:
         """Query DataLink service to obtain direct FITS science image URL."""

@@ -107,6 +107,8 @@ export interface TimeMachineManifestResponse {
   baseline_days: number;
   frames: TimeMachineFrame[];
   processing_notes: string[];
+  total_archive_products?: number;
+  archive_distinct_dates?: number;
 }
 
 export interface ComparisonResponse {
@@ -123,6 +125,15 @@ export interface ComparisonResponse {
   min_percentile: number;
   max_percentile: number;
   candidates: CandidateDetection[];
+  detection_metrics?: {
+    raw_sources_epoch1: number;
+    raw_sources_epoch2: number;
+    associations: number;
+    astrometric_stability_arcsec: number;
+    astrometric_stability_pixels: number;
+    residual_features: number;
+    filtered_candidates: number;
+  };
   processing_notes: string[];
   scientific_disclaimer: string;
 }

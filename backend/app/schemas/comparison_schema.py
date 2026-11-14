@@ -50,6 +50,7 @@ class ComparisonResponse(BaseModel):
     min_percentile: float
     max_percentile: float
     candidates: List[CandidateDetection] = Field(default_factory=list)
+    detection_metrics: Optional[Dict[str, Any]] = None
     processing_notes: List[str] = Field(default_factory=list)
     scientific_disclaimer: str = (
         "Calculations performed using Astropy WCS and Reproject. "
@@ -77,3 +78,5 @@ class TimeMachineManifestResponse(BaseModel):
     baseline_days: int
     frames: List[TimeMachineFrame]
     processing_notes: List[str]
+    total_archive_products: Optional[int] = None
+    archive_distinct_dates: Optional[int] = None

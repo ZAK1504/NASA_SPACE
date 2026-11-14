@@ -9,6 +9,29 @@ export interface AstronomicalObject {
   description: string;
   tags: string[];
   slug: string;
+  referenceEpoch?: string;
+  referenceCoords?: {
+    raDeg: number;
+    decDeg: number;
+    raHms: string;
+    decDms: string;
+    epoch: string;
+    frame: string;
+  };
+  properMotionRa?: number;
+  properMotionDec?: number;
+  parallax?: number;
+  distanceLy?: number;
+  spectralType?: string;
+  scientificLimitations?: string;
+  astrometricCitation?: string;
+  companion?: {
+    name: string;
+    ra: number;
+    dec: number;
+    type: string;
+    separationArcsec: number;
+  };
 }
 
 export interface Observation {

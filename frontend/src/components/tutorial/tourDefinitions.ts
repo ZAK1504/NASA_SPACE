@@ -166,7 +166,7 @@ export const TOURS: Record<string, TourDefinition> = {
         element: '[data-tour="target-selector"]',
         popover: {
           title: '🎯 Select Challenge Target or Enter Coordinates',
-          description: 'Choose from Barnard’s Star, WISE 0855, Epsilon Indi B, RW Aurigae, R Draconis, or enter any custom sky coordinates.',
+          description: 'Choose from Barnard’s Star, WISE 0855, Epsilon Indi B, RW Aurigae, R Draconis, or enter custom coordinates. The Archive Discovery banner indicates total products discovered across dates in DR1/QR3.',
           side: 'bottom',
         },
       },
@@ -174,15 +174,15 @@ export const TOURS: Record<string, TourDefinition> = {
         element: '[data-tour="timelapse-player"]',
         popover: {
           title: '🎬 Multi-Epoch Video Playback',
-          description: 'Play, pause, loop, and scrub through chronological SPHEREx observations of the same celestial patch across 359+ day baselines.',
+          description: 'Play, pause, loop, and scrub through chronological SPHEREx observations of the same celestial patch across 359+ day baselines on a fixed celestial grid.',
           side: 'top',
         },
       },
       {
         element: '[data-tour="comparison-modes"]',
         popover: {
-          title: '🔀 Scientific Comparison Modes & Honest Status',
-          description: 'Switch between Side-by-Side, Interactive Split Slider, High-Speed Blink Mode, and Cross-Epoch Difference Map. When only one epoch is available, HORIZON displays an honest single-epoch indicator rather than synthetic data.',
+          title: '🔀 Scientific Comparison Modes & Archive Metrics',
+          description: 'Switch between Side-by-Side, Interactive Split Slider, High-Speed Blink Mode, and Cross-Epoch Difference Map. When single-visit, HORIZON honestly displays archive discovery counts and prepared frame status.',
           side: 'bottom',
         },
       },
@@ -190,7 +190,7 @@ export const TOURS: Record<string, TourDefinition> = {
         element: '[data-tour="fov-selector"]',
         popover: {
           title: '🔍 Configurable Field of View (FOV)',
-          description: 'Expand from 2′ up to 30′ cutouts. Genuine larger cutouts are generated from calibrated FITS arrays, eliminating Minecraft-like pixelation.',
+          description: 'Expand from 2′ up to 30′ cutouts. Authentic larger cutouts are generated from calibrated FITS arrays. On Epsilon Indi B, inspect primary star Epsilon Indi A ~90″ to the WSW.',
           side: 'bottom',
         },
       },
@@ -208,30 +208,30 @@ export const TOURS: Record<string, TourDefinition> = {
   'discovery-lab': {
     id: 'discovery-lab',
     title: 'Discovery Lab & Source Detection',
-    description: 'Use Photutils DAOStarFinder, image subtraction, and log scientific candidate records.',
+    description: 'Use Photutils DAOStarFinder, 3-view image subtraction, and log scientific candidate records.',
     targetRoute: '/discovery-lab',
     steps: [
       {
         element: '[data-tour="difference-map"]',
         popover: {
-          title: '⚡ Cross-Epoch Difference Map',
-          description: 'Computes signed pixel differences (Epoch 2 − Epoch 1) using a coolwarm diverging colormap. Paired positive/negative residuals reveal movement.',
-          side: 'right',
+          title: '⚡ 3-View Cross-Epoch Difference Map',
+          description: 'View Epoch 1, Epoch 2, and the signed difference map (Epoch 2 − Epoch 1) side-by-side using coolwarm diverging colors (blue = earlier brighter, red = later brighter, gray = neutral zero Δ).',
+          side: 'bottom',
         },
       },
       {
         element: '[data-tour="candidate-list"]',
         popover: {
-          title: '✨ DAOStarFinder Detections',
-          description: 'Inspect independently measured source centroids, measured angular displacement, and local astrometric stability benchmarks.',
-          side: 'left',
+          title: '✨ DAOStarFinder Detections & Astrometric Stability',
+          description: 'Inspect source centroids, breakdown metrics, and astrometric registration stability (<0.45 px / 2.74″). For saturated cores like Barnard’s Star, understand IPAC NaN masking and unmasked wing dipoles.',
+          side: 'top',
         },
       },
       {
         element: '[data-tour="journal-form"]',
         popover: {
           title: '📝 Log to Discovery Journal',
-          description: 'Record your scientific findings with provenance, observation dates, and confidence ratings, and export a formatted Markdown/JSON report.',
+          description: 'Record scientific classifications (e.g. Exploratory Investigation, Possible Moving Source, Known-Source Recovery), add user confidence ratings, and save with full provenance.',
           side: 'top',
         },
       },

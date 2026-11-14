@@ -53,8 +53,9 @@ class DifferenceService:
         wcs: WCS,
         target_name: str = "Unknown Target",
         fwhm_pixels: float = 3.0,
-        detection_threshold_sigma: float = 4.0
-    ) -> List[Dict[str, Any]]:
+        detection_threshold_sigma: float = 4.0,
+        return_metrics: bool = False
+    ) -> Any:
         """
         Detect candidate moving or variable sources between two aligned epochs
         using photutils DAOStarFinder and cross-epoch astrometric matching.
@@ -71,7 +72,16 @@ class DifferenceService:
         sources2 = daofind2(later_data - med2)
 
         if sources1 is None or sources2 is None or len(sources1) == 0 or len(sources2) == 0:
-            return candidates
+            empty_metrics = {
+                "raw_sources_epoch1": len(sources1) if sources1 is not None else 0,
+                "raw_sources_epoch2": len(sources2) if sources2 is not None else 0,
+                "associations": 0,
+                "astrometric_stability_arcsec": 0.0,
+                "astrometric_stability_pixels": 0.0,
+                "residual_features": 0,
+                "filtered_candidates": 0,
+            }
+            return (candidates, empty_metrics) if return_metrics else candidates
 
         # Convert detected sources to celestial coordinates
         coords1 = wcs.pixel_to_world(sources1['xcentroid'], sources1['ycentroid'])
@@ -79,6 +89,7 @@ class DifferenceService:
 
         # Match sources across epochs using nearest neighbor
         idx, sep2d, _ = coords1.match_to_catalog_sky(coords2)
+        med_sep = float(np.median(sep2d.arcsec)) if len(sep2d) > 0 else 0.0
 
         # Separation threshold in arcseconds
         # Pixel scale ~ 6.2 arcsec for SPHEREx
@@ -139,6 +150,17 @@ class DifferenceService:
                         "scientific_limitations": "Variability can be affected by sky background subtraction, blending, and detector calibration differences."
                     })
 
-        return candidates[:10] # Top candidates
+        metrics = {
+            "raw_sources_epoch1": len(sources1),
+            "raw_sources_epoch2": len(sources2),
+            "associations": len(idx),
+            "astrometric_stability_arcsec": round(med_sep, 2),
+            "astrometric_stability_pixels": round(med_sep / 6.15, 3),
+            "residual_features": len(candidates),
+            "filtered_candidates": len(candidates),
+        }
+
+        top_candidates = candidates[:10]
+        return (top_candidates, metrics) if return_metrics else top_candidates
 
 difference_service = DifferenceService()
