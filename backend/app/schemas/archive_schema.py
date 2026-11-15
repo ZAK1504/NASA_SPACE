@@ -106,3 +106,5 @@ class ArchiveQueryResponse(BaseModel):
     archive_url: str = "https://irsa.ipac.caltech.edu/TAP"
     query_time_seconds: float
     cached: bool = False
+    archive_status: Optional[str] = "LIVE_SUCCESS_WITH_PRODUCTS"
+    diagnostic_message: Optional[str] = None

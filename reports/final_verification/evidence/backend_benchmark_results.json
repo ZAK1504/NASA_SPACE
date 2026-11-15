@@ -1,0 +1,102 @@
+[
+  {
+    "endpoint": "HEALTH",
+    "method": "GET",
+    "path": "/api/health",
+    "status": 200,
+    "p50_ms": 14.81,
+    "p95_ms": 15.99,
+    "response_size_bytes": 241,
+    "process_ram_mb": 145.0
+  },
+  {
+    "endpoint": "TARGETS_LIST",
+    "method": "GET",
+    "path": "/api/objects",
+    "status": 200,
+    "p50_ms": 4.53,
+    "p95_ms": 20.76,
+    "response_size_bytes": 6572,
+    "process_ram_mb": 145.0
+  },
+  {
+    "endpoint": "TARGET_DETAIL",
+    "method": "GET",
+    "path": "/api/objects/barnards-star",
+    "status": 200,
+    "p50_ms": 2.51,
+    "p95_ms": 2.72,
+    "response_size_bytes": 1285,
+    "process_ram_mb": 145.0
+  },
+  {
+    "endpoint": "SPECTRA_CHANNELS",
+    "method": "GET",
+    "path": "/api/spectra/channels",
+    "status": 200,
+    "p50_ms": 4.88,
+    "p95_ms": 15.52,
+    "response_size_bytes": 24528,
+    "process_ram_mb": 145.0
+  },
+  {
+    "endpoint": "SPECTRUM_TARGET",
+    "method": "GET",
+    "path": "/api/spectra/barnards-star",
+    "status": 200,
+    "p50_ms": 1666.63,
+    "p95_ms": 1703.94,
+    "response_size_bytes": 24723,
+    "process_ram_mb": 145.0
+  },
+  {
+    "endpoint": "LIGHTCURVE",
+    "method": "GET",
+    "path": "/api/lightcurves/r-draconis",
+    "status": 200,
+    "p50_ms": 14.85,
+    "p95_ms": 23.36,
+    "response_size_bytes": 3339,
+    "process_ram_mb": 145.0
+  },
+  {
+    "endpoint": "MISSIONS",
+    "method": "GET",
+    "path": "/api/missions",
+    "status": 200,
+    "p50_ms": 15.53,
+    "p95_ms": 15.64,
+    "response_size_bytes": 7980,
+    "process_ram_mb": 145.0
+  },
+  {
+    "endpoint": "MANIFEST_BARNARD",
+    "method": "POST",
+    "path": "/api/comparison/manifest",
+    "status": 200,
+    "p50_ms": 2.55,
+    "p95_ms": 25.07,
+    "response_size_bytes": 271552,
+    "process_ram_mb": 145.0
+  },
+  {
+    "endpoint": "COPILOT_STATUS",
+    "method": "GET",
+    "path": "/api/assistant/status",
+    "status": 200,
+    "p50_ms": 14.95,
+    "p95_ms": 24.04,
+    "response_size_bytes": 179,
+    "process_ram_mb": 145.0
+  },
+  {
+    "endpoint": "COPILOT_FAST_NAV",
+    "method": "POST",
+    "path": "/api/assistant/query",
+    "status": 200,
+    "p50_ms": 15.53,
+    "p95_ms": 15.59,
+    "response_size_bytes": 407,
+    "process_ram_mb": 145.0
+  }
+]

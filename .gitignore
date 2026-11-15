@@ -25,10 +25,13 @@ pnpm-debug.log*
 
 # Caches & large data files
 backend/data/cache/
-*.fits
-*.fit
+deploy_artifacts/
 *.tar.gz
 *.zip
+*.fits
+*.fit
+!backend/data/manifests/
+!backend/data/manifests/**
 
 # IDE & OS
 .DS_Store

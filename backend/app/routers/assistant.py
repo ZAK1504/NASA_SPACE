@@ -1,5 +1,7 @@
 import json
 import logging
+import ipaddress
+import os
 from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, Request, Body, HTTPException, status
 from fastapi.responses import StreamingResponse
@@ -35,16 +37,44 @@ class CopilotStatusResponse(BaseModel):
     token_budget: int
     budget_used_percent: float
 
+TRUSTED_PROXIES = {
+    "127.0.0.1",
+    "::1",
+    "localhost",
+}
+# Extend with any configured trusted proxies
+if os.getenv("TRUSTED_PROXIES"):
+    for p in os.getenv("TRUSTED_PROXIES", "").split(","):
+        if p.strip():
+            TRUSTED_PROXIES.add(p.strip())
+
 def get_client_ip(request: Request) -> str:
-    """Safely extracts client IP address handling proxies/Cloudflare."""
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        # First IP in list is the original client
-        return forwarded.split(",")[0].strip()
-    cf_ip = request.headers.get("cf-connecting-ip")
-    if cf_ip:
-        return cf_ip.strip()
-    return request.client.host if request.client else "127.0.0.1"
+    """
+    Safely extracts client IP address with anti-spoofing protection:
+    Forwarded headers are ONLY trusted if direct client host is in TRUSTED_PROXIES.
+    """
+    direct_ip = request.client.host if request.client else "127.0.0.1"
+    
+    # Only trust proxy headers when request originates from a trusted local proxy/reverse-proxy
+    if direct_ip in TRUSTED_PROXIES:
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            candidate = forwarded.split(",")[0].strip()
+            try:
+                ipaddress.ip_address(candidate)
+                return candidate
+            except ValueError:
+                pass
+        cf_ip = request.headers.get("cf-connecting-ip")
+        if cf_ip:
+            candidate = cf_ip.strip()
+            try:
+                ipaddress.ip_address(candidate)
+                return candidate
+            except ValueError:
+                pass
+
+    return direct_ip
 
 
 @router.get("/status", response_model=CopilotStatusResponse)

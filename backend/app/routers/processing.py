@@ -10,7 +10,7 @@ from astropy.coordinates import SkyCoord
 import astropy.units as u
 
 from app.config import settings
-from app.services.fits_service import fits_service
+from app.services.fits_service import fits_service, is_safe_fits_url
 from app.services.irsa_service import irsa_service
 from app.services.image_processing_service import image_processing_service
 from app.services.object_service import object_service
@@ -59,6 +59,9 @@ def _find_or_fetch_fits_for_target(
 
     # 1. Direct FITS URL provided
     if fits_url:
+        safe, reason = is_safe_fits_url(fits_url)
+        if not safe:
+            raise ValueError(f"Prohibited FITS URL: {reason}")
         try:
             return fits_service.download_fits(fits_url)
         except Exception:
@@ -124,7 +127,10 @@ def generate_preview(req: PreviewRequest = Body(...)):
     if cache_key in PREVIEW_CACHE:
         return PREVIEW_CACHE[cache_key]
 
-    fits_path = _find_or_fetch_fits_for_target(obs_id=obs_id, fits_url=fits_url, ra=ra, dec=dec)
+    try:
+        fits_path = _find_or_fetch_fits_for_target(obs_id=obs_id, fits_url=fits_url, ra=ra, dec=dec)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
     if not fits_path or not fits_path.exists():
         raise HTTPException(
             status_code=404,

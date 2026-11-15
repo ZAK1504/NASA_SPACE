@@ -27,7 +27,18 @@ def search_archive(
             limit=limit,
             bandpass=bandpass
         )
+        diag = getattr(irsa_service, "last_query_diagnostic", {})
+        status = diag.get("status", "LIVE_SUCCESS_WITH_PRODUCTS" if records else "LIVE_SUCCESS_EMPTY")
+
+        # If upstream archive failed and no cached records exist, report honest archive outage
+        if status in ("ARCHIVE_UNAVAILABLE", "QUERY_TIMEOUT") and not records:
+            raise HTTPException(
+                status_code=503,
+                detail=f"NASA/IPAC IRSA archive service is temporarily unavailable ({diag.get('error', '502 Server Error')}). No local offline cache covers this coordinate region."
+            )
+
         elapsed = time.time() - start_time
+        is_cached = bool(diag.get("cached_query") or diag.get("cached_inventory_match") or diag.get("fallback_used"))
         return {
             "ra": ra,
             "dec": dec,
@@ -36,7 +47,9 @@ def search_archive(
             "products": records,
             "archive_url": "https://irsa.ipac.caltech.edu/TAP",
             "query_time_seconds": round(elapsed, 3),
-            "cached": False
+            "cached": is_cached,
+            "archive_status": status,
+            "diagnostic_message": diag.get("error") if "error" in diag else None
         }
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))

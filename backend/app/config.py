@@ -22,20 +22,32 @@ class Settings:
     
     # Paths & Storage
     BASE_DIR: Path = Path(__file__).resolve().parent.parent
-    DATA_DIR: Path = BASE_DIR / "data"
+    DATA_DIR: Path = (
+        Path(os.environ["SPHEREXPLORE_DATA_DIR"]).resolve()
+        if os.getenv("SPHEREXPLORE_DATA_DIR", "").strip()
+        else BASE_DIR / "data"
+    )
     CACHE_DIR: Path = DATA_DIR / "cache"
     FITS_CACHE_DIR: Path = CACHE_DIR / "fits"
     PREVIEW_CACHE_DIR: Path = CACHE_DIR / "previews"
     QUERY_CACHE_DIR: Path = CACHE_DIR / "queries"
+    HIPS_CACHE_DIR: Path = CACHE_DIR / "hips"
+    MANIFESTS_DIR: Path = DATA_DIR / "manifests"
+    JOURNAL_DIR: Path = DATA_DIR / "journal"
     COPILOT_DB_PATH: Path = DATA_DIR / "copilot_budget.db"
     
     # CORS
-    CORS_ORIGINS: list = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-        "*"
-    ]
+    CORS_ORIGINS: list = (
+        [o.strip() for o in os.getenv("CORS_ORIGINS").split(",") if o.strip()]
+        if os.getenv("CORS_ORIGINS", "").strip()
+        else [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:3000",
+            "https://spherexplore.earth",
+            "https://www.spherexplore.earth",
+        ]
+    )
     
     # Supabase (optional persistent storage)
     SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
@@ -59,6 +71,11 @@ class Settings:
 settings = Settings()
 
 # Ensure directories exist
+settings.DATA_DIR.mkdir(parents=True, exist_ok=True)
+settings.CACHE_DIR.mkdir(parents=True, exist_ok=True)
 settings.FITS_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 settings.PREVIEW_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 settings.QUERY_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+settings.HIPS_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+settings.MANIFESTS_DIR.mkdir(parents=True, exist_ok=True)
+settings.JOURNAL_DIR.mkdir(parents=True, exist_ok=True)
