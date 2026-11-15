@@ -36,7 +36,7 @@ export const Layout: React.FC = () => {
       <Starfield />
 
       {/* Cinematic Top Navigation Header */}
-      <Navbar onStartTour={() => startTour('getting-started')} />
+      <Navbar onStartTour={() => startTour('getting-started', true)} />
 
       {/* Main Content Area */}
       <main className="flex-1 w-full relative z-10 flex flex-col">

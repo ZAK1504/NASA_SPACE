@@ -15,31 +15,96 @@ export const TOURS: Record<string, TourDefinition> = {
   'getting-started': {
     id: 'getting-started',
     title: 'Welcome to SPHEREx HORIZON',
-    description: 'A quick tour of the continuous storytelling Journey, 3D interactive instruments, and dedicated scientific workspaces.',
+    description: 'An interactive journey through the continuous storytelling chapters, 3D instruments, and dedicated scientific tools.',
     steps: [
       {
-        element: 'body',
+        element: '[data-tour="journey-hero"]',
         popover: {
           title: '🌌 Welcome to SPHEREx HORIZON',
-          description: 'SPHEREx is NASA’s revolutionary all-sky near-infrared space telescope mapping over 1 billion cosmic objects across 102 spectral bands. Experience the entire journey as one continuous cinematic voyage.',
+          description: 'HORIZON lets you explore genuine NASA SPHEREx near-infrared observations, inspect astronomical objects, and investigate how the sky changes over time across 102 spectral bands.',
+          side: 'bottom',
+          align: 'start',
+        },
+      },
+      {
+        element: '[data-tour="journey-spacecraft"]',
+        popover: {
+          title: '🛰️ Interactive SPHEREx Spacecraft',
+          description: 'This is the authentic 3D model of NASA’s SPHEREx space observatory. Drag to rotate the spacecraft and examine its passive conical thermal shields, optical assembly, and solar array wings.',
+          side: 'left',
+          align: 'center',
+        },
+      },
+      {
+        element: '[data-tour="journey-navigation"]',
+        popover: {
+          title: '🧭 Continuous Five-Chapter Journey',
+          description: 'These are the five chapters of our continuous storytelling Journey: Home, Explorer, Time Machine, Labs, and Mission. The entire experience flows smoothly as you scroll.',
           side: 'bottom',
           align: 'center',
         },
       },
       {
-        element: '[data-tour="navigation-header"]',
+        element: '[data-tour="journey-chapter-navigator"]',
         popover: {
-          title: '🛰️ Main Navigation & 5 Storytelling Chapters',
-          description: 'Travel through five continuous chapters: Home (Meet the Spacecraft), Explore (Celestial Universe), Time Machine (Multi-Epoch Motion), Labs (Image Subtraction & Discovery), and Mission (Observatory & Training).',
-          side: 'bottom',
+          title: '📍 Chapter Progress Navigator',
+          description: 'Track your continuous cosmic elevation across the five chapters or click any chapter number (01 to 05) to smoothly glide to that section of the sky.',
+          side: 'left',
+          align: 'center',
         },
       },
       {
-        element: '[data-tour="chapter-progress-nav"]',
+        element: '[data-tour="journey-explorer-actions"]',
         popover: {
-          title: '📍 Chapter Progress Navigator',
-          description: 'Track your current position in the Journey or click any chapter number (01 to 05) to smoothly glide to that section of the sky.',
+          title: '🔭 Chapter 02: Beyond the Visible',
+          description: 'Sky Explorer navigates the full celestial sphere with Aladin Lite. Object Explorer investigates individual astronomical targets and Gaia proper-motion vectors. Spectral Explorer uncovers 102 infrared wavelengths.',
+          side: 'right',
+          align: 'start',
+        },
+      },
+      {
+        element: '[data-tour="journey-time-machine-action"]',
+        popover: {
+          title: '⏳ Chapter 03: The SPHEREx Time Machine',
+          description: 'Compare multi-epoch observations across survey cadences to discover moving stars, examine split-screen and blink comparisons, and watch celestial motion over time.',
+          side: 'right',
+          align: 'start',
+        },
+      },
+      {
+        element: '[data-tour="journey-labs-actions"]',
+        popover: {
+          title: '🧪 Chapter 04: The Science of Discovery',
+          description: 'In Discovery Lab and Light Curves, compare aligned FITS frames, detect point sources with DAOStarFinder, analyze 3-plane signed residuals, and record verified findings in your journal.',
+          side: 'right',
+          align: 'start',
+        },
+      },
+      {
+        element: '[data-tour="journey-mission-actions"]',
+        popover: {
+          title: '🎯 Chapter 05: Your Discovery Begins',
+          description: 'Embark on genuine scientific challenge missions tracking Barnard\'s Star and cold brown dwarfs, or test your transient identification skills in the interactive Mini Game simulation.',
+          side: 'top',
+          align: 'center',
+        },
+      },
+      {
+        element: '[data-tour="cosmic-copilot"]',
+        popover: {
+          title: '✨ Cosmic Copilot & Science Guide',
+          description: 'Access on-demand celestial guidance, infrared astronomy assistance, and mission briefing notes at any point in your cosmic journey.',
           side: 'left',
+          align: 'center',
+        },
+      },
+      {
+        element: '[data-tour="journey-ready"]',
+        popover: {
+          title: '🚀 Dedicated Scientific Workspaces',
+          description: 'Entering any scientific tool opens its dedicated full-screen workspace. When you arrive, separate in-depth guided tutorials are available to help you master every scientific instrument.',
+          side: 'bottom',
+          align: 'end',
         },
       },
     ],

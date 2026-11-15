@@ -135,8 +135,18 @@ export function travelBackToJourney(
 ): void {
   const saved = getJourneyReturnState();
   const originChapter = saved?.originChapter || defaultChapter;
+  const targetScrollY = saved?.scrollY ?? 0;
 
   const performNavigation = () => {
+    // Synchronously prime the scroll position BEFORE the Journey route commits layout to the DOM
+    if (targetScrollY > 0) {
+      window.scrollTo(0, targetScrollY);
+      document.documentElement.scrollTop = targetScrollY;
+      document.body.scrollTop = targetScrollY;
+      if (window.__lenis) {
+        window.__lenis.scrollTo(targetScrollY, { immediate: true });
+      }
+    }
     returnToJourney(navigate, defaultChapter);
   };
 

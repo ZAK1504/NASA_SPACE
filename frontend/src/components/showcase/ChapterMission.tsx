@@ -13,7 +13,7 @@ export const ChapterMission: React.FC<ChapterMissionProps> = ({ onScrollToTop })
   const navigate = useNavigate();
 
   const actions = (
-    <div className="flex flex-col gap-4 w-full">
+    <div data-tour="journey-mission-actions" className="flex flex-col gap-4 w-full">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full">
         {/* Action 1: Guided Missions (Primary Accent) */}
         <button

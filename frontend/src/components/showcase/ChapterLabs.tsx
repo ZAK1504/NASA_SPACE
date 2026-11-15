@@ -13,7 +13,7 @@ export const ChapterLabs: React.FC<ChapterLabsProps> = ({ onScrollToNext }) => {
   const navigate = useNavigate();
 
   const actions = (
-    <div className="flex flex-col gap-3.5 w-full">
+    <div data-tour="journey-labs-actions" className="flex flex-col gap-3.5 w-full">
       {/* Action 1: Discovery Lab */}
       <button
         onClick={() => travelToWorkspace(navigate, "/discovery-lab", "labs")}

@@ -82,7 +82,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </a>
 
         {/* Desktop Persistent Top Navigation (Exact 5 Destinations) */}
-        <nav className="links" aria-label="Main continuous navigation">
+        <nav className="links" data-tour="journey-navigation" aria-label="Main continuous navigation">
           {NAV_DESTINATIONS.map((dest) => {
             const isActive = activeSection === dest.id || activeSection === dest.targetId;
             return (
@@ -104,7 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* Right CTA & Tour Actions */}
-        <div className="flex items-center gap-3 ml-auto">
+        <div data-tour="journey-ready" className="flex items-center gap-3 ml-auto">
           {onStartTour && (
             <button
               onClick={onStartTour}

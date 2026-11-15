@@ -27,9 +27,9 @@ function vnoise(x: number, y: number, s: number): number {
   return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
 }
 
-export function fbm(x: number, y: number, s: number): number {
+export function fbm(x: number, y: number, s: number, octaves = 3): number {
   let v = 0, a = 0.5, f = 1;
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < octaves; i++) {
     v += a * vnoise(x * f, y * f, s + i);
     f *= 2;
     a *= 0.5;
@@ -146,14 +146,27 @@ export interface DrawOptions {
   h?: number;
 }
 
+// Module-level cache so expensive procedural textures (nebula, galaxy, sky)
+// are computed once and reused in 0ms on subsequent mounts and Back-to-Journey returns.
+const ART_CACHE = new Map<string, ImageData>();
+
 export function drawColor(canvas: HTMLCanvasElement, { kind = "nebula", seed = 1, w = 480, h = 360 }: DrawOptions = {}) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   canvas.width = w;
   canvas.height = h;
+
+  const key = `${kind}_${seed}_${w}_${h}`;
+  const cached = ART_CACHE.get(key);
+  if (cached) {
+    ctx.putImageData(cached, 0, 0);
+    return;
+  }
+
   const img = ctx.createImageData(w, h);
   const fn = KINDS[kind as ArtKind] || KINDS.nebula;
   for (let i = 3; i < img.data.length; i += 4) img.data[i] = 255;
   fn(img.data, w, h, seed);
+  ART_CACHE.set(key, img);
   ctx.putImageData(img, 0, 0);
 }

@@ -96,11 +96,10 @@ export const JourneyPage: React.FC = () => {
         }
       };
 
-      // Attempt restore immediately and after a tick to ensure full hydration
-      restore();
-      const timer = setTimeout(restore, 120);
+      // Single synchronized restore pass — prevents delayed second scroll jump
+      const restoreRaf = requestAnimationFrame(restore);
       clearJourneyReturnState();
-      return () => clearTimeout(timer);
+      return () => cancelAnimationFrame(restoreRaf);
     }
   }, [location]);
 
@@ -200,7 +199,7 @@ export const JourneyPage: React.FC = () => {
       <Navbar
         activeSection={activeChapter}
         onNavigate={scrollToChapter}
-        onStartTour={() => startTour("getting-started")}
+        onStartTour={() => startTour("getting-started", true)}
       />
 
       {/* 3. Right-Side Chapter Progress Navigator (HOME 01, EXPLORE 02, TIME 03, LABS 04, MISSION 05) */}

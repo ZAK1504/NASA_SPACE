@@ -109,6 +109,7 @@ export const CosmicCopilot: React.FC = () => {
       {/* Floating Launcher Button */}
       {!isOpen && (
         <button
+          data-tour="cosmic-copilot"
           onClick={() => setIsOpen(true)}
           className="fixed bottom-20 md:bottom-6 right-6 z-40 bg-[#111117] hover:bg-[#181822] border border-[#F4A272]/40 text-[#F3EFE8] px-3.5 py-2.5 rounded-full shadow-2xl flex items-center gap-2.5 group cursor-pointer transition-all duration-200 hover:scale-105"
         >

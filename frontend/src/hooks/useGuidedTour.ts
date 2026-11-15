@@ -66,7 +66,7 @@ export const useGuidedTour = () => {
     return state.tours[tourId] === 'completed';
   }, []);
 
-  const startTour = useCallback((tourId: string, isManual = false) => {
+  const startTour = useCallback((tourId: string, isManual = true) => {
     const tourDef: TourDefinition | undefined = TOURS[tourId];
     if (!tourDef) {
       console.warn(`Tour '${tourId}' not found in registry`);
@@ -94,6 +94,20 @@ export const useGuidedTour = () => {
       doneBtnText: 'Done ✓',
       allowClose: true,
       steps: tourDef.steps,
+      onHighlightStarted: (element) => {
+        if (!element || element === document.body) return;
+        const htmlEl = element as HTMLElement;
+        const rect = htmlEl.getBoundingClientRect();
+        const vh = window.innerHeight;
+        // If element is partially offscreen or scrolled away, scroll to center it comfortably
+        if (rect.top < 90 || rect.bottom > vh - 60) {
+          if (window.__lenis) {
+            window.__lenis.scrollTo(htmlEl, { offset: -100, duration: 0.8 });
+          } else {
+            htmlEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+      },
       onPopoverRender: (popover: PopoverDOM) => {
         // Ensure custom action buttons are injected into footer if not present
         if (!popover.footer) return;

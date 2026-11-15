@@ -13,7 +13,7 @@ export const ChapterTimeMachine: React.FC<ChapterTimeMachineProps> = ({ onScroll
   const navigate = useNavigate();
 
   const actions = (
-    <div className="flex flex-col gap-5 w-full">
+    <div data-tour="journey-time-machine-action" className="flex flex-col gap-5 w-full">
       {/* Feature Bullet List */}
       <div className="space-y-2.5 text-xs font-mono text-white/70">
         <div className="flex items-center gap-2.5 bg-white/[0.04] p-2.5 rounded-xl border border-white/10">

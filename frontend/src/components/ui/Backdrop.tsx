@@ -112,7 +112,7 @@ export const Backdrop: React.FC<BackdropProps> = ({ activeSection = "home" }) =>
 
       {/* Persistent Nebula Texture with smooth opacity blending */}
       <div ref={nebRef} className="bd-neb absolute inset-0 transition-none will-change-opacity" style={{ opacity: 0.35 }}>
-        <Pic kind="nebula" seed={11} w={640} h={360} alt="" />
+        <Pic kind="nebula" seed={11} w={320} h={180} alt="" />
       </div>
 
       {/* Persistent Multi-Layer Atmosphere Blending Layers */}

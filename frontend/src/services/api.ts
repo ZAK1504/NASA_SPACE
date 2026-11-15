@@ -198,6 +198,8 @@ export interface DiscoveryRecord {
   created_at: string;
 }
 
+const comparisonCache = new Map<string, Promise<ComparisonResponse>>();
+
 export const api = {
   async getHealth() {
     const res = await fetch(`${API_BASE_URL}/health`);
@@ -286,23 +288,32 @@ export const api = {
     colormap?: string;
     smooth?: boolean;
   }): Promise<ComparisonResponse> {
-    const res = await fetch(`${API_BASE_URL}/comparison/align`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        obs_id_1: params.obsId1,
-        obs_id_2: params.obsId2,
-        target_name: params.targetName || 'Target',
-        center_ra: params.centerRa,
-        center_dec: params.centerDec,
-        cutout_size_arcsec: params.cutoutSizeArcsec || 180.0,
-        stretch: params.stretch || 'asinh',
-        colormap: params.colormap || 'inferno',
-        smooth: params.smooth || false,
-      }),
-    });
-    if (!res.ok) throw new Error('Failed to compare observations');
-    return res.json();
+    const cacheKey = JSON.stringify(params);
+    const cached = comparisonCache.get(cacheKey);
+    if (cached) return cached;
+
+    const promise = (async () => {
+      const res = await fetch(`${API_BASE_URL}/comparison/align`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          obs_id_1: params.obsId1,
+          obs_id_2: params.obsId2,
+          target_name: params.targetName || 'Target',
+          center_ra: params.centerRa,
+          center_dec: params.centerDec,
+          cutout_size_arcsec: params.cutoutSizeArcsec || 180.0,
+          stretch: params.stretch || 'asinh',
+          colormap: params.colormap || 'inferno',
+          smooth: params.smooth || false,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to compare observations');
+      return res.json();
+    })();
+
+    comparisonCache.set(cacheKey, promise);
+    return promise;
   },
 
   async getTimeMachineManifest(params: {

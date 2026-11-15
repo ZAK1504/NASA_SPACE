@@ -20,6 +20,7 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center w-full my-auto">
         {/* Left Column: Numbered Label, Massive Typography, Mission Narrative, CTAs */}
         <div
+          data-tour="journey-hero"
           className="lg:col-span-6 flex flex-col justify-center"
           style={{
             transform: `translateY(calc(var(--hero-scroll, 0) * -30px))`,
@@ -98,6 +99,7 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
 
         {/* Right Column: Genuine 3D Spacecraft Floating Freely (Zero Box / Visible Card Container) */}
         <div
+          data-tour="journey-spacecraft"
           className="lg:col-span-6 flex items-center justify-center relative w-full h-[460px] sm:h-[520px] lg:h-[600px] pointer-events-auto select-none lg:-translate-x-10 lg:translate-y-8"
           style={{
             transform: `translateX(calc(var(--hero-scroll, 0) * 40px - 2.5rem)) translateY(calc(var(--hero-scroll, 0) * 20px + 2rem))`,

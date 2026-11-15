@@ -20,7 +20,7 @@ export const ChapterExplorer: React.FC<ChapterExplorerProps> = ({ onScrollToNext
   };
 
   const actions = (
-    <div className="flex flex-col gap-3 w-full">
+    <div data-tour="journey-explorer-actions" className="flex flex-col gap-3 w-full">
       {/* Action 1: Sky Explorer */}
       <button
         onClick={() => handleOpenWorkspace("sky")}

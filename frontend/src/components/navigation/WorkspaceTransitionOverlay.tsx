@@ -107,7 +107,6 @@ export const WorkspaceTransitionOverlay: React.FC = () => {
       // Midpoint route swap: at 45% progress (~280ms), veil is fully covering the viewport
       if (progress >= 0.45 && !stateRef.current.hasNavigated) {
         stateRef.current.hasNavigated = true;
-        setPhase("navigating");
         if (stateRef.current.onNavigate) {
           stateRef.current.onNavigate();
         }
@@ -161,14 +160,19 @@ export const WorkspaceTransitionOverlay: React.FC = () => {
       ctx.fillStyle = sweepGrad;
       ctx.fillRect(-bandWidth / 2, -H * 1.5, bandWidth, H * 3);
 
-      // Inner luminous curved arc crest for celestial aperture feel
+      // Inner luminous curved arc crest (dual-pass stroke: radiant core + soft outer aura without CPU shadowBlur overhead)
       ctx.beginPath();
       ctx.moveTo(-15, -H * 1.5);
       ctx.quadraticCurveTo(isReturn ? -60 : 60, 0, -15, H * 1.5);
-      ctx.lineWidth = 10;
-      ctx.strokeStyle = palette.coreLight.replace(/[\d.]+\)$/, `${peakAlpha * 0.96})`);
-      ctx.shadowColor = palette.primary;
-      ctx.shadowBlur = 20;
+      ctx.lineWidth = 26;
+      ctx.strokeStyle = palette.primary.replace(/[\d.]+\)$/, `${peakAlpha * 0.36})`);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(-15, -H * 1.5);
+      ctx.quadraticCurveTo(isReturn ? -60 : 60, 0, -15, H * 1.5);
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = palette.coreLight.replace(/[\d.]+\)$/, `${peakAlpha * 0.98})`);
       ctx.stroke();
 
       ctx.restore();

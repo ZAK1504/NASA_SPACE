@@ -167,7 +167,7 @@ export const ContinuousHorizonApp: React.FC = () => {
       <Navbar
         activeSection={activeSection}
         onNavigate={scrollToSection}
-        onStartTour={() => startTour("getting-started")}
+        onStartTour={() => startTour("getting-started", true)}
       />
 
       {/* 3. Continuous Main Scroll Container */}
