@@ -114,32 +114,35 @@ export const ExplorerShowcaseVisual: React.FC<ExplorerShowcaseVisualProps> = ({
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
-    // Milky Way band
+    // Milky Way galactic disk & infrared dust lane (seamless rotated galactic plane)
     const rot = rotation % (Math.PI * 2);
-    const bandShift = (rot / (Math.PI * 2)) * W;
-    const milkyWayTint = mode === "spectral"
-      ? ["rgba(80,100,255,0.13)", "rgba(255,120,40,0.08)"]
-      : ["rgba(255,160,80,0.14)", "rgba(200,120,80,0.07)"];
-
     ctx.save();
-    ctx.translate(bandShift % W - W / 2, 0);
-    for (let wrap = -1; wrap <= 1; wrap++) {
-      const bx = cx + wrap * W;
-      const grad = ctx.createLinearGradient(bx - W * 0.4, cy - H * 0.5, bx + W * 0.4, cy + H * 0.5);
-      grad.addColorStop(0, "transparent");
-      grad.addColorStop(0.35, milkyWayTint[0]);
-      grad.addColorStop(0.5, milkyWayTint[1]);
-      grad.addColorStop(0.65, milkyWayTint[0]);
-      grad.addColorStop(1, "transparent");
-      ctx.fillStyle = grad;
-      ctx.fillRect(bx - W * 0.5, 0, W, H);
+    ctx.translate(cx, cy);
+    ctx.rotate(rot * 0.35 + 0.38); // Inclined galactic plane
+    const mwGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, R * 0.95);
+    if (mode === "spectral") {
+      mwGrad.addColorStop(0, "rgba(99, 102, 241, 0.25)");
+      mwGrad.addColorStop(0.35, "rgba(168, 85, 247, 0.15)");
+      mwGrad.addColorStop(0.7, "rgba(59, 130, 246, 0.06)");
+      mwGrad.addColorStop(1, "transparent");
+    } else {
+      mwGrad.addColorStop(0, "rgba(255, 175, 90, 0.24)");
+      mwGrad.addColorStop(0.35, "rgba(244, 162, 114, 0.14)");
+      mwGrad.addColorStop(0.7, "rgba(180, 90, 50, 0.06)");
+      mwGrad.addColorStop(1, "transparent");
     }
+    ctx.scale(2.2, 0.42); // Realistic elliptical disk
+    ctx.fillStyle = mwGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, R * 0.95, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
 
     // Draw stars
     const dimStars = mode === "object";
     STARS.forEach((star) => {
-      const sx = ((star.x + (rot / (Math.PI * 2))) % 1) * W;
+      const normX = (((star.x + rot / (Math.PI * 2)) % 1) + 1) % 1;
+      const sx = normX * W;
       const sy = star.y * H;
       const alpha = dimStars ? star.opacity * 0.25 : star.opacity;
       ctx.beginPath();

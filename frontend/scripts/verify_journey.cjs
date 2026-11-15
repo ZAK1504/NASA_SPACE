@@ -192,13 +192,17 @@ async function runVerification() {
   await page.evaluate(() => {
     document.getElementById('explorer')?.scrollIntoView({ behavior: 'instant', block: 'start' });
   });
-  await new Promise(r => setTimeout(r, 1000));
+  await new Promise(r => setTimeout(r, 1200));
   await page.screenshot({ path: path.join(OUT_DIR, 'polished_06_explorer_showcase.png') });
 
   // Time Machine Showcase
   await page.evaluate(() => {
     document.getElementById('time-machine')?.scrollIntoView({ behavior: 'instant', block: 'start' });
   });
+  await page.waitForFunction(() => {
+    const img = document.querySelector('.time-machine-showcase-visual img');
+    return img && img.complete && img.naturalWidth > 0;
+  }, { timeout: 8000 }).catch(() => console.log('Timeout waiting for TM img'));
   await new Promise(r => setTimeout(r, 1000));
   await page.screenshot({ path: path.join(OUT_DIR, 'polished_07_timemachine_showcase.png') });
 
@@ -206,6 +210,10 @@ async function runVerification() {
   await page.evaluate(() => {
     document.getElementById('labs')?.scrollIntoView({ behavior: 'instant', block: 'start' });
   });
+  await page.waitForFunction(() => {
+    const img = document.querySelector('.labs-showcase-visual img');
+    return img && img.complete && img.naturalWidth > 0;
+  }, { timeout: 8000 }).catch(() => console.log('Timeout waiting for Labs img'));
   await new Promise(r => setTimeout(r, 1000));
   await page.screenshot({ path: path.join(OUT_DIR, 'polished_08_labs_showcase.png') });
 

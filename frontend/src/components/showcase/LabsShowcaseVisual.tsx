@@ -37,15 +37,14 @@ export const LabsShowcaseVisual: React.FC = () => {
     };
   }, []);
 
-  const e1Src = data?.epoch1_image_base64
-    ? `data:image/png;base64,${data.epoch1_image_base64}`
-    : null;
-  const e2Src = data?.epoch2_image_base64
-    ? `data:image/png;base64,${data.epoch2_image_base64}`
-    : null;
-  const diffSrc = data?.difference_image_base64
-    ? `data:image/png;base64,${data.difference_image_base64}`
-    : null;
+  const formatSrc = (b64?: string | null) => {
+    if (!b64) return null;
+    return b64.startsWith("data:") ? b64 : `data:image/png;base64,${b64}`;
+  };
+
+  const e1Src = formatSrc(data?.epoch1_image_base64);
+  const e2Src = formatSrc(data?.epoch2_image_base64);
+  const diffSrc = formatSrc(data?.difference_image_base64);
 
   return (
     <div className="labs-showcase-visual w-full relative flex flex-col items-center justify-center min-h-[460px] select-none overflow-hidden rounded-3xl p-4">

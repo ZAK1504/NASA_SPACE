@@ -49,10 +49,14 @@ export const TimeMachineShowcaseVisual: React.FC = () => {
   }, [blinking]);
 
   const epoch1Src = data?.epoch1_image_base64
-    ? `data:image/png;base64,${data.epoch1_image_base64}`
+    ? (data.epoch1_image_base64.startsWith("data:")
+        ? data.epoch1_image_base64
+        : `data:image/png;base64,${data.epoch1_image_base64}`)
     : null;
   const epoch2Src = data?.epoch2_image_base64
-    ? `data:image/png;base64,${data.epoch2_image_base64}`
+    ? (data.epoch2_image_base64.startsWith("data:")
+        ? data.epoch2_image_base64
+        : `data:image/png;base64,${data.epoch2_image_base64}`)
     : null;
 
   return (
@@ -104,7 +108,7 @@ export const TimeMachineShowcaseVisual: React.FC = () => {
             {viewMode === "split" ? (
               /* Split-Slider Mode */
               <div className="relative w-full h-full overflow-hidden">
-                {/* Epoch 2 (Background Right Layer) */}
+                {/* Epoch 2 (Background Layer) */}
                 <div className="absolute inset-0 flex items-center justify-center bg-black">
                   {epoch2Src ? (
                     <img
@@ -120,26 +124,30 @@ export const TimeMachineShowcaseVisual: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Epoch 1 (Foreground Left Clipped Layer) */}
+                {/* Epoch 1 (Clipped Over Epoch 2) */}
                 <div
-                  className="absolute inset-0 overflow-hidden border-r-2 border-[var(--accent)] bg-black"
-                  style={{ width: `${splitPos}%` }}
+                  className="absolute inset-0 flex items-center justify-center bg-black"
+                  style={{ clipPath: `inset(0 calc(100% - ${splitPos}%) 0 0)` }}
                 >
-                  <div className="relative w-full h-full flex items-center justify-center" style={{ minWidth: "100%" }}>
-                    {epoch1Src ? (
-                      <img
-                        src={epoch1Src}
-                        alt="SPHEREx Epoch 1 Barnard's Star"
-                        className="w-full h-full object-contain filter contrast-125"
-                      />
-                    ) : (
-                      <div className="text-xs text-white/40 font-mono">Frame 1 Loading...</div>
-                    )}
-                    <div className="absolute top-3 left-3 text-[10px] font-mono text-cyan-300 bg-black/80 px-2 py-0.5 rounded border border-cyan-400/30 shadow whitespace-nowrap">
-                      Epoch 1 · 2025-08-27
-                    </div>
+                  {epoch1Src ? (
+                    <img
+                      src={epoch1Src}
+                      alt="SPHEREx Epoch 1 Barnard's Star"
+                      className="w-full h-full object-contain filter contrast-125"
+                    />
+                  ) : (
+                    <div className="text-xs text-white/40 font-mono">Frame 1 Loading...</div>
+                  )}
+                  <div className="absolute top-3 left-3 text-[10px] font-mono text-cyan-300 bg-black/80 px-2 py-0.5 rounded border border-cyan-400/30 shadow whitespace-nowrap">
+                    Epoch 1 · 2025-08-27
                   </div>
                 </div>
+
+                {/* Vertical Divider Line */}
+                <div
+                  className="absolute top-0 bottom-0 pointer-events-none z-10 w-0.5 bg-[var(--accent)] shadow-[0_0_8px_rgba(244,162,114,0.8)]"
+                  style={{ left: `${splitPos}%` }}
+                />
 
                 {/* Draggable Divider Handle */}
                 <input
@@ -153,7 +161,7 @@ export const TimeMachineShowcaseVisual: React.FC = () => {
                 />
 
                 <div
-                  className="absolute top-0 bottom-0 pointer-events-none z-10 flex items-center justify-center"
+                  className="absolute top-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center justify-center"
                   style={{ left: `calc(${splitPos}% - 14px)` }}
                 >
                   <div className="w-7 h-7 rounded-full bg-[var(--accent)] text-black flex items-center justify-center shadow-[0_0_15px_rgba(244,162,114,0.8)] font-mono text-xs font-bold">
