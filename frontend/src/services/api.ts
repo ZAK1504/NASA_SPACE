@@ -1,4 +1,30 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+/**
+ * Resolves the API base URL with production-safe same-origin routing:
+ * 1. If import.meta.env.VITE_API_BASE_URL is provided, use it.
+ * 2. If running in a browser environment on a non-localhost domain (e.g. spherexplore.earth),
+ *    default to same-origin '/api' to avoid hardcoded localhost calls.
+ * 3. In local development environments, fallback to 'http://localhost:8000/api'.
+ */
+export const getApiBaseUrl = (): string => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '');
+  }
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1' && hostname !== '::1') {
+      return '/api';
+    }
+  }
+  return 'http://localhost:8000/api';
+};
+
+export const API_BASE_URL = getApiBaseUrl();
+
+export const getApiUrl = (endpoint: string): string => {
+  const base = getApiBaseUrl();
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return `${base}${cleanEndpoint}`;
+};
 
 export interface AstronomicalObject {
   id: string;

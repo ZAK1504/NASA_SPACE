@@ -9,6 +9,7 @@ import { FEATURED_OBJECTS } from '../constants/objects';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { InfoPanel } from '../components/ui/InfoPanel';
+import { setCopilotContext } from '../services/copilotContext';
 
 export const DiscoveryLab: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -46,6 +47,21 @@ export const DiscoveryLab: React.FC = () => {
 
   // Record Investigation expandable
   const [recordOpen, setRecordOpen] = useState(false);
+
+  // Sync verified Discovery Lab workspace state with Cosmic Copilot
+  useEffect(() => {
+    setCopilotContext({
+      route: '/discovery-lab',
+      target_id: selectedObject.slug,
+      target_name: selectedObject.name,
+      ra: selectedObject.ra,
+      dec: selectedObject.dec,
+      mode: activeMode,
+      subtraction_mode: activeMode === 'difference' ? 'DAOStarFinder Point-Source Residual Analysis' : 'Image Stacking Co-Addition',
+      detection_summary: comparison?.candidates ? `${comparison.candidates.length} candidate source(s) extracted via photutils DAOStarFinder` : undefined,
+      scientific_limitations: 'Citizen science detection lab; candidate transient / proper-motion signals require multi-epoch verification against catalog proper motion.',
+    });
+  }, [selectedObject, activeMode, comparison]);
 
   useEffect(() => {
     setLoading(true);

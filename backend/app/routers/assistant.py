@@ -2,8 +2,9 @@ import json
 import logging
 import ipaddress
 import os
+import secrets
 from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, Request, Body, HTTPException, status
+from fastapi import APIRouter, Request, Response, Body, HTTPException, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -36,6 +37,15 @@ class CopilotStatusResponse(BaseModel):
     daily_tokens: int
     token_budget: int
     budget_used_percent: float
+    monthly_requests: Optional[int] = 0
+    monthly_tokens: Optional[int] = 0
+    monthly_token_budget: Optional[int] = 3000000
+
+class CopilotQueryResponse(BaseModel):
+    response: str
+    actions: List[Dict[str, str]]
+    suggested_questions: List[str]
+    source: str
 
 TRUSTED_PROXIES = {
     "127.0.0.1",
@@ -54,7 +64,7 @@ def get_client_ip(request: Request) -> str:
     Forwarded headers are ONLY trusted if direct client host is in TRUSTED_PROXIES.
     """
     direct_ip = request.client.host if request.client else "127.0.0.1"
-    
+
     # Only trust proxy headers when request originates from a trusted local proxy/reverse-proxy
     if direct_ip in TRUSTED_PROXIES:
         forwarded = request.headers.get("x-forwarded-for")
@@ -76,6 +86,30 @@ def get_client_ip(request: Request) -> str:
 
     return direct_ip
 
+def get_or_create_session(request: Request, response: Response, provided_id: Optional[str] = None) -> str:
+    """
+    Retrieves or establishes a cryptographically secure anonymous session cookie.
+    Prevents client-side identity spoofing and rate-limit evasion.
+    """
+    cookie_session = request.cookies.get("spherex_copilot_session")
+    if cookie_session and len(cookie_session) <= 64:
+        return cookie_session
+
+    if provided_id and provided_id != "anon" and len(provided_id) <= 64:
+        session_id = provided_id
+    else:
+        session_id = f"sess_{secrets.token_urlsafe(18)}"
+
+    # Issue HttpOnly session cookie
+    response.set_cookie(
+        key="spherex_copilot_session",
+        value=session_id,
+        httponly=True,
+        samesite="lax",
+        max_age=86400 * 30  # 30 days
+    )
+    return session_id
+
 
 @router.get("/status", response_model=CopilotStatusResponse)
 def get_copilot_status():
@@ -93,22 +127,26 @@ def get_copilot_status():
         daily_requests=metrics["total_requests"],
         daily_tokens=metrics["total_tokens"],
         token_budget=metrics["daily_token_budget"],
-        budget_used_percent=metrics["budget_percentage_used"]
+        budget_used_percent=metrics["budget_percentage_used"],
+        monthly_requests=metrics.get("monthly_requests", 0),
+        monthly_tokens=metrics.get("monthly_tokens", 0),
+        monthly_token_budget=metrics.get("monthly_token_budget", settings.COSMIC_AI_MONTHLY_TOKEN_BUDGET)
     )
 
 
 @router.post("/stream")
 async def stream_copilot_chat(
     req: CopilotChatRequest,
-    request: Request
+    request: Request,
+    response: Response
 ):
     """
     Server-Sent Events (SSE) streaming endpoint for Cosmic Copilot.
     Provides progressive token-by-token text generation, dynamic actions,
-    suggested questions, and token usage accounting with Groq LLM.
+    suggested questions, honest response source metadata, and token accounting with Groq LLM.
     """
     client_ip = get_client_ip(request)
-    session_id = req.session_id or "anon"
+    session_id = get_or_create_session(request, response, req.session_id)
 
     # Sanitize and validate history
     clean_history = []
@@ -120,14 +158,27 @@ async def stream_copilot_chat(
                     "text": str(turn["text"])[:1000]
                 })
 
-    # Sanitize context
+    # Sanitize scientific context
     clean_context = {}
     if req.context and isinstance(req.context, dict):
         clean_context = {
             "route": str(req.context.get("route", ""))[:100],
             "target_id": str(req.context.get("target_id", ""))[:50],
+            "target_name": str(req.context.get("target_name", ""))[:100],
+            "ra": req.context.get("ra"),
+            "dec": req.context.get("dec"),
+            "wavelength_um": req.context.get("wavelength_um"),
             "band": str(req.context.get("band", ""))[:50],
-            "mode": str(req.context.get("mode", ""))[:50]
+            "detector": str(req.context.get("detector", ""))[:20],
+            "mode": str(req.context.get("mode", ""))[:50],
+            "subtraction_mode": str(req.context.get("subtraction_mode", ""))[:100],
+            "obs_ids": req.context.get("obs_ids") if isinstance(req.context.get("obs_ids"), list) else [],
+            "epoch_dates": req.context.get("epoch_dates") if isinstance(req.context.get("epoch_dates"), list) else [],
+            "baseline_days": req.context.get("baseline_days"),
+            "measured_displacement_arcsec": req.context.get("measured_displacement_arcsec"),
+            "catalog_proper_motion": str(req.context.get("catalog_proper_motion", ""))[:100],
+            "detection_summary": str(req.context.get("detection_summary", ""))[:150],
+            "scientific_limitations": str(req.context.get("scientific_limitations", ""))[:200],
         }
 
     generator = copilot_ai_service.stream_chat_response(
@@ -149,25 +200,27 @@ async def stream_copilot_chat(
     )
 
 
-@router.post("/query")
+@router.post("/query", response_model=CopilotQueryResponse)
 async def ask_assistant(
+    req: CopilotChatRequest,
     request: Request,
-    body: Dict[str, Any] = Body(...)
+    response: Response
 ) -> Dict[str, Any]:
     """
     Synchronous fallback & backward-compatible endpoint for Cosmic Copilot.
-    Integrates fast deterministic routing, astronomical glossary, and full responses.
+    Uses strict shared validation schema identical to /stream.
+    Integrates fast deterministic routing, astronomical glossary, and full responses with honest source metadata.
     """
-    raw_message = body.get("message", "")
-    if not isinstance(raw_message, str) or not raw_message.strip():
+    raw_message = req.message.strip()
+    if not raw_message:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Message field is required and must be non-empty."
         )
 
     q = raw_message.lower().strip()
-    session_id = str(body.get("session_id", "anon"))[:64]
     client_ip = get_client_ip(request)
+    session_id = get_or_create_session(request, response, req.session_id)
 
     # 1. Fast deterministic navigation command
     fast_nav = copilot_ai_service.is_navigation_command(raw_message)
@@ -176,17 +229,17 @@ async def ask_assistant(
             "response": fast_nav["text"],
             "actions": fast_nav["actions"],
             "suggested_questions": copilot_ai_service.generate_suggested_questions(fast_nav["text"], raw_message),
-            "source": "fast_nav"
+            "source": "deterministic_navigation"
         }
 
-    # 2. Check deterministic responses
+    # 2. Check deterministic knowledge base responses
     for key, entry in DETERMINISTIC_RESPONSES.items():
         if key in q:
             return {
                 "response": entry["text"],
                 "actions": entry["actions"],
                 "suggested_questions": copilot_ai_service.generate_suggested_questions(entry["text"], raw_message),
-                "source": "knowledge_base"
+                "source": "scientific_knowledge_base"
             }
 
     # 3. If AI is enabled and within budget, gather stream into single response
@@ -194,13 +247,14 @@ async def ask_assistant(
         tokens = []
         actions = []
         suggested = []
+        final_source = "groq_ai"
         try:
             async for sse_event in copilot_ai_service.stream_chat_response(
                 message=raw_message,
                 session_id=session_id,
                 client_ip=client_ip,
-                history=body.get("history", []),
-                context=body.get("context", {})
+                history=req.history or [],
+                context=req.context or {}
             ):
                 if sse_event.startswith("data: "):
                     payload = json.loads(sse_event[6:].strip())
@@ -212,15 +266,19 @@ async def ask_assistant(
                             actions = payload["actions"]
                         if "text" in payload:
                             tokens.append(payload["text"])
+                        if "source" in payload:
+                            final_source = payload["source"]
                     elif p_type == "suggested_questions":
                         suggested = payload.get("suggested_questions", [])
+                    elif p_type == "done" and "source" in payload:
+                        final_source = payload["source"]
 
             if tokens:
                 return {
                     "response": "".join(tokens),
                     "actions": actions or copilot_ai_service.extract_actions("".join(tokens), raw_message),
                     "suggested_questions": suggested or copilot_ai_service.generate_suggested_questions("".join(tokens), raw_message),
-                    "source": "groq_ai"
+                    "source": final_source
                 }
         except Exception as e:
             logger.error("Synchronous query error: %s", str(e))

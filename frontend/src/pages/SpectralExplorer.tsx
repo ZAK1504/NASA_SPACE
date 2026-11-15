@@ -6,12 +6,13 @@ import {
   Play, Pause, SkipBack, SkipForward, Download, Globe,
   AlertTriangle, Compass, MapPin, Sliders, RefreshCw
 } from 'lucide-react';
-import { api, TargetSpectrumResponse } from '../services/api';
+import { api, TargetSpectrumResponse, getApiUrl } from '../services/api';
 import { FEATURED_OBJECTS } from '../constants/objects';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { InfoPanel } from '../components/ui/InfoPanel';
 import { getAladinInstance } from '../utils/aladinLoader';
+import { setCopilotContext } from '../services/copilotContext';
 
 const DETECTORS = [
   { id: 'ALL', name: 'All Arrays', range: '0.75 – 5.00 μm', chRange: [1, 102] },
@@ -31,11 +32,7 @@ const MOLECULAR_FEATURES = [
 ];
 
 const getHipsApiBase = (): string => {
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname || '127.0.0.1';
-    return `http://${host}:8000/api/spectra/hips`;
-  }
-  return 'http://127.0.0.1:8000/api/spectra/hips';
+  return getApiUrl('/spectra/hips');
 };
 
 export const SpectralExplorer: React.FC = () => {
@@ -85,10 +82,8 @@ export const SpectralExplorer: React.FC = () => {
     setPreloading(true);
     setIsPreloaded(false);
 
-    const host = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1';
-
     // 1. Audit backend cache status
-    fetch(`http://${host}:8000/api/spectra/hips/preload/status?mode=${scanMode}`)
+    fetch(getApiUrl(`/spectra/hips/preload/status?mode=${scanMode}`))
       .then((r) => r.json())
       .then((data) => {
         if (!isCancelled) {
@@ -103,7 +98,7 @@ export const SpectralExplorer: React.FC = () => {
 
     validChannels.forEach((ch) => {
       const img = new Image();
-      img.src = `http://${host}:8000/api/spectra/frame/${ch}`;
+      img.src = getApiUrl(`/spectra/frame/${ch}`);
       img.onload = () => {
         if (!isCancelled) {
           loaded++;
@@ -360,6 +355,22 @@ export const SpectralExplorer: React.FC = () => {
 
   const currentDetector = getCurrentDetectorId(renderedChannel);
 
+  // Sync verified spectral workspace state with Cosmic Copilot
+  useEffect(() => {
+    setCopilotContext({
+      route: '/spectra',
+      target_id: selectedObject.slug,
+      target_name: selectedObject.name,
+      ra: selectedObject.ra,
+      dec: selectedObject.dec,
+      wavelength_um: currentWavelengthUm,
+      band: `Channel ${renderedChannel} (${currentWavelengthUm} μm, ${currentDetector})`,
+      detector: currentDetector,
+      quality_flags: isGap ? ['Detector Gap (Ch 51/52)'] : ['Calibrated Science Channel'],
+      scientific_limitations: 'SPHEREx low-resolution R~35-130 spectrophotometry across 102 bands.',
+    });
+  }, [selectedObject, renderedChannel, currentWavelengthUm, currentDetector, isGap]);
+
   // Handle detector filter tab click: syncs table/chart AND jumps channel scanner
   const handleSelectDetector = (detId: string) => {
     setActiveDetector(detId);
@@ -520,7 +531,7 @@ export const SpectralExplorer: React.FC = () => {
           {viewerMode === 'scan' && !isGap && (
             <div className="relative w-full h-full flex items-center justify-center bg-[#08080C]">
               <img
-                src={`http://${typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1'}:8000/api/spectra/frame/${renderedChannel}`}
+                src={getApiUrl(`/spectra/frame/${renderedChannel}`)}
                 alt={`SPHEREx DR1 Channel ${renderedChannel}`}
                 className="max-w-full max-h-full object-contain select-none"
               />
