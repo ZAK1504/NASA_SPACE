@@ -47,7 +47,7 @@ export const MissionShowcaseVisual: React.FC = () => {
   };
 
   return (
-    <div className="mission-showcase-visual w-full max-w-[560px] relative flex flex-col items-center select-none overflow-hidden rounded-3xl p-3 sm:p-4">
+    <div className="mission-showcase-visual w-full max-w-[580px] relative flex flex-col items-center select-none overflow-hidden rounded-3xl p-3 sm:p-4">
       {/* 1. Ambient Midnight Blue & Warm Sunrise Horizon Atmosphere */}
       <div className="absolute inset-0 bg-radial from-amber-500/12 via-indigo-950/15 to-transparent pointer-events-none filter blur-3xl -z-10" />
 
@@ -146,21 +146,30 @@ export const MissionShowcaseVisual: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. Target Selection Controls (Clean Chips Strip) */}
-      <div className="w-full mt-3 flex flex-wrap items-center justify-between gap-1.5">
-        {FEATURED_OBJECTS.map((t) => (
-          <button
-            key={t.slug}
-            onClick={() => setSelectedSlug(t.slug)}
-            className={`px-3 py-1.5 rounded-full font-mono text-[10.5px] transition-all cursor-pointer ${
-              selectedSlug === t.slug
-                ? "bg-[#F4A272] text-black font-semibold shadow-[0_0_14px_rgba(244,162,114,0.45)] scale-105"
-                : "bg-white/[0.06] text-white/70 hover:text-white hover:bg-white/[0.12] border border-white/10"
-            }`}
-          >
-            {t.name}
-          </button>
-        ))}
+      {/* 4. Target Selection Controls (Clean Single Row: All 5 Targets Perfectly Aligned) */}
+      <div
+        className="w-full mt-3 overflow-x-auto sm:overflow-x-visible scrollbar-none overscroll-contain py-1"
+        data-lenis-prevent
+      >
+        <div className="grid grid-cols-5 gap-1.5 w-full min-w-[460px] sm:min-w-0">
+          {FEATURED_OBJECTS.map((t) => {
+            const isSelected = selectedSlug === t.slug;
+            return (
+              <button
+                key={t.slug}
+                onClick={() => setSelectedSlug(t.slug)}
+                className={`h-9 px-1 py-0.5 rounded-xl text-[10px] sm:text-[10.5px] font-sans font-medium flex items-center justify-center text-center transition-colors cursor-pointer border ${
+                  isSelected
+                    ? "bg-[#F4A272] text-[#08080C] font-bold border-[#FF7B3D] shadow-[0_0_12px_rgba(244,162,114,0.4)]"
+                    : "bg-white/[0.06] text-white/70 hover:text-white hover:bg-white/[0.12] border-white/10"
+                }`}
+                title={t.name}
+              >
+                <span className="whitespace-nowrap tracking-tight">{t.name}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* 5. Dedicated Selected-Target Information Area (Clearly Separated, Never Obscuring the Map) */}

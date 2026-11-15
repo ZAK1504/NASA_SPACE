@@ -75,7 +75,6 @@ def _get_channel_properties_text(channel: int) -> str:
         f"hips_tile_format     = png\n"
         f"dataproduct_type     = image\n"
         f"hips_frame           = equatorial\n"
-        f"hips_service_url     = /api/spectra/hips/{channel}\n"
         f"obs_regime           = Infrared\n"
         f"em_min               = {wavelength * 1e-6:.3e}\n"
         f"em_max               = {wavelength * 1e-6:.3e}\n"
@@ -281,7 +280,7 @@ def get_prepared_spectral_frame(channel: int):
 
 
 # Official HiPS Cube Endpoints for Aladin Lite v3
-@router.get("/hips/cube/properties")
+@router.api_route("/hips/cube/properties", methods=["GET", "HEAD"])
 def get_cube_root_properties():
     """Serve official SPHEREx DR1 HiPS Cube properties."""
     props = (
@@ -301,26 +300,26 @@ def get_cube_root_properties():
     return Response(content=props, media_type="text/plain; charset=utf-8")
 
 
-@router.get("/hips/cube/{channel}/properties")
+@router.api_route("/hips/cube/{channel}/properties", methods=["GET", "HEAD"])
 def get_cube_slice_properties(channel: int):
     """Serve HiPS slice properties when Aladin Lite v3 requests frame-level properties."""
     return Response(content=_get_channel_properties_text(channel), media_type="text/plain; charset=utf-8")
 
 
-@router.get("/hips/cube/{channel}/Norder{order}/Dir{dir_val}/{filename}")
+@router.api_route("/hips/cube/{channel}/Norder{order}/Dir{dir_val}/{filename}", methods=["GET", "HEAD"])
 def get_cube_slice_tile(channel: int, order: int, dir_val: str, filename: str):
     """Serve HiPS tile for cube slice frame."""
     return _fetch_and_stream_tile(channel=channel, order=order, dir_val=dir_val, filename=filename)
 
 
-@router.get("/hips/cube/Norder{order}/Dir{dir_val}/{filename}")
+@router.api_route("/hips/cube/Norder{order}/Dir{dir_val}/{filename}", methods=["GET", "HEAD"])
 def get_cube_direct_tile(order: int, dir_val: str, filename: str):
     """Serve direct HiPS tile from cube root."""
     return _fetch_and_stream_tile(channel=None, order=order, dir_val=dir_val, filename=filename)
 
 
 # Channel-specific 2D Image HiPS Endpoints (Allows individual slice navigation in Aladin Lite)
-@router.get("/hips/{channel}/properties")
+@router.api_route("/hips/{channel}/properties", methods=["GET", "HEAD"])
 def get_channel_properties_endpoint(channel: int):
     """Serve authentic HiPS 2D image properties for SPHEREx spectral band."""
     if channel < 1 or channel > 102:
@@ -328,15 +327,55 @@ def get_channel_properties_endpoint(channel: int):
     return Response(content=_get_channel_properties_text(channel), media_type="text/plain; charset=utf-8")
 
 
-@router.get("/hips/{channel}/Norder{order}/Dir{dir_val}/{filename}")
+@router.api_route("/hips/{channel}/Norder{order}/Dir{dir_val}/{filename}", methods=["GET", "HEAD"])
 def get_channel_tile_endpoint(channel: int, order: int, dir_val: str, filename: str):
     """Serve authentic SPHEREx DR1 HiPS tile for channel."""
     return _fetch_and_stream_tile(channel=channel, order=order, dir_val=dir_val, filename=filename)
 
 
-@router.get("/hips/{channel}/{filename:path}")
+@router.api_route("/hips/{channel}/{filename:path}", methods=["GET", "HEAD"])
 def get_channel_fallback_file(channel: int, filename: str):
-    """Handle standard HiPS metadata files (Moc.fits, Allsky.jpg) gracefully."""
+    """Handle standard HiPS metadata files (Moc.fits, Allsky.png) gracefully."""
+    fname_clean = filename.strip("/")
+
+    # Handle Moc.fits
+    if fname_clean.lower() == "moc.fits":
+        moc_path = HIPS_CACHE_DIR / "Moc.fits"
+        if not moc_path.exists() or moc_path.stat().st_size < 100:
+            try:
+                url = f"{IPAC_HIPS_ROOT}/Moc.fits"
+                req = urllib.request.Request(url, headers={"User-Agent": "SPHEREx-Horizon/1.0"})
+                with urllib.request.urlopen(req, timeout=4.0) as resp:
+                    if resp.status == 200:
+                        moc_path.write_bytes(resp.read())
+            except Exception:
+                pass
+        if moc_path.exists() and moc_path.stat().st_size > 100:
+            return FileResponse(moc_path, media_type="application/fits", headers={"Cache-Control": "public, max-age=604800, immutable"})
+
+    # Handle Allsky tile requests (e.g. Norder3/Allsky.png, Allsky.png)
+    if "allsky" in fname_clean.lower():
+        tile_ch = 101 if channel == 102 else channel
+        allsky_cache = HIPS_CACHE_DIR / f"ch{channel}_allsky.png"
+        if allsky_cache.exists() and allsky_cache.stat().st_size > 1000:
+            return FileResponse(allsky_cache, media_type="image/png", headers={"Cache-Control": "public, max-age=604800, immutable"})
+
+        candidate_allsky = [
+            f"{IPAC_HIPS_ROOT}/Norder3/Allsky_{tile_ch}.png",
+            f"{IPAC_HIPS_ROOT}/Norder3/Allsky.png",
+        ]
+        for u in candidate_allsky:
+            try:
+                req = urllib.request.Request(u, headers={"User-Agent": "SPHEREx-Horizon/1.0"})
+                with urllib.request.urlopen(req, timeout=4.0) as resp:
+                    if resp.status == 200:
+                        data = resp.read()
+                        if len(data) > 1000:
+                            allsky_cache.write_bytes(data)
+                            return Response(content=data, media_type="image/png", headers={"Cache-Control": "public, max-age=604800, immutable"})
+            except Exception:
+                continue
+
     raise HTTPException(status_code=404, detail=f"File {filename} not present in channel {channel}")
 
 @router.get("/extract")
