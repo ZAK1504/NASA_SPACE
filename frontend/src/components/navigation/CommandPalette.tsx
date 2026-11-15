@@ -61,19 +61,19 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-lg bg-[#151E30] border border-[#263247] rounded-lg shadow-2xl overflow-hidden">
+      <div className="w-full max-w-lg bg-[#111117] border border-[#262635] rounded-lg shadow-2xl overflow-hidden">
         {/* Input header */}
-        <div className="flex items-center px-4 py-3 border-b border-[#263247]">
-          <Search className="w-4 h-4 text-[#94A3B8] mr-3" />
+        <div className="flex items-center px-4 py-3 border-b border-[#262635]">
+          <Search className="w-4 h-4 text-[#9E9AA7] mr-3" />
           <input
             type="text"
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Type a command, page name, or target…"
-            className="flex-1 bg-transparent text-sm text-[#E8EDF5] placeholder:text-[#94A3B8] focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-[#F3EFE8] placeholder:text-[#9E9AA7] focus:outline-none"
           />
-          <button onClick={onClose} className="text-[#94A3B8] hover:text-[#E8EDF5]">
+          <button onClick={onClose} className="text-[#9E9AA7] hover:text-[#F3EFE8]">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -81,7 +81,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
         {/* Results list */}
         <div className="max-h-80 overflow-y-auto p-2 space-y-1">
           {filtered.length === 0 ? (
-            <div className="py-8 text-center text-xs text-[#94A3B8]">
+            <div className="py-8 text-center text-xs text-[#9E9AA7]">
               No matches found for "{query}"
             </div>
           ) : (
@@ -91,17 +91,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                 <button
                   key={idx}
                   onClick={() => handleSelect(item.path)}
-                  className="w-full flex items-center justify-between px-3 py-2 text-xs rounded text-[#94A3B8] hover:text-[#E8EDF5] hover:bg-[#1a2540] transition-colors cursor-pointer text-left group"
+                  className="w-full flex items-center justify-between px-3 py-2 text-xs rounded text-[#9E9AA7] hover:text-[#F3EFE8] hover:bg-[#1c1c28] transition-colors cursor-pointer text-left group"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Icon className="w-4 h-4 text-[#6EA8FE]" />
-                    <span className="font-medium text-[#E8EDF5]">{item.label}</span>
+                    <Icon className="w-4 h-4 text-[#F4A272]" />
+                    <span className="font-medium text-[#F3EFE8]">{item.label}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#0B1020] border border-[#263247] text-[#94A3B8]">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#08080C] border border-[#262635] text-[#9E9AA7]">
                       {item.category}
                     </span>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#263247] group-hover:text-[#6EA8FE] transition-colors" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#262635] group-hover:text-[#F4A272] transition-colors" />
                   </div>
                 </button>
               );
@@ -110,9 +110,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
         </div>
 
         {/* Footer info */}
-        <div className="px-4 py-2 border-t border-[#263247] bg-[#0d1526] flex items-center justify-between text-[11px] text-[#94A3B8]">
-          <span>Tip: Press <kbd className="px-1.5 py-0.5 rounded bg-[#0B1020] border border-[#263247] text-[10px]">ESC</kbd> to close</span>
-          <span className="font-mono text-[#6EA8FE]">SPHEREx Quick Navigation</span>
+        <div className="px-4 py-2 border-t border-[#262635] bg-[#0d1526] flex items-center justify-between text-[11px] text-[#9E9AA7]">
+          <span>Tip: Press <kbd className="px-1.5 py-0.5 rounded bg-[#08080C] border border-[#262635] text-[10px]">ESC</kbd> to close</span>
+          <span className="font-mono text-[#F4A272]">SPHEREx Quick Navigation</span>
         </div>
       </div>
     </div>

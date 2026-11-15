@@ -8,37 +8,39 @@
   html {
     scroll-behavior: smooth;
     color-scheme: dark;
+    overflow-x: hidden;
   }
 
   body {
-    background-color: #0B1020;
-    color: #E8EDF5;
+    background-color: #08080C;
+    color: #F3EFE8;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     margin: 0;
     min-height: 100vh;
+    overflow-x: hidden;
     background-image: 
-      radial-gradient(circle at 15% 20%, rgba(110, 168, 254, 0.04) 0%, transparent 45%),
-      radial-gradient(circle at 85% 75%, rgba(243, 184, 91, 0.03) 0%, transparent 50%),
-      radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.3) 0%, transparent 70%);
+      radial-gradient(circle at 15% 20%, rgba(244, 162, 114, 0.04) 0%, transparent 45%),
+      radial-gradient(circle at 85% 75%, rgba(255, 123, 61, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(8, 8, 12, 0.4) 0%, transparent 70%);
     background-attachment: fixed;
   }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #0B1020; }
-  ::-webkit-scrollbar-thumb { background: #263247; border-radius: 4px; border: 1px solid #0B1020; }
-  ::-webkit-scrollbar-thumb:hover { background: #3a4d6b; }
+  ::-webkit-scrollbar-track { background: #08080C; }
+  ::-webkit-scrollbar-thumb { background: #262635; border-radius: 4px; border: 1px solid #08080C; }
+  ::-webkit-scrollbar-thumb:hover { background: #3c3c4d; }
 }
 
 @layer components {
-  /* Modern Glassmorphic Card */
+  /* HORIZON Scientific Surface Card */
   .panel {
-    @apply bg-[#151E30]/90 backdrop-blur-md border border-[#263247] rounded-lg shadow-hud transition-all duration-200;
+    @apply bg-[#111117]/95 backdrop-blur-md border border-[#262635] rounded-xl shadow-hud transition-all duration-200;
   }
   
   .panel-interactive {
-    @apply panel hover:border-[#3a4d6b] hover:shadow-glow-blue hover:-translate-y-0.5 transition-all duration-200;
+    @apply panel hover:border-[#F4A272]/50 hover:shadow-[0_0_20px_rgba(244,162,114,0.18)] hover:-translate-y-0.5 transition-all duration-200;
   }
 
   /* High-Tech HUD Reticle & Corner Accents */
@@ -57,7 +59,7 @@
   .aladin-fullscreen,
   div[id^="aladin"],
   div[id^="aladin"] canvas {
-    background-color: #070B14 !important;
+    background-color: #040308 !important;
   }
 
   /* Prevent overlapping native Aladin location / coordinate HUD box */
@@ -72,8 +74,8 @@
     left: -1px;
     width: 6px;
     height: 6px;
-    border-top: 1.5px solid #6EA8FE;
-    border-left: 1.5px solid #6EA8FE;
+    border-top: 1.5px solid #F4A272;
+    border-left: 1.5px solid #F4A272;
     pointer-events: none;
   }
   .hud-bracket::after {
@@ -83,28 +85,28 @@
     right: -1px;
     width: 6px;
     height: 6px;
-    border-bottom: 1.5px solid #6EA8FE;
-    border-right: 1.5px solid #6EA8FE;
+    border-bottom: 1.5px solid #F4A272;
+    border-right: 1.5px solid #F4A272;
     pointer-events: none;
   }
 
   /* Navigation Link */
   .nav-link {
-    @apply flex items-center gap-3 px-3 py-2 rounded-md text-[#94A3B8] hover:text-[#E8EDF5] hover:bg-[#1a2540]/80 transition-all duration-200 text-sm font-medium;
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-[#9E9AA7] hover:text-[#F3EFE8] hover:bg-white/[0.06] transition-all duration-200 text-sm font-medium;
   }
   .nav-link-active {
-    @apply text-[#6EA8FE] bg-[#1a2540] border-l-2 border-[#6EA8FE] shadow-sm;
+    @apply text-[#F4A272] bg-[#181822] border-l-2 border-[#F4A272] shadow-sm;
     padding-left: 10px;
   }
   
   .coord-text {
-    @apply font-mono text-[#6EA8FE] tracking-tight;
+    @apply font-mono text-[#F4A272] tracking-tight;
   }
 }
 
 /* Skeleton shimmer */
 .skeleton {
-  background: linear-gradient(90deg, #151E30 25%, #1f2f47 50%, #151E30 75%);
+  background: linear-gradient(90deg, #111117 25%, #1c1c28 50%, #111117 75%);
   background-size: 200% 100%;
   animation: shimmer 1.8s linear infinite;
 }
@@ -125,20 +127,21 @@ canvas.starfield {
 
 /* Driver.js Dark Theme for SPHEREx HORIZON */
 .driver-popover.horizon-driver-popover {
-  background-color: #0F172A !important;
-  color: #E8EDF5 !important;
-  border: 1px solid #263247 !important;
-  border-radius: 12px !important;
-  padding: 16px !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.7) !important;
+  background-color: #111117 !important;
+  color: #F3EFE8 !important;
+  border: 1px solid #262635 !important;
+  border-radius: 14px !important;
+  padding: 18px !important;
+  box-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.8), 0 0 30px rgba(244, 162, 114, 0.15) !important;
   font-family: inherit !important;
 }
 
 .driver-popover.horizon-driver-popover .driver-popover-title {
   font-size: 14px !important;
   font-weight: 700 !important;
-  color: #6EA8FE !important;
+  color: #F4A272 !important;
   margin-bottom: 8px !important;
+  letter-spacing: -0.01em !important;
 }
 
 .driver-popover.horizon-driver-popover .driver-popover-description {
@@ -149,45 +152,49 @@ canvas.starfield {
 }
 
 .driver-popover.horizon-driver-popover .driver-popover-footer button {
-  background-color: #1E293B !important;
-  color: #E8EDF5 !important;
-  border: 1px solid #334155 !important;
-  border-radius: 6px !important;
-  padding: 5px 12px !important;
+  background-color: #181822 !important;
+  color: #F3EFE8 !important;
+  border: 1px solid #262635 !important;
+  border-radius: 8px !important;
+  padding: 6px 14px !important;
   font-size: 11px !important;
   font-weight: 500 !important;
   text-shadow: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
 }
 
 .driver-popover.horizon-driver-popover .driver-popover-footer button:hover {
-  background-color: #334155 !important;
-  border-color: #475569 !important;
+  background-color: #262635 !important;
+  border-color: #F4A272 !important;
 }
 
 .driver-popover.horizon-driver-popover .driver-popover-next-btn {
-  background-color: #2563EB !important;
-  border-color: #3B82F6 !important;
-  color: #FFFFFF !important;
+  background: linear-gradient(135deg, #F4A272, #FF7B3D) !important;
+  border-color: #F4A272 !important;
+  color: #000000 !important;
+  font-weight: 600 !important;
 }
 
 .driver-popover.horizon-driver-popover .driver-popover-next-btn:hover {
-  background-color: #1D4ED8 !important;
+  filter: brightness(1.1) !important;
 }
 
 .driver-popover.horizon-driver-popover .driver-popover-progress-text {
   font-size: 11px !important;
-  color: #94A3B8 !important;
+  color: #9E9AA7 !important;
+  font-family: monospace !important;
 }
 
 .driver-popover.horizon-driver-popover .driver-popover-arrow-side-left {
-  border-right-color: #0F172A !important;
+  border-right-color: #111117 !important;
 }
 .driver-popover.horizon-driver-popover .driver-popover-arrow-side-right {
-  border-left-color: #0F172A !important;
+  border-left-color: #111117 !important;
 }
 .driver-popover.horizon-driver-popover .driver-popover-arrow-side-top {
-  border-bottom-color: #0F172A !important;
+  border-bottom-color: #111117 !important;
 }
 .driver-popover.horizon-driver-popover .driver-popover-arrow-side-bottom {
-  border-top-color: #0F172A !important;
+  border-top-color: #111117 !important;
 }

@@ -74,15 +74,15 @@ export const MyDiscoveries: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <BookOpen className="w-5 h-5 text-[#6EA8FE]" />
-            <h1 className="text-2xl font-bold text-[#E8EDF5]">My Discoveries</h1>
+            <BookOpen className="w-5 h-5 text-[#F4A272]" />
+            <h1 className="text-2xl font-bold text-[#F3EFE8]">My Discoveries</h1>
           </div>
-          <p className="text-sm text-[#94A3B8]">
+          <p className="text-sm text-[#9E9AA7]">
             Your personal astronomical observation journal and candidate catalog
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div data-tour="journal-export" className="flex items-center gap-2">
           {discoveries.length > 0 && (
             <Button
               variant="secondary"
@@ -107,37 +107,39 @@ export const MyDiscoveries: React.FC = () => {
       {loading ? (
         <div className="space-y-4">
           {[1, 2].map((i) => (
-            <div key={i} className="bg-[#151E30] border border-[#263247] rounded p-6 h-36 animate-pulse" />
+            <div key={i} className="bg-[#111117] border border-[#262635] rounded p-6 h-36 animate-pulse" />
           ))}
         </div>
       ) : discoveries.length === 0 ? (
-        <EmptyState
-          icon={<BookOpen className="w-12 h-12" />}
-          title="No discoveries logged yet"
-          description="Investigate astronomical objects in the Discovery Lab, identify candidate moving or variable features, and save them here."
-          action={{
-            label: 'Launch Discovery Lab',
-            onClick: () => navigate('/discovery-lab'),
-          }}
-        />
+        <div data-tour="journal-list">
+          <EmptyState
+            icon={<BookOpen className="w-12 h-12" />}
+            title="No discoveries logged yet"
+            description="Investigate astronomical objects in the Discovery Lab, identify candidate moving or variable features, and save them here."
+            action={{
+              label: 'Launch Discovery Lab',
+              onClick: () => navigate('/discovery-lab'),
+            }}
+          />
+        </div>
       ) : (
-        <div className="space-y-4">
+        <div data-tour="journal-list" className="space-y-4">
           {discoveries.map((disc) => (
             <div
               key={disc.id}
-              className="bg-[#151E30] border border-[#263247] rounded p-6 hover:border-[#3a4d6b] transition-colors"
+              className="bg-[#111117] border border-[#262635] rounded p-6 hover:border-[#3c3c4d] transition-colors"
             >
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-base font-semibold text-[#E8EDF5]">{disc.title}</h3>
+                    <h3 className="text-base font-semibold text-[#F3EFE8]">{disc.title}</h3>
                     <Badge variant={disc.candidate_type === 'moving_source' ? 'amber' : 'blue'}>
                       {disc.candidate_type.replace('_', ' ')}
                     </Badge>
                     <Badge variant="muted">Confidence: {disc.confidence}</Badge>
                   </div>
-                  <div className="text-xs text-[#94A3B8] flex items-center gap-2">
-                    <span className="text-[#6EA8FE] font-medium">{disc.object_name}</span>
+                  <div className="text-xs text-[#9E9AA7] flex items-center gap-2">
+                    <span className="text-[#F4A272] font-medium">{disc.object_name}</span>
                     <span>·</span>
                     <span className="flex items-center gap-1 font-mono">
                       <Calendar className="w-3 h-3" />
@@ -156,7 +158,7 @@ export const MyDiscoveries: React.FC = () => {
                   </Button>
                   <button
                     onClick={() => handleDelete(disc.id)}
-                    className="p-1.5 text-[#94A3B8] hover:text-red-400 hover:bg-red-900/20 rounded transition-colors cursor-pointer"
+                    className="p-1.5 text-[#9E9AA7] hover:text-red-400 hover:bg-red-900/20 rounded transition-colors cursor-pointer"
                     title="Delete discovery"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -165,15 +167,15 @@ export const MyDiscoveries: React.FC = () => {
               </div>
 
               {disc.notes && (
-                <div className="bg-[#0B1020] border border-[#263247] rounded p-3 text-xs text-[#E8EDF5] leading-relaxed mb-3">
-                  <span className="font-semibold text-[#94A3B8] block mb-1">Observer Notes:</span>
+                <div className="bg-[#08080C] border border-[#262635] rounded p-3 text-xs text-[#F3EFE8] leading-relaxed mb-3">
+                  <span className="font-semibold text-[#9E9AA7] block mb-1">Observer Notes:</span>
                   {disc.notes}
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center justify-between text-[11px] text-[#94A3B8] pt-2 border-t border-[#263247]">
+              <div className="flex flex-wrap items-center justify-between text-[11px] text-[#9E9AA7] pt-2 border-t border-[#262635]">
                 <div>
-                  Observation Products: <span className="font-mono text-[#6EA8FE]">{disc.observation_ids.join(', ')}</span>
+                  Observation Products: <span className="font-mono text-[#F4A272]">{disc.observation_ids.join(', ')}</span>
                 </div>
                 {disc.angular_displacement_arcsec && (
                   <div>

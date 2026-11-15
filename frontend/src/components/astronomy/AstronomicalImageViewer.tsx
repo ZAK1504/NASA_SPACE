@@ -89,12 +89,12 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
   const isEpsInd = targetName.toLowerCase().includes('epsilon indi') || targetName.toLowerCase().includes('eps ind');
 
   return (
-    <div data-tour="astronomical-viewer" className="bg-[#151E30] border border-[#263247] rounded-lg p-5 space-y-4">
+    <div data-tour="astronomical-viewer" className="bg-[#111117] border border-[#262635] rounded-lg p-5 space-y-4">
       {/* Controls Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Eye className="w-4 h-4 text-[#6EA8FE]" />
-          <h3 className="text-sm font-semibold text-[#E8EDF5]">
+          <Eye className="w-4 h-4 text-[#F4A272]" />
+          <h3 className="text-sm font-semibold text-[#F3EFE8]">
             Scientific Astronomical Visualization
           </h3>
           {isSingleEpoch && (
@@ -105,12 +105,12 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
         <div className="flex flex-wrap items-center gap-2">
           {/* FOV Selector */}
           {onFovChange && (
-            <div data-tour="viewer-fov" className="flex items-center gap-1.5 text-xs text-[#94A3B8]">
+            <div data-tour="viewer-fov" className="flex items-center gap-1.5 text-xs text-[#9E9AA7]">
               <ZoomIn className="w-3.5 h-3.5" />
               <select
                 value={fovArcsec}
                 onChange={(e) => onFovChange(Number(e.target.value))}
-                className="bg-[#0B1020] border border-[#263247] text-[#E8EDF5] text-xs rounded px-2 py-1 focus:outline-none focus:border-[#6EA8FE]"
+                className="bg-[#08080C] border border-[#262635] text-[#F3EFE8] text-xs rounded px-2 py-1 focus:outline-none focus:border-[#F4A272]"
                 title="Select celestial Field of View"
               >
                 {FOV_OPTIONS.map((opt) => (
@@ -128,7 +128,7 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
               <select
                 value={stretch}
                 onChange={(e) => onStretchChange(e.target.value)}
-                className="bg-[#0B1020] border border-[#263247] text-[#94A3B8] text-xs rounded px-2 py-1 focus:outline-none focus:border-[#6EA8FE]"
+                className="bg-[#08080C] border border-[#262635] text-[#9E9AA7] text-xs rounded px-2 py-1 focus:outline-none focus:border-[#F4A272]"
                 title="Select display normalization stretch"
               >
                 {STRETCH_OPTIONS.map((opt) => (
@@ -146,7 +146,7 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
               <select
                 value={colormap}
                 onChange={(e) => onColormapChange(e.target.value)}
-                className="bg-[#0B1020] border border-[#263247] text-[#94A3B8] text-xs rounded px-2 py-1 focus:outline-none focus:border-[#6EA8FE]"
+                className="bg-[#08080C] border border-[#262635] text-[#9E9AA7] text-xs rounded px-2 py-1 focus:outline-none focus:border-[#F4A272]"
                 title="Select false-color palette"
               >
                 {COLORMAP_OPTIONS.map((opt) => (
@@ -165,8 +165,8 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
               onClick={() => onSmoothToggle(!smooth)}
               className={`px-2 py-1 text-xs rounded border transition-colors ${
                 smooth
-                  ? 'bg-[#1a2540] border-[#6EA8FE] text-[#6EA8FE]'
-                  : 'bg-[#0B1020] border-[#263247] text-[#94A3B8] hover:text-[#E8EDF5]'
+                  ? 'bg-[#1c1c28] border-[#F4A272] text-[#F4A272]'
+                  : 'bg-[#08080C] border-[#262635] text-[#9E9AA7] hover:text-[#F3EFE8]'
               }`}
               title={smooth ? 'Smooth bicubic interpolation enabled' : 'Native telescope pixel display enabled'}
             >
@@ -189,12 +189,12 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
       </div>
 
       {/* Main Astronomical Canvas Container */}
-      <div className="relative aspect-square max-h-[520px] mx-auto bg-[#070B14] border border-[#263247] rounded-lg overflow-hidden flex items-center justify-center select-none">
+      <div className="relative aspect-square max-h-[520px] mx-auto bg-[#08080C] border border-[#262635] rounded-lg overflow-hidden flex items-center justify-center select-none">
         {loading ? (
           <div className="text-center p-6 space-y-2">
-            <RefreshCw className="w-7 h-7 text-[#6EA8FE] animate-spin mx-auto mb-2" />
-            <p className="text-xs text-[#E8EDF5] font-medium">Reprojecting authentic SPHEREx Level 2 FITS…</p>
-            <p className="text-[11px] text-[#94A3B8]">
+            <RefreshCw className="w-7 h-7 text-[#F4A272] animate-spin mx-auto mb-2" />
+            <p className="text-xs text-[#F3EFE8] font-medium">Reprojecting authentic SPHEREx Level 2 FITS…</p>
+            <p className="text-[11px] text-[#9E9AA7]">
               Astropy tangent celestial grid · {currentStretch.value.toUpperCase()} stretch · {colormap}
             </p>
           </div>
@@ -207,15 +207,15 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
             />
 
             {/* Standard Celestial Compass Overlay: North UP, East LEFT */}
-            <div data-tour="viewer-compass" className="absolute top-3 left-3 bg-[#0B1020]/80 backdrop-blur-sm border border-[#263247] rounded px-2 py-1 text-[11px] font-mono text-[#E8EDF5] flex items-center gap-1.5 shadow-md pointer-events-none">
-              <Compass className="w-3.5 h-3.5 text-[#6EA8FE]" />
+            <div data-tour="viewer-compass" className="absolute top-3 left-3 bg-[#08080C]/80 backdrop-blur-sm border border-[#262635] rounded px-2 py-1 text-[11px] font-mono text-[#F3EFE8] flex items-center gap-1.5 shadow-md pointer-events-none">
+              <Compass className="w-3.5 h-3.5 text-[#F4A272]" />
               <span>N ↑ &nbsp; E ←</span>
             </div>
 
             {/* Angular Scale Bar Overlay */}
-            <div data-tour="viewer-scalebar" className="absolute bottom-3 left-3 bg-[#0B1020]/80 backdrop-blur-sm border border-[#263247] rounded px-2.5 py-1.5 text-[10px] font-mono text-[#94A3B8] shadow-md pointer-events-none">
+            <div data-tour="viewer-scalebar" className="absolute bottom-3 left-3 bg-[#08080C]/80 backdrop-blur-sm border border-[#262635] rounded px-2.5 py-1.5 text-[10px] font-mono text-[#9E9AA7] shadow-md pointer-events-none">
               <div
-                className="h-1 bg-[#6EA8FE] rounded mb-1"
+                className="h-1 bg-[#F4A272] rounded mb-1"
                 style={{ width: `${Math.max(20, Math.min(80, scaleBarPixelsPercent))}%`, minWidth: '30px' }}
               />
               <span>{scaleBarArcmin}′ ({scaleBarArcmin * 60}″) scale</span>
@@ -223,10 +223,10 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
 
             {/* Center Reticle Marker */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60">
-              <div className="w-6 h-6 border border-[#6EA8FE] rounded-full flex items-center justify-center relative">
-                <div className="w-1 h-1 bg-[#6EA8FE] rounded-full" />
+              <div className="w-6 h-6 border border-[#F4A272] rounded-full flex items-center justify-center relative">
+                <div className="w-1 h-1 bg-[#F4A272] rounded-full" />
                 {isEpsInd && (
-                  <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#0B1020]/90 px-1.5 py-0.5 rounded text-[9px] font-mono text-[#38BDF8] border border-[#38BDF8]/40">
+                  <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#08080C]/90 px-1.5 py-0.5 rounded text-[9px] font-mono text-[#38BDF8] border border-[#38BDF8]/40">
                     Epsilon Indi B (Brown Dwarf)
                   </span>
                 )}
@@ -235,15 +235,15 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
 
             {/* Epsilon Indi A & B Distinction Overlay */}
             {isEpsInd && (
-              <div className="absolute top-12 left-3 bg-[#0B1020]/90 backdrop-blur-sm border border-[#38BDF8]/40 rounded p-2 text-[10px] space-y-1 shadow-lg max-w-[210px] pointer-events-none">
-                <div className="font-semibold text-[#E8EDF5] flex items-center gap-1">
+              <div className="absolute top-12 left-3 bg-[#08080C]/90 backdrop-blur-sm border border-[#38BDF8]/40 rounded p-2 text-[10px] space-y-1 shadow-lg max-w-[210px] pointer-events-none">
+                <div className="font-semibold text-[#F3EFE8] flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-[#F3B85B]" />
                   <span>Epsilon Indi System Breakdown</span>
                 </div>
-                <p className="text-[10px] text-[#94A3B8] leading-tight">
+                <p className="text-[10px] text-[#9E9AA7] leading-tight">
                   <strong className="text-[#F3B85B]">Primary A:</strong> Saturated K5V star (V=4.69, masked core).
                 </p>
-                <p className="text-[10px] text-[#94A3B8] leading-tight">
+                <p className="text-[10px] text-[#9E9AA7] leading-tight">
                   <strong className="text-[#38BDF8]">Target B:</strong> T1+T6 sub-stellar binary at center reticle (~402″ / 6.7′ ENE separation).
                 </p>
               </div>
@@ -251,13 +251,13 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
 
             {/* Saturation / Physical Core Warning */}
             {isBarnard && (
-              <div className="absolute top-3 right-3 bg-[#0B1020]/90 backdrop-blur-sm border border-[#F3B85B]/50 rounded px-2.5 py-1 text-[11px] text-[#F3B85B] flex items-center gap-1.5 shadow-md">
+              <div className="absolute top-3 right-3 bg-[#08080C]/90 backdrop-blur-sm border border-[#F3B85B]/50 rounded px-2.5 py-1 text-[11px] text-[#F3B85B] flex items-center gap-1.5 shadow-md">
                 <AlertTriangle className="w-3.5 h-3.5" />
                 <span>Detector Saturation Masked (H2RG Core)</span>
               </div>
             )}
             {isEpsInd && (
-              <div className="absolute top-3 right-3 bg-[#0B1020]/90 backdrop-blur-sm border border-[#F3B85B]/50 rounded px-2.5 py-1 text-[11px] text-[#F3B85B] flex items-center gap-1.5 shadow-md">
+              <div className="absolute top-3 right-3 bg-[#08080C]/90 backdrop-blur-sm border border-[#F3B85B]/50 rounded px-2.5 py-1 text-[11px] text-[#F3B85B] flex items-center gap-1.5 shadow-md">
                 <AlertTriangle className="w-3.5 h-3.5" />
                 <span>Epsilon Indi A Core Saturation Masked</span>
               </div>
@@ -265,11 +265,11 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
           </>
         ) : (
           <div className="text-center p-6 space-y-3 max-w-sm">
-            <Info className="w-8 h-8 text-[#94A3B8] mx-auto opacity-70" />
-            <p className="text-xs font-semibold text-[#E8EDF5]">
+            <Info className="w-8 h-8 text-[#9E9AA7] mx-auto opacity-70" />
+            <p className="text-xs font-semibold text-[#F3EFE8]">
               {unavailableReason || 'Observation Frame Unavailable'}
             </p>
-            <p className="text-[11px] text-[#94A3B8] leading-relaxed">
+            <p className="text-[11px] text-[#9E9AA7] leading-relaxed">
               {isSingleEpoch
                 ? 'Single calibrated Level 2 observation visit available in current local archive release. Multi-epoch comparison requires at least 2 distinct visits.'
                 : 'Selected celestial region or observation product does not contain usable scientific pixels in local cache.'}
@@ -279,14 +279,14 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
       </div>
 
       {/* Explanatory Banner Synchronized with UI State */}
-      <div className="flex items-center justify-between text-xs text-[#94A3B8] px-1">
+      <div className="flex items-center justify-between text-xs text-[#9E9AA7] px-1">
         <div>
-          <span className="font-medium text-[#E8EDF5]">{currentStretch.label}:</span>{' '}
-          <span className="text-[#94A3B8]">{currentStretch.desc}</span>
+          <span className="font-medium text-[#F3EFE8]">{currentStretch.label}:</span>{' '}
+          <span className="text-[#9E9AA7]">{currentStretch.desc}</span>
         </div>
         <button
           onClick={() => setShowMetadata(!showMetadata)}
-          className="flex items-center gap-1 text-[#6EA8FE] hover:underline font-mono text-[11px] ml-4 flex-shrink-0"
+          className="flex items-center gap-1 text-[#F4A272] hover:underline font-mono text-[11px] ml-4 flex-shrink-0"
         >
           {showMetadata ? 'Hide Provenance' : 'View Provenance'}
           {showMetadata ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -295,26 +295,26 @@ export const AstronomicalImageViewer: React.FC<AstronomicalImageViewerProps> = (
 
       {/* Collapsible Scientific Provenance & Metadata Panel */}
       {showMetadata && (
-        <div className="bg-[#0B1020] border border-[#263247] rounded-lg p-4 text-xs font-mono space-y-2">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[#94A3B8]">
+        <div className="bg-[#08080C] border border-[#262635] rounded-lg p-4 text-xs font-mono space-y-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[#9E9AA7]">
             <div>
               <span className="block text-[#64748B] text-[10px]">OBSERVATION ID</span>
-              <span className="text-[#E8EDF5]">{scientificMetadata?.obsId || 'SPHEREx Level 2'}</span>
+              <span className="text-[#F3EFE8]">{scientificMetadata?.obsId || 'SPHEREx Level 2'}</span>
             </div>
             <div>
               <span className="block text-[#64748B] text-[10px]">DATE (UTC)</span>
-              <span className="text-[#E8EDF5]">{scientificMetadata?.dateObs?.slice(0, 10) || '2025-08-27'}</span>
+              <span className="text-[#F3EFE8]">{scientificMetadata?.dateObs?.slice(0, 10) || '2025-08-27'}</span>
             </div>
             <div>
               <span className="block text-[#64748B] text-[10px]">PIXEL SCALE</span>
-              <span className="text-[#6EA8FE]">6.15″ / pixel</span>
+              <span className="text-[#F4A272]">6.15″ / pixel</span>
             </div>
             <div>
               <span className="block text-[#64748B] text-[10px]">SCIENTIFIC UNIT</span>
-              <span className="text-[#E8EDF5]">{scientificMetadata?.bunit || 'MJy / sr'}</span>
+              <span className="text-[#F3EFE8]">{scientificMetadata?.bunit || 'MJy / sr'}</span>
             </div>
           </div>
-          <div className="pt-2 border-t border-[#263247]/50 text-[11px] text-[#64748B] flex items-center justify-between">
+          <div className="pt-2 border-t border-[#262635]/50 text-[11px] text-[#64748B] flex items-center justify-between">
             <span>Projection: Tangential (RA---TAN, DEC--TAN) · North UP, East LEFT</span>
             <span>Archive: NASA/IPAC Infrared Science Archive (IRSA)</span>
           </div>

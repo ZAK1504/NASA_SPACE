@@ -25,28 +25,28 @@ export const Sidebar: React.FC = () => {
   const { pathname } = useLocation();
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-60 bg-[#0d1526]/95 backdrop-blur-xl border-r border-[#263247] flex flex-col z-40 select-none shadow-2xl">
+    <aside className="fixed left-0 top-0 h-screen w-60 bg-[#0d1526]/95 backdrop-blur-xl border-r border-[#262635] flex flex-col z-40 select-none shadow-2xl">
       {/* Logo Header */}
-      <div className="px-4 py-5 border-b border-[#263247] flex-shrink-0">
+      <div className="px-4 py-5 border-b border-[#262635] flex-shrink-0">
         <NavLink to="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#6EA8FE]/20 via-[#1a2540] to-transparent border border-[#6EA8FE]/40 flex items-center justify-center flex-shrink-0 group-hover:shadow-glow-blue transition-all duration-300">
-            <CircleDot className="w-5 h-5 text-[#6EA8FE] group-hover:rotate-45 transition-transform duration-300" />
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#F4A272]/20 via-[#1c1c28] to-transparent border border-[#F4A272]/40 flex items-center justify-center flex-shrink-0 group-hover:shadow-glow-blue transition-all duration-300">
+            <CircleDot className="w-5 h-5 text-[#F4A272] group-hover:rotate-45 transition-transform duration-300" />
           </div>
           <div>
-            <div className="text-sm font-bold text-[#E8EDF5] tracking-widest flex items-center gap-1.5">
+            <div className="text-sm font-bold text-[#F3EFE8] tracking-widest flex items-center gap-1.5">
               <span>SPHEREX</span>
-              <span className="text-[9px] px-1 py-0.2 rounded bg-[#6EA8FE]/10 text-[#6EA8FE] border border-[#6EA8FE]/30 font-mono">
+              <span className="text-[9px] px-1 py-0.2 rounded bg-[#F4A272]/10 text-[#F4A272] border border-[#F4A272]/30 font-mono">
                 DR1
               </span>
             </div>
-            <div className="text-[11px] text-[#94A3B8]">Cosmic Discovery</div>
+            <div className="text-[11px] text-[#9E9AA7]">Cosmic Discovery</div>
           </div>
         </NavLink>
       </div>
 
       {/* Navigation Sections */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-1">
-        <div className="text-[10px] font-bold text-[#94A3B8]/70 uppercase tracking-widest px-3 mb-2 flex items-center justify-between">
+        <div className="text-[10px] font-bold text-[#9E9AA7]/70 uppercase tracking-widest px-3 mb-2 flex items-center justify-between">
           <span>Observation</span>
         </div>
         {PRIMARY.map(({ to, icon: Icon, label, exact, tourId }) => {
@@ -58,8 +58,8 @@ export const Sidebar: React.FC = () => {
               data-tour={tourId}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 active
-                  ? 'text-[#6EA8FE] bg-[#1a2540] border-l-2 border-[#6EA8FE] pl-[10px] shadow-sm'
-                  : 'text-[#94A3B8] hover:text-[#E8EDF5] hover:bg-[#1a2540]/60'
+                  ? 'text-[#F4A272] bg-[#1c1c28] border-l-2 border-[#F4A272] pl-[10px] shadow-sm'
+                  : 'text-[#9E9AA7] hover:text-[#F3EFE8] hover:bg-[#1c1c28]/60'
               }`}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
@@ -68,7 +68,7 @@ export const Sidebar: React.FC = () => {
           );
         })}
 
-        <div className="text-[10px] font-bold text-[#94A3B8]/70 uppercase tracking-widest px-3 mt-6 mb-2 flex items-center justify-between">
+        <div className="text-[10px] font-bold text-[#9E9AA7]/70 uppercase tracking-widest px-3 mt-6 mb-2 flex items-center justify-between">
           <span>Investigation</span>
         </div>
         {SECONDARY.map(({ to, icon: Icon, label, tourId }) => {
@@ -80,8 +80,8 @@ export const Sidebar: React.FC = () => {
               data-tour={tourId}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 active
-                  ? 'text-[#6EA8FE] bg-[#1a2540] border-l-2 border-[#6EA8FE] pl-[10px] shadow-sm'
-                  : 'text-[#94A3B8] hover:text-[#E8EDF5] hover:bg-[#1a2540]/60'
+                  ? 'text-[#F4A272] bg-[#1c1c28] border-l-2 border-[#F4A272] pl-[10px] shadow-sm'
+                  : 'text-[#9E9AA7] hover:text-[#F3EFE8] hover:bg-[#1c1c28]/60'
               }`}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
@@ -92,12 +92,12 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       {/* Bottom Footer Section */}
-      <div className="px-3 py-3 border-t border-[#263247] space-y-1 flex-shrink-0 bg-[#0B1020]/50">
+      <div className="px-3 py-3 border-t border-[#262635] space-y-1 flex-shrink-0 bg-[#08080C]/50">
         <NavLink
           to="/about"
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-              isActive ? 'text-[#6EA8FE]' : 'text-[#94A3B8] hover:text-[#E8EDF5] hover:bg-[#1a2540]'
+              isActive ? 'text-[#F4A272]' : 'text-[#9E9AA7] hover:text-[#F3EFE8] hover:bg-[#1c1c28]'
             }`
           }
         >

@@ -15,8 +15,8 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
 }) => (
   <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
     <AlertTriangle className="w-10 h-10 text-red-400 mb-4" />
-    <h3 className="text-sm font-semibold text-[#E8EDF5] mb-2">{title}</h3>
-    <p className="text-sm text-[#94A3B8] max-w-sm mb-4 leading-relaxed">{message}</p>
+    <h3 className="text-sm font-semibold text-[#F3EFE8] mb-2">{title}</h3>
+    <p className="text-sm text-[#9E9AA7] max-w-sm mb-4 leading-relaxed">{message}</p>
     {onRetry && (
       <Button variant="ghost" size="sm" onClick={onRetry}>
         Try again
