@@ -114,8 +114,8 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
           {/* 3D WebGL Canvas floating freely directly against the galaxy */}
           <Satellite3D yaw={0.4} className="w-full h-full" />
 
-          {/* Minimal, elegant floating label */}
-          <div className="absolute bottom-2 right-6 flex items-center gap-2 text-[10.5px] font-mono text-white/45 pointer-events-none tracking-wider uppercase bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/5">
+          {/* Minimal, elegant floating label — 100% centered under the satellite across all screen sizes */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center justify-center gap-2 text-[10.5px] font-mono text-white/55 pointer-events-none tracking-wider uppercase bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 whitespace-nowrap shadow-[0_0_20px_rgba(0,0,0,0.5)]">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
             <span>SPHEREx Flight Model · Drag to rotate</span>
           </div>
