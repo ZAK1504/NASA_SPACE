@@ -103,9 +103,11 @@ export function useCountUp(
   return [ref, v.toFixed(decimals)];
 }
 
-/** Scroll progress 0..1 written to --p on <html>; elements with [data-par] get --py for parallax; --hero-scroll for hero choreography. */
+/** Scroll progress 0..1 written to --p on <html>; elements with [data-par] get --py for parallax; --hero-scroll for hero choreography.
+ *  Also writes --chapter-progress-{id} for each chapter section (home, explorer, time-machine, labs, mission). */
 export function useScrollVars(dep?: any) {
   useEffect(() => {
+    const CHAPTER_IDS = ["home", "explorer", "time-machine", "labs", "mission"];
     let raf = 0;
     const run = () => {
       raf = 0;
@@ -124,6 +126,15 @@ export function useScrollVars(dep?: any) {
         const c = r.top + r.height / 2 - h / 2;
         el.style.setProperty("--py", `${(-c * parseFloat(el.dataset.par || "0")).toFixed(1)}px`);
       });
+
+      // Per-chapter progress vars: 0 when section top is at viewport bottom, 1 when section bottom is at viewport top
+      CHAPTER_IDS.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const p = Math.max(0, Math.min(1, (h - rect.top) / (rect.height + h)));
+        document.documentElement.style.setProperty(`--chapter-progress-${id}`, p.toFixed(4));
+      });
     };
     const on = () => {
       if (!raf) raf = requestAnimationFrame(run);
@@ -137,6 +148,35 @@ export function useScrollVars(dep?: any) {
       cancelAnimationFrame(raf);
     };
   }, [dep]);
+}
+
+/** Returns normalized scroll progress 0..1 for a DOM section. Ref-based, no rerender. */
+export function useSectionProgress(
+  id: string,
+  onChange: (progress: number) => void
+) {
+  useEffect(() => {
+    let raf = 0;
+    const measure = () => {
+      raf = 0;
+      const el = document.getElementById(id);
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const h = window.innerHeight;
+      // 0 when top of section at bottom of viewport, 1 when bottom of section at top
+      const p = Math.max(0, Math.min(1, (h - rect.top) / (rect.height + h)));
+      onChange(p);
+    };
+    const on = () => { if (!raf) raf = requestAnimationFrame(measure); };
+    measure();
+    window.addEventListener('scroll', on, { passive: true });
+    window.addEventListener('resize', on);
+    return () => {
+      window.removeEventListener('scroll', on);
+      window.removeEventListener('resize', on);
+      cancelAnimationFrame(raf);
+    };
+  }, [id, onChange]);
 }
 
 declare global {

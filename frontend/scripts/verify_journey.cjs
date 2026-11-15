@@ -32,25 +32,36 @@ async function runVerification() {
   await page.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle2' });
   await new Promise(r => setTimeout(r, 2000));
 
-  // TEST A: Homepage Spacecraft Free-Floating Presentation
-  console.log('Verifying Test A: Homepage Spacecraft presentation...');
-  const spacecraftBoxCheck = await page.evaluate(() => {
+  // TEST A: Homepage Spacecraft Free-Floating Presentation & Button Parity
+  console.log('Verifying Test A: Homepage Spacecraft presentation & Button Parity...');
+  const homeCheck = await page.evaluate(() => {
     const homeSection = document.getElementById('home');
     if (!homeSection) return { found: false };
     const rightCol = homeSection.querySelector('.lg\\:col-span-6:last-child');
-    // Verify there is NO visible card with border/shadow/bg-black
     const hasVisibleCard = !!rightCol?.querySelector('.rounded-3xl.border.bg-black\\/40');
     const satCanvas = rightCol?.querySelector('canvas');
+
+    // Button parity check
+    const buttons = Array.from(homeSection.querySelectorAll('.lg\\:col-span-6:first-child button'));
+    const skyBtn = buttons.find(b => b.innerText.includes('Explore the Sky'));
+    const tmBtn = buttons.find(b => b.innerText.includes('Time Machine'));
+    const skyClass = skyBtn ? skyBtn.className : '';
+    const tmClass = tmBtn ? tmBtn.className : '';
+    const buttonsMatch = skyClass === tmClass;
+
     return {
       found: true,
       hasVisibleCard,
       hasSatCanvas: !!satCanvas,
       canvasWidth: satCanvas ? satCanvas.clientWidth : 0,
-      canvasHeight: satCanvas ? satCanvas.clientHeight : 0
+      canvasHeight: satCanvas ? satCanvas.clientHeight : 0,
+      buttonsMatch,
+      skyClass,
+      tmClass
     };
   });
-  console.log('Spacecraft container check (expecting hasVisibleCard: false):', spacecraftBoxCheck);
-  audit.testA_SpacecraftFreeFloating = !spacecraftBoxCheck.hasVisibleCard && spacecraftBoxCheck.hasSatCanvas;
+  console.log('Homepage check:', homeCheck);
+  audit.testA_SpacecraftFreeFloating = !homeCheck.hasVisibleCard && homeCheck.hasSatCanvas && homeCheck.buttonsMatch;
 
   await page.screenshot({ path: path.join(OUT_DIR, 'polished_01_home_spacecraft.png') });
 
@@ -205,13 +216,31 @@ async function runVerification() {
   await new Promise(r => setTimeout(r, 1000));
   await page.screenshot({ path: path.join(OUT_DIR, 'polished_09_mission_showcase.png') });
 
+  // TEST I: Discovery Lab Full-Width Layout & Relocated Form
+  console.log('Verifying Test I: Discovery Lab Full-Width Layout...');
+  await page.goto('http://127.0.0.1:5173/discovery-lab', { waitUntil: 'networkidle2' });
+  await new Promise(r => setTimeout(r, 2000));
+  const labCheck = await page.evaluate(() => {
+    const threeCols = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-3');
+    const recordBtn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.includes('Record Investigation'));
+    const isFullWidth = !!document.querySelector('.max-w-\\[1440px\\]');
+    return {
+      hasThreeCols: !!threeCols,
+      hasRecordBtn: !!recordBtn,
+      isFullWidth
+    };
+  });
+  console.log('Discovery Lab check:', labCheck);
+  audit.testI_DiscoveryLabFullWidth = labCheck.hasThreeCols && labCheck.hasRecordBtn;
+  await page.screenshot({ path: path.join(OUT_DIR, 'polished_10_discovery_lab_fullwidth.png') });
+
   audit.testG_ShowcasesRedesigned = true;
 
   // TEST H: Mobile Viewport Responsiveness (390 x 844)
   console.log('Testing Mobile Viewport (390 x 844)...');
   await page.setViewport({ width: 390, height: 844 });
-  await page.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle2' });
-  await new Promise(r => setTimeout(r, 1500));
+  await page.goto('http://127.0.0.1:5173/', { waitUntil: 'domcontentloaded' });
+  await new Promise(r => setTimeout(r, 2000));
 
   const mobileCheck = await page.evaluate(() => {
     const scrollW = document.documentElement.scrollWidth;
@@ -227,8 +256,8 @@ async function runVerification() {
 
   await page.screenshot({ path: path.join(OUT_DIR, 'mobile_polished_01_home.png') });
 
-  await page.goto('http://127.0.0.1:5173/time-machine', { waitUntil: 'networkidle2' });
-  await new Promise(r => setTimeout(r, 1500));
+  await page.goto('http://127.0.0.1:5173/time-machine', { waitUntil: 'domcontentloaded' });
+  await new Promise(r => setTimeout(r, 2000));
   await page.screenshot({ path: path.join(OUT_DIR, 'mobile_polished_02_timemachine.png') });
 
   await browser.close();

@@ -30,7 +30,7 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
     const width = container.clientWidth || 600;
     const height = container.clientHeight || 500;
     const camera = new THREE.PerspectiveCamera(36, width / height, 0.1, 100);
-    camera.position.set(0, 0.1, 5.8);
+    camera.position.set(0.5, 0.55, 5.75);
 
     // 2. Renderer with transparent clear color
     const renderer = new THREE.WebGLRenderer({
@@ -53,7 +53,7 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
     controls.maxPolarAngle = 2.4;
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.target.set(0, 0, 0);
+    controls.target.set(0, -0.12, 0);
 
     let isUserInteracting = false;
     controls.addEventListener("start", () => {
@@ -63,25 +63,25 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
       isUserInteracting = false;
     });
 
-    // 4. Lighting matching visual prototype
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    // 4. Lighting matching visual prototype: warm golden key, subtle cool rim
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xfff1dc, 3.2);
-    dirLight.position.set(4, 5, 3);
+    const dirLight = new THREE.DirectionalLight(0xffedd5, 3.4);
+    dirLight.position.set(5, 6, 4);
     scene.add(dirLight);
 
-    const pointLightBlue = new THREE.PointLight(0x8fb4ff, 45, 20);
-    pointLightBlue.position.set(-4, -1, -3);
+    const pointLightBlue = new THREE.PointLight(0x7dd3fc, 30, 25);
+    pointLightBlue.position.set(-5, -2, -4);
     scene.add(pointLightBlue);
 
-    const pointLightOrange = new THREE.PointLight(0xf4a272, 80, 20);
-    pointLightOrange.position.set(0, -4, 3);
+    const pointLightOrange = new THREE.PointLight(0xf59e0b, 55, 25);
+    pointLightOrange.position.set(1, -4, 3);
     scene.add(pointLightOrange);
 
-    // 5. Model Root Group
+    // 5. Model Root Group: three-quarter elevation and gentle diagonal tilt
     const modelGroup = new THREE.Group();
-    modelGroup.rotation.set(0.28, 0, 0.08);
+    modelGroup.rotation.set(0.24, 0, 0.12);
     scene.add(modelGroup);
 
     // Helper: Build procedural fallback if GLB is unavailable

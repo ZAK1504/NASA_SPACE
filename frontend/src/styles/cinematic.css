@@ -1557,6 +1557,45 @@ html.js-reveal .rv.in {
   }
 }
 
+/* HORIZON Workspace theme - forces black+orange on scientific pages */
+.horizon-workspace {
+  --ws-bg: #08080C;
+  --ws-surface: #111117;
+  --ws-surface2: #18181f;
+  --ws-border: rgba(255,255,255,0.1);
+  --ws-border-hover: rgba(244,162,114,0.4);
+  --ws-text: #F3EFE8;
+  --ws-text-muted: rgba(243,239,232,0.5);
+  --ws-accent: #F4A272;
+  --ws-accent-strong: #FF7B3D;
+  --ws-focus: 0 0 0 2px rgba(244,162,114,0.5);
+}
+
+/* Chapter-specific backdrop atmosphere tints */
+.backdrop[data-section="home"] .bd-atmosphere {
+  background: radial-gradient(ellipse 80% 60% at 70% 90%, rgba(220,150,60,0.18), transparent 70%);
+}
+.backdrop[data-section="explorer"] .bd-atmosphere {
+  background: radial-gradient(ellipse 80% 70% at 50% 60%, rgba(60,50,200,0.2), transparent 70%);
+}
+.backdrop[data-section="time-machine"] .bd-atmosphere {
+  background: radial-gradient(ellipse 70% 70% at 50% 50%, rgba(220,100,20,0.18), transparent 70%);
+}
+.backdrop[data-section="labs"] .bd-atmosphere {
+  background: radial-gradient(ellipse 70% 50% at 50% 50%, rgba(180,180,210,0.07), transparent 70%);
+}
+.backdrop[data-section="mission"] .bd-atmosphere {
+  background: radial-gradient(ellipse 100% 60% at 50% 85%, rgba(220,160,60,0.15), transparent 70%);
+}
+
+/* bd-atmosphere base positioning */
+.bd-atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: background 1.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1565,4 +1604,119 @@ html.js-reveal .rv.in {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ============================================================
+   CINEMATIC CHAPTER TRANSITIONS
+   ============================================================ */
+
+/* --- Transition 1: Home → Explorer "Into the Infrared" --- */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes driftUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    60% {
+      opacity: 0.4;
+    }
+    to {
+      transform: translateY(-60px);
+      opacity: 0;
+    }
+  }
+
+  .drift-particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: rgba(100, 80, 240, 0.5);
+    animation: driftUp 4s ease-in-out infinite;
+  }
+
+  /* --- Transition 3: Time Machine → Labs "Deceleration" --- */
+  @keyframes scanReveal {
+    0% {
+      transform: scaleX(0);
+      opacity: 0;
+    }
+    30% {
+      opacity: 0.3;
+    }
+    100% {
+      transform: scaleX(0.5);
+      opacity: 0;
+    }
+  }
+
+  .scan-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(200, 200, 230, 0.3);
+    transform-origin: left;
+    animation: scanReveal 3s ease-out infinite;
+  }
+}
+
+/* static fallback for reduced-motion */
+.drift-particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: rgba(100, 80, 240, 0.3);
+  opacity: 0;
+}
+
+.scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(200, 200, 230, 0.15);
+  transform-origin: left;
+}
+
+/* --- Transition 4: Labs → Mission "Expanding Atlas" --- */
+.labs-to-mission-transition {
+  background: linear-gradient(
+    to bottom,
+    rgba(5, 5, 5, 1) 0%,
+    rgba(2, 3, 15, 0.9) 50%,
+    rgba(10, 8, 30, 0.8) 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+.labs-to-mission-transition::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: radial-gradient(
+    ellipse 60% 100% at 50% 100%,
+    rgba(220, 160, 60, 0.15),
+    transparent 70%
+  );
+}
+
+/* --- TimeWarpTransition enhancement: indigo→amber gradient overlay --- */
+.time-warp-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* blends from explorer-indigo at top to time-machine-amber at bottom */
+  background: linear-gradient(
+    to bottom,
+    rgba(60, 50, 180, 0.08) 0%,
+    rgba(0, 0, 0, 0) 40%,
+    rgba(0, 0, 0, 0) 60%,
+    rgba(200, 100, 20, 0.08) 100%
+  );
 }

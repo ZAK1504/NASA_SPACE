@@ -19,7 +19,15 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center w-full my-auto">
         {/* Left Column: Numbered Label, Massive Typography, Mission Narrative, CTAs */}
-        <div className="lg:col-span-6 flex flex-col justify-center">
+        <div
+          className="lg:col-span-6 flex flex-col justify-center"
+          style={{
+            transform: `translateY(calc(var(--hero-scroll, 0) * -30px))`,
+            opacity: `calc(1 - var(--hero-scroll, 0) * 1.3)`,
+            willChange: 'transform, opacity',
+            transition: 'none',
+          }}
+        >
           {/* Chapter Number & Tag */}
           <div className="flex items-center gap-2 mb-3">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)]" />
@@ -56,7 +64,7 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
 
             <button
               onClick={() => navigateToWorkspace(navigate, "/explore", "home")}
-              className="group px-5 py-3.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 hover:border-[#f4a272] text-white text-sm font-medium transition-all cursor-pointer inline-flex items-center justify-center gap-2 hover:-translate-y-0.5 shadow-sm"
+              className="group px-5 py-3.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 hover:border-[#f4a272] text-white text-sm font-medium transition-all cursor-pointer inline-flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f4a272]/50"
             >
               <Compass className="w-4 h-4 text-[#f4a272] group-hover:rotate-45 transition-transform" />
               <span>Explore the Sky</span>
@@ -64,9 +72,9 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
 
             <button
               onClick={() => navigateToWorkspace(navigate, "/time-machine", "home")}
-              className="group px-4 py-3.5 rounded-full text-xs font-mono text-white/70 hover:text-white bg-black/40 hover:bg-white/10 border border-white/10 hover:border-white/25 transition-all flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-0.5"
+              className="group px-5 py-3.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 hover:border-[#f4a272] text-white text-sm font-medium transition-all cursor-pointer inline-flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f4a272]/50"
             >
-              <Clock className="w-3.5 h-3.5 text-[#f4a272]" />
+              <Clock className="w-4 h-4 text-[#f4a272] group-hover:rotate-45 transition-transform" />
               <span>Time Machine</span>
             </button>
           </div>
@@ -89,15 +97,23 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
         </div>
 
         {/* Right Column: Genuine 3D Spacecraft Floating Freely (Zero Box / Visible Card Container) */}
-        <div className="lg:col-span-6 flex items-center justify-center relative w-full h-[460px] sm:h-[520px] lg:h-[600px] pointer-events-auto select-none">
+        <div
+          className="lg:col-span-6 flex items-center justify-center relative w-full h-[460px] sm:h-[520px] lg:h-[600px] pointer-events-auto select-none lg:-translate-x-10 lg:translate-y-8"
+          style={{
+            transform: `translateX(calc(var(--hero-scroll, 0) * 40px - 2.5rem)) translateY(calc(var(--hero-scroll, 0) * 20px + 2rem))`,
+            opacity: `calc(1 - var(--hero-scroll, 0) * 0.65)`,
+            willChange: 'transform, opacity',
+            transition: 'none',
+          }}
+        >
           {/* Subtle atmospheric cosmic back-illumination (No rectangular edges) */}
           <div className="absolute inset-0 bg-radial from-[var(--accent)]/15 via-indigo-600/5 to-transparent pointer-events-none filter blur-3xl -z-10" />
 
           {/* 3D WebGL Canvas floating freely directly against the galaxy */}
           <Satellite3D yaw={0.4} className="w-full h-full" />
 
-          {/* Minimal, elegant floating label */}
-          <div className="absolute bottom-2 right-4 flex items-center gap-2 text-[10.5px] font-mono text-white/40 pointer-events-none tracking-wider uppercase">
+          {/* Minimal, elegant floating label closer to model */}
+          <div className="absolute bottom-6 right-8 flex items-center gap-2 text-[10.5px] font-mono text-white/45 pointer-events-none tracking-wider uppercase bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/5">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
             <span>SPHEREx Flight Model · Drag to rotate</span>
           </div>

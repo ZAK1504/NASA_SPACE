@@ -73,7 +73,7 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
   };
 
   return (
-    <div className="scientific-workspace-layout min-h-screen bg-[#020308] text-[#f3efe8] flex flex-col relative selection:bg-[#f4a272] selection:text-black">
+    <div className="scientific-workspace-layout horizon-workspace min-h-screen bg-[#08080C] text-[#f3efe8] flex flex-col relative selection:bg-[#f4a272] selection:text-black">
       {/* 1. Dedicated Scientific Top Bar */}
       <header className="sticky top-0 z-50 w-full h-16 border-b border-white/10 bg-black/85 backdrop-blur-xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Left: Back to Journey & Brand */}

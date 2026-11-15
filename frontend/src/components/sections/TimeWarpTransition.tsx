@@ -54,9 +54,15 @@ export const TimeWarpTransition: React.FC = () => {
     <div
       ref={containerRef}
       className="time-warp-zone w-full py-8 my-2 relative overflow-hidden flex flex-col items-center justify-center pointer-events-none select-none"
-      style={{ minHeight: "26vh" }}
+      style={{ minHeight: "40vh" }}
       aria-hidden="true"
     >
+      {/* Indigo → Amber atmospheric color blend overlay (Explorer → Time Machine) */}
+      <div
+        className="time-warp-gradient-overlay"
+        style={{ opacity: 0.6 + progress * 0.4 }}
+      />
+
       {/* Dynamic atmospheric warp tunnel rings */}
       <div
         className="absolute inset-0 flex items-center justify-center transition-opacity duration-300"

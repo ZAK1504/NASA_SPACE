@@ -10,11 +10,22 @@ import ChapterTimeMachine from "../components/showcase/ChapterTimeMachine";
 import ChapterLabs from "../components/showcase/ChapterLabs";
 import ChapterMission from "../components/showcase/ChapterMission";
 import TimeWarpTransition from "../components/sections/TimeWarpTransition";
+import {
+  HomeToExplorerTransition,
+  TimeMachineToLabsTransition,
+  LabsToMissionTransition,
+} from "../components/sections/ChapterTransition";
 import { CommandPalette } from "../components/navigation/CommandPalette";
 import { CosmicCopilot } from "../components/assistant/CosmicCopilot";
 import { useGuidedTour } from "../hooks/useGuidedTour";
 import { useSmoothScroll, useReveal, useScrollVars } from "../lib/hooks";
 import { getJourneyReturnState, clearJourneyReturnState } from "../lib/journeyState";
+
+declare global {
+  interface Window {
+    __horizonWarpFactor?: number;
+  }
+}
 
 const CHAPTER_IDS = ["home", "explorer", "time-machine", "labs", "mission"];
 
@@ -101,6 +112,58 @@ export const JourneyPage: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // Warp coordination: drive window.__horizonWarpFactor from time-machine section scroll progress
+  // 0..1 when time-machine is 20-80% in view (explorer→time-machine transition zone), 0 in labs/mission
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const h = window.innerHeight;
+
+      // Determine if we're in labs or mission → warp off
+      const labsEl = document.getElementById("labs");
+      const missionEl = document.getElementById("mission");
+      if (labsEl) {
+        const r = labsEl.getBoundingClientRect();
+        // labs is in view (top < 70% of viewport)
+        if (r.top < h * 0.7) {
+          window.__horizonWarpFactor = 0;
+          return;
+        }
+      }
+      if (missionEl) {
+        const r = missionEl.getBoundingClientRect();
+        if (r.top < h * 0.7) {
+          window.__horizonWarpFactor = 0;
+          return;
+        }
+      }
+
+      // time-machine section progress: map 20%-80% viewport visibility → warpFactor 0..1
+      const tmEl = document.getElementById("time-machine");
+      if (!tmEl) {
+        window.__horizonWarpFactor = 0;
+        return;
+      }
+      const rect = tmEl.getBoundingClientRect();
+      // section progress: how much of the section has entered/left view
+      const rawP = (h - rect.top) / (rect.height + h);
+      // remap [0.2, 0.8] → [0, 1]
+      const warp = Math.max(0, Math.min(1, (rawP - 0.2) / 0.6));
+      window.__horizonWarpFactor = warp;
+    };
+    const on = () => { if (!raf) raf = requestAnimationFrame(update); };
+    update();
+    window.addEventListener("scroll", on, { passive: true });
+    window.addEventListener("resize", on);
+    return () => {
+      window.removeEventListener("scroll", on);
+      window.removeEventListener("resize", on);
+      cancelAnimationFrame(raf);
+      window.__horizonWarpFactor = 0;
+    };
+  }, []);
+
   // Passive active-chapter tracking via IntersectionObserver
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -157,6 +220,9 @@ export const JourneyPage: React.FC = () => {
         {/* Chapter 01 — Home: Meet SPHEREx */}
         <ChapterHome onScrollToExplorer={() => scrollToChapter("explorer")} />
 
+        {/* Transition 01 — Home to Explorer: Departure into the Infrared */}
+        <HomeToExplorerTransition />
+
         {/* Chapter 02 — Explorer: See Beyond the Visible */}
         <ChapterExplorer onScrollToNext={() => scrollToChapter("time-machine")} />
 
@@ -166,8 +232,14 @@ export const JourneyPage: React.FC = () => {
         {/* Chapter 03 — Time Machine: Travel Through the Changing Sky */}
         <ChapterTimeMachine onScrollToNext={() => scrollToChapter("labs")} />
 
+        {/* Transition 03 — Time Machine to Labs: Deceleration into Scientific Investigation */}
+        <TimeMachineToLabsTransition />
+
         {/* Chapter 04 — Labs: The Science of Discovery */}
         <ChapterLabs onScrollToNext={() => scrollToChapter("mission")} />
+
+        {/* Transition 04 — Labs to Mission: Expanding Atlas into Exploration */}
+        <LabsToMissionTransition />
 
         {/* Chapter 05 — Mission: Your Discovery Begins */}
         <ChapterMission onScrollToTop={() => scrollToChapter("home")} />

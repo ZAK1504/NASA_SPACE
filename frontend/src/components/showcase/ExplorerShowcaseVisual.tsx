@@ -1,172 +1,334 @@
-import React from "react";
-import { Compass, Eye, Layers, Sparkles, Radio } from "lucide-react";
+import React, { useRef, useEffect, useCallback } from "react";
 
 export interface ExplorerShowcaseVisualProps {
   activeMode?: "sky" | "object" | "spectral";
 }
 
-const CHALLENGE_TARGETS_COORDS = [
-  { name: "Barnard's Star", ra: "17h 57m", dec: "+04° 41′", type: "High PM Star", x: "32%", y: "42%" },
-  { name: "WISE 0855", ra: "08h 55m", dec: "-07° 14′", type: "Cold Brown Dwarf", x: "68%", y: "55%" },
-  { name: "Epsilon Indi B", ra: "22h 04m", dec: "-56° 47′", type: "T-Dwarf Binary", x: "24%", y: "72%" },
-  { name: "RW Aurigae", ra: "05h 07m", dec: "+30° 24′", type: "Young Stellar Object", x: "78%", y: "30%" },
-  { name: "R Draconis", ra: "16h 32m", dec: "+66° 45′", type: "Mira Variable", x: "50%", y: "22%" },
+interface Star {
+  x: number;   // normalized 0..1 on panorama sphere
+  y: number;
+  size: number;
+  opacity: number;
+  layer: number; // 0=far, 3=near
+}
+
+interface Beacon {
+  name: string;
+  type: string;
+  nx: number; // normalized 0..1 position on panorama
+  ny: number;
+}
+
+const BEACONS: Beacon[] = [
+  { name: "Barnard's Star",  type: "High PM Red Dwarf",    nx: 0.55, ny: 0.46 },
+  { name: "WISE 0855",       type: "Cold Brown Dwarf",     nx: 0.28, ny: 0.60 },
+  { name: "Epsilon Indi B",  type: "T-Dwarf Binary",       nx: 0.20, ny: 0.74 },
+  { name: "RW Aurigae",      type: "Young Stellar Object", nx: 0.78, ny: 0.30 },
+  { name: "R Draconis",      type: "Carbon Mira Variable", nx: 0.50, ny: 0.22 },
 ];
 
-const MOLECULAR_BANDS = [
-  { name: "Water Ice", wave: "3.05 µm", color: "#60a5fa" },
-  { name: "PAH Emission", wave: "3.30 µm", color: "#f472b6" },
-  { name: "CO₂ Ice", wave: "4.27 µm", color: "#34d399" },
-  { name: "CO Gas / Ice", wave: "4.67 µm", color: "#fb923c" },
-];
+function seededRand(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return ((s >>> 0) / 4294967296);
+  };
+}
+
+function buildStars(count: number): Star[] {
+  const rand = seededRand(42);
+  const stars: Star[] = [];
+  for (let i = 0; i < count; i++) {
+    const layer = Math.floor(rand() * 4);
+    stars.push({
+      x: rand(),
+      y: rand(),
+      size: 0.4 + rand() * (layer === 3 ? 1.6 : layer === 2 ? 1.0 : 0.6),
+      opacity: 0.3 + rand() * 0.5 + layer * 0.1,
+      layer,
+    });
+  }
+  return stars;
+}
+
+const STARS = buildStars(220);
 
 export const ExplorerShowcaseVisual: React.FC<ExplorerShowcaseVisualProps> = ({
   activeMode = "sky",
 }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const stateRef = useRef({
+    rotation: 0,       // current panorama rotation in radians
+    dragStartX: 0,
+    dragStartRot: 0,
+    isDragging: false,
+    hoveredBeacon: -1,
+    animFrame: 0,
+    activeMode: "sky" as "sky" | "object" | "spectral",
+    lastTime: 0,
+    touchId: -1,
+  });
+
+  // Keep activeMode in ref for the rAF loop
+  useEffect(() => {
+    stateRef.current.activeMode = activeMode;
+  }, [activeMode]);
+
+  const draw = useCallback((ts: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const { rotation, hoveredBeacon, activeMode: mode } = stateRef.current;
+    const W = canvas.width;
+    const H = canvas.height;
+    const cx = W / 2;
+    const cy = H / 2;
+    const R = Math.min(W, H) / 2 - 2;
+
+    // Auto-rotate: 1 deg/min = PI/10800 rad/ms
+    const dt = ts - (stateRef.current.lastTime || ts);
+    stateRef.current.lastTime = ts;
+    if (!stateRef.current.isDragging) {
+      stateRef.current.rotation += (Math.PI / 10800) * dt;
+    }
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Clip to circle
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.clip();
+
+    // Sky background
+    const bg = ctx.createRadialGradient(cx, cy - cy * 0.3, 0, cx, cy, R * 1.1);
+    if (mode === "spectral") {
+      bg.addColorStop(0, "#080518");
+      bg.addColorStop(1, "#020108");
+    } else {
+      bg.addColorStop(0, "#05030f");
+      bg.addColorStop(1, "#000006");
+    }
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Milky Way band
+    const rot = rotation % (Math.PI * 2);
+    const bandShift = (rot / (Math.PI * 2)) * W;
+    const milkyWayTint = mode === "spectral"
+      ? ["rgba(80,100,255,0.13)", "rgba(255,120,40,0.08)"]
+      : ["rgba(255,160,80,0.14)", "rgba(200,120,80,0.07)"];
+
+    ctx.save();
+    ctx.translate(bandShift % W - W / 2, 0);
+    for (let wrap = -1; wrap <= 1; wrap++) {
+      const bx = cx + wrap * W;
+      const grad = ctx.createLinearGradient(bx - W * 0.4, cy - H * 0.5, bx + W * 0.4, cy + H * 0.5);
+      grad.addColorStop(0, "transparent");
+      grad.addColorStop(0.35, milkyWayTint[0]);
+      grad.addColorStop(0.5, milkyWayTint[1]);
+      grad.addColorStop(0.65, milkyWayTint[0]);
+      grad.addColorStop(1, "transparent");
+      ctx.fillStyle = grad;
+      ctx.fillRect(bx - W * 0.5, 0, W, H);
+    }
+    ctx.restore();
+
+    // Draw stars
+    const dimStars = mode === "object";
+    STARS.forEach((star) => {
+      const sx = ((star.x + (rot / (Math.PI * 2))) % 1) * W;
+      const sy = star.y * H;
+      const alpha = dimStars ? star.opacity * 0.25 : star.opacity;
+      ctx.beginPath();
+      ctx.arc(sx, sy, star.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,245,235,${alpha})`;
+      ctx.fill();
+    });
+
+    // Spectral wavelength band overlay
+    if (mode === "spectral") {
+      const spectralGrad = ctx.createLinearGradient(0, 0, W, H);
+      spectralGrad.addColorStop(0.0, "rgba(60,80,255,0.09)");
+      spectralGrad.addColorStop(0.4, "rgba(80,255,160,0.05)");
+      spectralGrad.addColorStop(0.7, "rgba(255,160,60,0.07)");
+      spectralGrad.addColorStop(1.0, "rgba(255,60,40,0.06)");
+      ctx.fillStyle = spectralGrad;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // Draw beacons
+    BEACONS.forEach((beacon, idx) => {
+      const bx = ((beacon.nx + (rot / (Math.PI * 2))) % 1) * W;
+      const by = beacon.ny * H;
+      const isHovered = hoveredBeacon === idx;
+      const prominent = mode === "object";
+
+      // Ping ring
+      const pingT = (ts % 2000) / 2000;
+      const pingR = (prominent ? 14 : 8) * (1 + pingT * 1.2);
+      const pingAlpha = (1 - pingT) * (prominent ? 0.6 : 0.35);
+      ctx.beginPath();
+      ctx.arc(bx, by, pingR, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255,145,50,${pingAlpha})`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Core dot
+      const coreR = prominent ? 5 : (isHovered ? 4 : 3);
+      const coreGrad = ctx.createRadialGradient(bx, by, 0, bx, by, coreR * 2.5);
+      coreGrad.addColorStop(0, "rgba(255,210,120,1)");
+      coreGrad.addColorStop(0.5, "rgba(255,120,40,0.8)");
+      coreGrad.addColorStop(1, "rgba(255,80,20,0)");
+      ctx.beginPath();
+      ctx.arc(bx, by, coreR, 0, Math.PI * 2);
+      ctx.fillStyle = coreGrad;
+      ctx.fill();
+
+      // Hover / prominent tooltip
+      if (isHovered || (prominent && idx === 0)) {
+        ctx.save();
+        const tw = 150;
+        const th = 36;
+        const tx = Math.min(bx + 10, W - tw - 6);
+        const ty = Math.max(by - th / 2, 4);
+        ctx.fillStyle = "rgba(0,0,0,0.85)";
+        ctx.strokeStyle = "rgba(255,145,50,0.6)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(tx, ty, tw, th, 6);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "rgba(255,170,80,1)";
+        ctx.font = "bold 10px 'Courier New', monospace";
+        ctx.fillText(beacon.name, tx + 8, ty + 13);
+        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.font = "9px 'Courier New', monospace";
+        ctx.fillText(beacon.type, tx + 8, ty + 27);
+        ctx.restore();
+      }
+    });
+
+    // Vignette edge
+    const vignette = ctx.createRadialGradient(cx, cy, R * 0.65, cx, cy, R);
+    vignette.addColorStop(0, "rgba(0,0,0,0)");
+    vignette.addColorStop(0.75, "rgba(0,0,0,0.1)");
+    vignette.addColorStop(1, "rgba(0,0,0,0.85)");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.restore(); // end clip
+
+    stateRef.current.animFrame = requestAnimationFrame(draw);
+  }, []);
+
+  useEffect(() => {
+    stateRef.current.animFrame = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(stateRef.current.animFrame);
+  }, [draw]);
+
+  // Mouse interaction
+  const getCanvasPos = (canvas: HTMLCanvasElement, clientX: number) => {
+    const rect = canvas.getBoundingClientRect();
+    return clientX - rect.left;
+  };
+
+  const findHoveredBeacon = (canvas: HTMLCanvasElement, clientX: number, clientY: number) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = clientX - rect.left;
+    const my = clientY - rect.top;
+    const W = canvas.width;
+    const H = canvas.height;
+    const rot = stateRef.current.rotation % (Math.PI * 2);
+    for (let i = 0; i < BEACONS.length; i++) {
+      const bx = ((BEACONS[i].nx + (rot / (Math.PI * 2))) % 1) * W;
+      const by = BEACONS[i].ny * H;
+      const dist = Math.hypot(mx - bx, my - by);
+      if (dist < 16) return i;
+    }
+    return -1;
+  };
+
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    stateRef.current.isDragging = true;
+    stateRef.current.dragStartX = getCanvasPos(canvas, e.clientX);
+    stateRef.current.dragStartRot = stateRef.current.rotation;
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    if (stateRef.current.isDragging) {
+      const dx = getCanvasPos(canvas, e.clientX) - stateRef.current.dragStartX;
+      stateRef.current.rotation = stateRef.current.dragStartRot - (dx / canvas.width) * Math.PI * 2;
+    } else {
+      stateRef.current.hoveredBeacon = findHoveredBeacon(canvas, e.clientX, e.clientY);
+    }
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    stateRef.current.isDragging = false;
+  }, []);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas || e.touches.length === 0) return;
+    stateRef.current.isDragging = true;
+    stateRef.current.dragStartX = getCanvasPos(canvas, e.touches[0].clientX);
+    stateRef.current.dragStartRot = stateRef.current.rotation;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas || !stateRef.current.isDragging || e.touches.length === 0) return;
+    e.preventDefault();
+    const dx = getCanvasPos(canvas, e.touches[0].clientX) - stateRef.current.dragStartX;
+    stateRef.current.rotation = stateRef.current.dragStartRot - (dx / canvas.width) * Math.PI * 2;
+  }, []);
+
   return (
     <div className="explorer-showcase-visual w-full relative flex items-center justify-center min-h-[440px] sm:min-h-[480px] select-none overflow-hidden rounded-3xl">
-      {/* 1. Ambient Cosmic Illumination (Warm orange & indigo galactic glow) */}
-      <div className="absolute inset-0 bg-radial from-[var(--accent)]/15 via-indigo-900/10 to-transparent pointer-events-none filter blur-3xl -z-10" />
+      {/* Ambient cosmic glow */}
+      <div className="absolute inset-0 bg-radial from-indigo-900/20 via-transparent to-transparent pointer-events-none filter blur-3xl -z-10" />
 
-      {/* 2. Floating Luminous Celestial Sphere Centerpiece */}
-      <div className="relative w-full max-w-[520px] aspect-square flex items-center justify-center">
-        {/* Outer Celestial Coordinate Rings */}
-        <div className="absolute inset-4 rounded-full border border-white/10 flex items-center justify-center pointer-events-none">
-          <div className="w-[85%] h-[85%] rounded-full border border-dashed border-indigo-400/20 flex items-center justify-center animate-spin" style={{ animationDuration: "120s" }}>
-            <div className="w-[80%] h-[80%] rounded-full border border-white/5" />
-          </div>
+      <div className="relative flex flex-col items-center gap-3">
+        {/* Circular viewport */}
+        <div className="relative" style={{ width: 420, height: 420 }}>
+          {/* Soft outer glow ring */}
+          <div
+            className="absolute inset-0 rounded-full pointer-events-none"
+            style={{
+              boxShadow: "0 0 60px 10px rgba(100,80,220,0.18), inset 0 0 40px 10px rgba(0,0,0,0.6)",
+            }}
+          />
+          <canvas
+            ref={canvasRef}
+            width={420}
+            height={420}
+            className="rounded-full cursor-grab active:cursor-grabbing"
+            style={{ display: "block" }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleMouseUp}
+          />
         </div>
 
-        {/* Diagonal Ecliptic / Galactic Plane Orbital Arc */}
-        <div className="absolute w-[110%] h-[40%] rounded-full border border-[var(--accent)]/20 -rotate-25 pointer-events-none shadow-[0_0_30px_rgba(244,162,114,0.1)]" />
-        <div className="absolute w-[115%] h-[42%] rounded-full border border-dashed border-cyan-400/15 -rotate-25 pointer-events-none" />
-
-        {/* Central Luminous Sphere Atmosphere */}
-        <div className="w-[72%] h-[72%] rounded-full bg-radial from-indigo-950/80 via-[#060814]/90 to-black/95 border border-white/15 shadow-[0_0_60px_rgba(30,27,75,0.6)] relative overflow-hidden flex items-center justify-center backdrop-blur-md">
-          {/* Subtle Galactic Dust Ribbon Projection */}
-          <div className="absolute inset-0 opacity-40 mix-blend-screen bg-gradient-to-tr from-transparent via-orange-500/20 to-purple-600/30 -rotate-12 pointer-events-none" />
-
-          {/* MODE A: All-Sky Survey Overview */}
-          {activeMode === "sky" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
-              {/* Coordinate Grid Overlay */}
-              <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" viewBox="0 0 400 400">
-                <circle cx="200" cy="200" r="160" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3 3" />
-                <circle cx="200" cy="200" r="100" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3 3" />
-                <line x1="40" y1="200" x2="360" y2="200" stroke="currentColor" strokeWidth="0.5" />
-                <line x1="200" y1="40" x2="200" y2="360" stroke="currentColor" strokeWidth="0.5" />
-              </svg>
-
-              {/* Challenge Target Beacons */}
-              {CHALLENGE_TARGETS_COORDS.map((target, idx) => (
-                <div
-                  key={target.name}
-                  className="absolute group/beacon cursor-default"
-                  style={{ left: target.x, top: target.y }}
-                >
-                  <span className="relative flex h-2.5 w-2.5 items-center justify-center">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[var(--accent)]" />
-                  </span>
-                  <div className="absolute left-3.5 -top-2 opacity-0 group-hover/beacon:opacity-100 transition-opacity whitespace-nowrap bg-black/85 px-2 py-0.5 rounded border border-white/20 text-[9px] font-mono text-white pointer-events-none z-20">
-                    <b className="text-[var(--accent)]">{target.name}</b> · {target.type}
-                  </div>
-                </div>
-              ))}
-
-              <div className="relative z-10 flex flex-col items-center max-w-xs">
-                <div className="w-12 h-12 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/30 flex items-center justify-center text-[var(--accent)] mb-3 shadow-[0_0_20px_rgba(244,162,114,0.3)]">
-                  <Compass className="w-6 h-6 animate-pulse" />
-                </div>
-                <h4 className="text-base font-medium text-white tracking-tight mb-1">
-                  All-Sky Infrared Atlas
-                </h4>
-                <p className="text-xs text-white/60 font-mono leading-relaxed">
-                  CDS Hierarchical HiPS Projection · 460 Million Cosmic Objects
-                </p>
-                <div className="mt-3 flex items-center gap-1.5 text-[10px] font-mono text-[var(--accent)] bg-black/60 px-3 py-1 rounded-full border border-white/10">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span>5 Challenge Targets Mapped</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* MODE B: Object Inspector & Gaia DR3 Astrometry */}
-          {activeMode === "object" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
-              <div className="relative z-10 flex flex-col items-center max-w-xs">
-                {/* Simulated Target Cutout with Proper Motion Vector */}
-                <div className="relative w-28 h-28 rounded-full border border-amber-400/40 bg-black/60 flex items-center justify-center mb-3 shadow-[0_0_30px_rgba(245,158,11,0.25)]">
-                  {/* Central Star with Diffraction Core */}
-                  <div className="w-4 h-4 rounded-full bg-amber-200 shadow-[0_0_15px_#fde68a]" />
-                  {/* Gaia DR3 Motion Vector Arrow */}
-                  <div className="absolute w-12 h-[1.5px] bg-cyan-400 right-4 top-9 rotate-[-70deg] origin-left shadow-[0_0_8px_#22d3ee]">
-                    <div className="absolute right-0 -top-1 w-2 h-2 border-t-2 border-r-2 border-cyan-400 rotate-45" />
-                  </div>
-                  <span className="absolute -bottom-2 text-[9px] font-mono text-cyan-300 bg-black/80 px-1.5 py-0.5 rounded border border-cyan-500/30">
-                    μ = 10.39″/yr
-                  </span>
-                </div>
-
-                <span className="font-mono text-[10px] text-[var(--accent)] uppercase tracking-wider mb-1">
-                  Target Astrometry Inspector
-                </span>
-                <h4 className="text-base font-medium text-white mb-1">
-                  Barnard's Star (GJ 699)
-                </h4>
-                <p className="text-xs text-white/60 font-mono leading-relaxed">
-                  Gaia DR3 Proper Motion Vector · 359-Day Astrometric Baseline
-                </p>
-                <div className="mt-3 text-[10px] font-mono text-white/50 bg-white/5 px-2.5 py-1 rounded-md border border-white/10">
-                  RA 269.4521° · Dec +4.6934°
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* MODE C: 102-Band Spectral Dispersion */}
-          {activeMode === "spectral" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
-              <div className="relative z-10 flex flex-col items-center w-full max-w-xs">
-                <div className="w-10 h-10 rounded-full bg-purple-500/15 border border-purple-400/30 flex items-center justify-center text-purple-300 mb-2.5 shadow-[0_0_20px_rgba(168,85,247,0.3)]">
-                  <Layers className="w-5 h-5" />
-                </div>
-
-                <h4 className="text-base font-medium text-white tracking-tight mb-2">
-                  102 Near-IR Spectral Channels
-                </h4>
-
-                {/* Spectral dispersion color bar (0.75 - 5.0 µm) */}
-                <div className="w-full h-3 rounded-full bg-gradient-to-r from-blue-500 via-emerald-400 via-amber-400 to-red-600 shadow-md mb-2 relative">
-                  {/* Dichroic gap marker */}
-                  <div className="absolute left-[48%] top-0 bottom-0 w-1 bg-black shadow" title="Dichroic Gap at 2.42 µm" />
-                </div>
-                <div className="w-full flex justify-between text-[9px] font-mono text-white/40 mb-3">
-                  <span>0.75 µm</span>
-                  <span className="text-[var(--accent)] font-semibold">2.42 µm (Gap)</span>
-                  <span>5.00 µm</span>
-                </div>
-
-                {/* Key Molecular Diagnostic Bands */}
-                <div className="grid grid-cols-2 gap-1.5 w-full text-[9.5px] font-mono text-left">
-                  {MOLECULAR_BANDS.map((b) => (
-                    <div key={b.name} className="flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded border border-white/10">
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: b.color }} />
-                      <span className="text-white/80 truncate">{b.name}</span>
-                      <span className="text-white/40 ml-auto">{b.wave}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Orbiting Satellite Telemetry Chip */}
-        <div className="absolute -bottom-2 right-4 flex items-center gap-2 bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/15 text-[10px] font-mono text-white/70 shadow-lg">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>SPHEREx DR1 Level 2 Tangent Cutouts</span>
+        {/* Bottom status bar */}
+        <div className="flex items-center gap-4 text-[10px] font-mono text-white/50">
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
+            {activeMode === "sky" ? "All-Sky Panorama" : activeMode === "object" ? "Target Beacon Mode" : "Spectral Overlay"}
+          </span>
+          <span className="text-white/30">|</span>
+          <span>Drag to rotate · Hover beacons</span>
         </div>
       </div>
     </div>
