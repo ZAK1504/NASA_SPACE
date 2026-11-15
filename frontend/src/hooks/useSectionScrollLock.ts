@@ -49,8 +49,12 @@ export function useSectionScrollLock({
   const lastWheelTimeRef = useRef(0);
   const arrivalTimestampRef = useRef(0);
 
+  const onChapterChangeRef = useRef(onChapterChange);
+  onChapterChangeRef.current = onChapterChange;
+
   useEffect(() => {
     if (!enabled) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     (window as any).__isJourneyScrollLocked = true;
 
@@ -59,7 +63,7 @@ export function useSectionScrollLock({
       if (chapterId === "home") return 0;
       const el = document.getElementById(chapterId);
       if (!el) return 0;
-      return Math.max(0, el.offsetTop - 70);
+      return Math.max(0, el.getBoundingClientRect().top + window.scrollY - 70);
     };
 
     // Helper: get bounding info for chapter (top, height, bottom)
@@ -75,15 +79,10 @@ export function useSectionScrollLock({
       const chs = chaptersRef.current;
       const scrollY = window.scrollY;
       let closestIdx = 0;
-      let minDistance = Infinity;
 
       for (let i = 0; i < chs.length; i++) {
         const { top } = getChapterBounds(chs[i]);
-        const dist = Math.abs(scrollY - top);
-        if (dist < minDistance) {
-          minDistance = dist;
-          closestIdx = i;
-        }
+        if (scrollY >= top - 20) closestIdx = i;
       }
       return closestIdx;
     };
@@ -111,7 +110,7 @@ export function useSectionScrollLock({
       stateRef.current = "TRANSITIONING";
       fixedDestinationIndexRef.current = safeIdx;
       activeChapterRef.current = targetId;
-      onChapterChange?.(targetId);
+      onChapterChangeRef.current?.(targetId);
 
       const targetY = getChapterScrollTarget(targetId);
 
@@ -120,6 +119,8 @@ export function useSectionScrollLock({
       if (safetyTimerRef.current) window.clearTimeout(safetyTimerRef.current);
 
       const onArrival = () => {
+        if (stateRef.current !== "TRANSITIONING" || fixedDestinationIndexRef.current !== safeIdx) return;
+        if (safetyTimerRef.current) window.clearTimeout(safetyTimerRef.current);
         const now = performance.now();
         const timeSinceLastWheel = now - lastWheelTimeRef.current;
 
@@ -385,7 +386,7 @@ export function useSectionScrollLock({
       delete (window as any).__journeyNavigateToChapter;
       delete (window as any).__resetJourneyScrollState;
     };
-  }, [enabled, onChapterChange]);
+  }, [enabled]);
 }
 
 export default useSectionScrollLock;
