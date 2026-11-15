@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useCallback } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Backdrop from "../components/ui/Backdrop";
@@ -53,7 +53,7 @@ export const JourneyPage: React.FC = () => {
     // Update URL hash passively without polluting history
     const newHash = `#${chapterId}`;
     if (window.location.hash !== newHash) {
-      window.history.replaceState(window.history.state, "", newHash);
+      window.history.replaceState(null, "", newHash);
     }
 
     if (typeof (window as any).__journeyNavigateToChapter === "function") {
@@ -61,7 +61,7 @@ export const JourneyPage: React.FC = () => {
       return;
     }
 
-    const targetY = chapterId === "home" ? 0 : Math.max(0, el.getBoundingClientRect().top + window.scrollY - 70);
+    const targetY = chapterId === "home" ? 0 : Math.max(0, el.offsetTop - 70);
 
     if (window.__lenis) {
       window.__lenis.scrollTo(targetY, {
@@ -76,20 +76,17 @@ export const JourneyPage: React.FC = () => {
     }
   };
 
-  // Keep the wheel controller mounted while active chapters change.
-  const handleChapterChange = useCallback((chapterId: string) => {
-    setActiveChapter(chapterId);
-    const newHash = `#${chapterId}`;
-    if (window.location.hash !== newHash) {
-      window.history.replaceState(window.history.state, "", newHash);
-    }
-  }, []);
-
   // High-Precision Section Scroll Lock Engine ("scroll a bit to other page, full page comes")
   useSectionScrollLock({
     chapters: CHAPTER_IDS,
     activeChapter,
-    onChapterChange: handleChapterChange,
+    onChapterChange: (chapterId) => {
+      setActiveChapter(chapterId);
+      const newHash = `#${chapterId}`;
+      if (window.location.hash !== newHash) {
+        window.history.replaceState(null, "", newHash);
+      }
+    },
     enabled: true,
   });
 
@@ -113,7 +110,7 @@ export const JourneyPage: React.FC = () => {
       } else if (restoreTarget !== "home") {
         const el = document.getElementById(restoreTarget);
         if (el) {
-          finalScroll = Math.max(0, el.getBoundingClientRect().top + window.scrollY - 70);
+          finalScroll = Math.max(0, el.offsetTop - 70);
         }
       }
 
@@ -209,7 +206,7 @@ export const JourneyPage: React.FC = () => {
               // Update URL hash passively without full reload
               const newHash = `#${id}`;
               if (window.location.hash !== newHash) {
-                window.history.replaceState(window.history.state, "", newHash);
+                window.history.replaceState(null, "", newHash);
               }
             }
           }
@@ -233,7 +230,7 @@ export const JourneyPage: React.FC = () => {
       if (scrollY + vh >= totalH - 120) {
         setActiveChapter("about");
         if (window.location.hash !== "#about") {
-          window.history.replaceState(window.history.state, "", "#about");
+          window.history.replaceState(null, "", "#about");
         }
       }
     };
