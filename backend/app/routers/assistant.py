@@ -10,7 +10,14 @@ from pydantic import BaseModel, Field, ConfigDict
 
 from app.config import settings
 from app.services.copilot_budget_service import copilot_budget_service
-from app.services.copilot_ai_service import copilot_ai_service, DETERMINISTIC_RESPONSES
+from app.services.copilot_ai_service import (
+    copilot_ai_service,
+    DETERMINISTIC_RESPONSES,
+    copilot_in_scope,
+    COPILOT_SCOPE_REFUSAL,
+    COPILOT_SCOPE_ACTIONS,
+    COPILOT_SCOPE_QUESTIONS,
+)
 from app.services.object_service import object_service
 
 logger = logging.getLogger(__name__)
@@ -230,6 +237,15 @@ async def ask_assistant(
             "actions": fast_nav["actions"],
             "suggested_questions": copilot_ai_service.generate_suggested_questions(fast_nav["text"], raw_message),
             "source": "deterministic_navigation"
+        }
+
+    # 1.5. Server-Side Scientific Scope Guard (Defense in Depth before burning tokens or falling back)
+    if not copilot_in_scope(raw_message, req.history):
+        return {
+            "response": COPILOT_SCOPE_REFUSAL,
+            "actions": COPILOT_SCOPE_ACTIONS,
+            "suggested_questions": COPILOT_SCOPE_QUESTIONS,
+            "source": "scope_restricted"
         }
 
     # 2. Check deterministic knowledge base responses
