@@ -15,9 +15,9 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
     <section
       id="home"
       data-tour="home-hero"
-      className="chapter-home w-full min-h-[calc(100vh-70px)] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 flex flex-col justify-center relative z-10"
+      className="chapter-home w-full min-h-[calc(100vh-70px)] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 lg:pt-16 pb-4 sm:pb-6 flex flex-col justify-center relative z-10"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center w-full my-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center w-full my-auto translate-y-3 sm:translate-y-6 lg:translate-y-8">
         {/* Left Column: Numbered Label, Massive Typography, Mission Narrative, CTAs */}
         <div
           data-tour="journey-hero"
@@ -100,7 +100,7 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
         {/* Right Column: Genuine 3D Spacecraft Floating Freely */}
         <div
           data-tour="journey-spacecraft"
-          className="lg:col-span-6 flex items-center justify-center relative w-full h-[380px] sm:h-[440px] lg:h-[480px] pointer-events-auto select-none"
+          className="lg:col-span-6 flex items-center justify-center relative w-full h-[400px] sm:h-[460px] lg:h-[500px] pointer-events-auto select-none"
           style={{
             transform: `translateX(calc(var(--hero-scroll, 0) * 40px)) translateY(calc(var(--hero-scroll, 0) * 25px)) scale(calc(1 - var(--hero-scroll, 0) * 0.1))`,
             opacity: `calc(1 - var(--hero-scroll, 0) * 0.7)`,
@@ -115,7 +115,7 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
           <Satellite3D yaw={0.4} className="w-full h-full" />
 
           {/* Minimal, elegant floating label */}
-          <div className="absolute bottom-4 right-6 flex items-center gap-2 text-[10.5px] font-mono text-white/45 pointer-events-none tracking-wider uppercase bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/5">
+          <div className="absolute bottom-2 right-6 flex items-center gap-2 text-[10.5px] font-mono text-white/45 pointer-events-none tracking-wider uppercase bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/5">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
             <span>SPHEREx Flight Model · Drag to rotate</span>
           </div>

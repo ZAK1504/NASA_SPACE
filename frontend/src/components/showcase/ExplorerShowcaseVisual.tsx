@@ -315,12 +315,13 @@ export const ExplorerShowcaseVisual: React.FC<ExplorerShowcaseVisualProps> = ({
   };
 
   return (
-    <div
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
-      className="explorer-showcase-visual relative w-full max-w-[500px] aspect-[54/46] flex items-center justify-center select-none overflow-visible mx-auto"
-      style={{ touchAction: "pan-y" }}
-    >
+    <div className="flex flex-col items-center w-full max-w-[500px] mx-auto select-none">
+      <div
+        onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
+        className="explorer-showcase-visual relative w-full aspect-[54/46] flex items-center justify-center select-none overflow-visible"
+        style={{ touchAction: "pan-y" }}
+      >
       {/* 1. Master Responsive SVG Scene (Single Authoritative Coordinate System) */}
       <svg
         viewBox="0 0 540 460"
@@ -735,10 +736,11 @@ export const ExplorerShowcaseVisual: React.FC<ExplorerShowcaseVisualProps> = ({
           </div>
         </div>
       )}
+      </div>
 
-      {/* 4. Minimal Discreet Status Caption (In Sky Mode when no target selected) */}
+      {/* 4. Minimal Discreet Status Caption with generous clear space below the picture */}
       {activeMode === "sky" && !selectedTarget && (
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[10px] font-mono text-white/60 bg-black/60 backdrop-blur-lg px-3 py-1 rounded-full border border-white/15 pointer-events-none whitespace-nowrap shadow-lg">
+        <div className="mt-5 flex items-center gap-2 text-[10.5px] font-mono text-white/70 bg-black/75 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15 pointer-events-none whitespace-nowrap shadow-[0_0_20px_rgba(0,0,0,0.6)]">
           <Activity className="w-3.5 h-3.5 text-[#F4A272] animate-pulse" />
           <span>CELESTIAL DISCOVERY PATH · 5 Connected Infrared Science Targets</span>
         </div>
