@@ -300,7 +300,7 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
     };
   }, [glbUrl]);
 
-  return <div ref={containerRef} className={`sat ${className}`} />;
+  return <div ref={containerRef} className={`satellite-canvas relative w-full h-full ${className}`} />;
 };
 
 export default Satellite3D;

@@ -110,7 +110,11 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
           {/* HORIZON Branding */}
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[var(--accent)]" />
-            <span className="font-medium text-xs sm:text-sm tracking-tight text-white">SPHEREx HORIZON</span>
+            <span className="font-semibold text-xs sm:text-sm tracking-tight text-white inline-flex items-baseline">
+              <span>SPHERE</span>
+              <span className="text-[1.5em] font-black leading-none inline-block mx-0.5 text-[var(--accent)]">x</span>
+              <span className="text-[var(--accent)] font-light ml-1">HORIZON</span>
+            </span>
           </div>
 
           {/* Workspace Title Badge */}

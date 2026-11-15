@@ -9,20 +9,11 @@ import ChapterExplorer from "../components/showcase/ChapterExplorer";
 import ChapterTimeMachine from "../components/showcase/ChapterTimeMachine";
 import ChapterLabs from "../components/showcase/ChapterLabs";
 import ChapterMission from "../components/showcase/ChapterMission";
-import {
-  HomeToExplorerRibbon,
-  ExplorerToTimeMachineRibbon,
-  TimeMachineToLabsRibbon,
-  LabsToMissionRibbon,
-} from "../components/ui/SnakeRibbon";
-import {
-  HomeToExplorerTransition,
-  TimeMachineToLabsTransition,
-} from "../components/sections/ChapterTransition";
 import { CommandPalette } from "../components/navigation/CommandPalette";
 import { CosmicCopilot } from "../components/assistant/CosmicCopilot";
 import { useGuidedTour } from "../hooks/useGuidedTour";
 import { useSmoothScroll, useReveal, useScrollVars } from "../lib/hooks";
+import { useSectionScrollLock } from "../hooks/useSectionScrollLock";
 import { getJourneyReturnState, clearJourneyReturnState } from "../lib/journeyState";
 
 declare global {
@@ -59,12 +50,34 @@ export const JourneyPage: React.FC = () => {
       window.history.replaceState(null, "", newHash);
     }
 
+    const targetY = chapterId === "home" ? 0 : Math.max(0, el.offsetTop - 70);
+
     if (window.__lenis) {
-      window.__lenis.scrollTo(el, { offset: -70, duration: 1.2 });
+      window.__lenis.scrollTo(targetY, {
+        duration: 1.15,
+        easing: (t: number) => 1 - Math.pow(1 - t, 3.5),
+      });
     } else {
-      el.scrollIntoView({ behavior: "smooth" });
+      window.scrollTo({
+        top: targetY,
+        behavior: "smooth",
+      });
     }
   };
+
+  // High-Precision Section Scroll Lock Engine ("scroll a bit to other page, full page comes")
+  useSectionScrollLock({
+    chapters: CHAPTER_IDS,
+    activeChapter,
+    onChapterChange: (chapterId) => {
+      setActiveChapter(chapterId);
+      const newHash = `#${chapterId}`;
+      if (window.location.hash !== newHash) {
+        window.history.replaceState(null, "", newHash);
+      }
+    },
+    enabled: true,
+  });
 
   // Authoritative synchronous scroll restoration: runs BEFORE browser paint to prevent any visible scroll jumps
   useLayoutEffect(() => {
@@ -218,37 +231,19 @@ export const JourneyPage: React.FC = () => {
         onSelectChapter={scrollToChapter}
       />
 
-      {/* 4. Continuous Storytelling Journey */}
+      {/* 4. Continuous Storytelling Journey (Zero Separators — Seamless Flow) */}
       <main className="flex-1 w-full relative z-10 flex flex-col">
         {/* Chapter 01 — Home: Meet SPHEREx */}
         <ChapterHome onScrollToExplorer={() => scrollToChapter("explorer")} />
 
-        {/* Ribbon 01 — Home to Explorer: Animated Snake Text Ribbon */}
-        <HomeToExplorerRibbon />
-
-        {/* Transition 01 — Home to Explorer: Departure into the Infrared */}
-        <HomeToExplorerTransition />
-
         {/* Chapter 02 — Explorer: See Beyond the Visible */}
         <ChapterExplorer onScrollToNext={() => scrollToChapter("time-machine")} />
-
-        {/* Ribbon 02 — Explorer to Time Machine: Animated Snake Text Ribbon */}
-        <ExplorerToTimeMachineRibbon />
 
         {/* Chapter 03 — Time Machine: Travel Through the Changing Sky */}
         <ChapterTimeMachine onScrollToNext={() => scrollToChapter("labs")} />
 
-        {/* Ribbon 03 — Time Machine to Labs: Animated Snake Text Ribbon */}
-        <TimeMachineToLabsRibbon />
-
-        {/* Transition 03 — Time Machine to Labs: Deceleration into Scientific Investigation */}
-        <TimeMachineToLabsTransition />
-
         {/* Chapter 04 — Labs: The Science of Discovery */}
         <ChapterLabs onScrollToNext={() => scrollToChapter("mission")} />
-
-        {/* Ribbon 04 — Labs to Mission: Animated Snake Text Ribbon */}
-        <LabsToMissionRibbon />
 
         {/* Chapter 05 — Mission: Your Discovery Begins */}
         <ChapterMission onScrollToTop={() => scrollToChapter("home")} />

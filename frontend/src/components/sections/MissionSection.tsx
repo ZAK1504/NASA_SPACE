@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import Ribbon from "../ui/Ribbon";
 import { ClockCard, StatCard } from "../ui/Glass";
 import Icon from "../ui/Icon";
 import Satellite3D from "../ui/Satellite3D";
@@ -201,8 +200,8 @@ export const MissionSection: React.FC<MissionSectionProps> = ({
         </div>
       </header>
 
-      {/* Decorative Ribbon Divider */}
-      <Ribbon className="stage-ribbon my-4" amp={22} />
+      {/* Hairline Divider (Zero Curly Waves) */}
+      <div className="w-full my-4 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
       {/* Sub-navigation pill between 3D Observatory & Guided Scientific Missions */}
       <div className="flex justify-center mb-8">

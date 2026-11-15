@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import PillSwitch from "../ui/PillSwitch";
-import Ribbon from "../ui/Ribbon";
 import { ClockCard, StatCard } from "../ui/Glass";
 import Icon from "../ui/Icon";
 import { DiscoveryLab } from "../../pages/DiscoveryLab";
@@ -111,8 +110,8 @@ export const LabsSection: React.FC<LabsSectionProps> = ({
         </div>
       </header>
 
-      {/* Decorative Ribbon Divider */}
-      <Ribbon className="stage-ribbon my-4" amp={22} />
+      {/* Hairline Divider (Zero Curly Waves) */}
+      <div className="w-full my-4 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
       {/* Internal Active Workspace Shell */}
       <div className="labs-workspace w-full min-h-[580px] relative transition-opacity duration-300">

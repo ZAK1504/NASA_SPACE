@@ -32,7 +32,7 @@ export const Stage: React.FC<StageProps> = ({
   icon = "sky",
   blurb = "",
   cards,
-  ribbon = true,
+  ribbon = false,
   children,
 }) => {
   const nav = useNavigate();
