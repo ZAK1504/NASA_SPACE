@@ -103,6 +103,11 @@ export const ContinuousHorizonApp: React.FC = () => {
 
   // Smooth scroll handler for navigation clicks
   const scrollToSection = (sectionId: string) => {
+    if (sectionId === "about") {
+      navigate("/about");
+      return;
+    }
+
     const el = document.getElementById(sectionId);
     if (!el) return;
 

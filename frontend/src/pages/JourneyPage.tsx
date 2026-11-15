@@ -14,7 +14,7 @@ import { CosmicCopilot } from "../components/assistant/CosmicCopilot";
 import { useGuidedTour } from "../hooks/useGuidedTour";
 import { useSmoothScroll, useReveal, useScrollVars } from "../lib/hooks";
 import { useSectionScrollLock } from "../hooks/useSectionScrollLock";
-import { getJourneyReturnState, clearJourneyReturnState } from "../lib/journeyState";
+import { getJourneyReturnState, clearJourneyReturnState, travelToWorkspace } from "../lib/journeyState";
 
 declare global {
   interface Window {
@@ -39,6 +39,11 @@ export const JourneyPage: React.FC = () => {
 
   // Scroll smoothly to a specific chapter
   const scrollToChapter = (chapterId: string) => {
+    if (chapterId === "about") {
+      travelToWorkspace(navigate, "/about", activeChapter);
+      return;
+    }
+
     const el = document.getElementById(chapterId);
     if (!el) return;
 

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { HelpCircle, Compass, Menu, X } from "lucide-react";
+import { HelpCircle, Compass, Menu, X, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { travelToWorkspace } from "../lib/journeyState";
 
 export interface NavDestination {
   id: string;
@@ -27,6 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
   onStartTour,
 }) => {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [solid, setSolid] = useState(false);
 
@@ -40,6 +43,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   const handleNavClick = (targetId: string) => (e: React.MouseEvent) => {
     e.preventDefault();
     setOpen(false);
+
+    if (targetId === "about") {
+      if (onNavigate) {
+        onNavigate("about");
+      } else {
+        travelToWorkspace(navigate, "/about", activeSection);
+      }
+      return;
+    }
+
     if (onNavigate) {
       onNavigate(targetId);
     } else {
@@ -124,10 +137,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <a
             className="cta cursor-pointer"
-            href="#mission"
-            onClick={handleNavClick("mission")}
+            href="/about"
+            onClick={handleNavClick("about")}
           >
-            Play mission
+            About
           </a>
 
           {/* Mobile hamburger button */}
@@ -185,6 +198,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Start Guided Tour</span>
             </button>
           )}
+
+          <div className="pt-2 border-t border-white/10 flex flex-col gap-2 mt-2">
+            <a
+              href="/about"
+              onClick={handleNavClick("about")}
+              className="flex items-center justify-between p-3 rounded-lg border border-[var(--accent)]/40 bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20 text-base font-semibold transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <Users className="w-4 h-4 text-[var(--accent)]" />
+                <span>Behind the Horizon · Team</span>
+              </div>
+              <span>↗</span>
+            </a>
+          </div>
         </div>
       </div>
     </>
