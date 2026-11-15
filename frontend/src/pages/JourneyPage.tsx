@@ -10,6 +10,12 @@ import ChapterTimeMachine from "../components/showcase/ChapterTimeMachine";
 import ChapterLabs from "../components/showcase/ChapterLabs";
 import ChapterMission from "../components/showcase/ChapterMission";
 import {
+  HomeToExplorerRibbon,
+  ExplorerToTimeMachineRibbon,
+  TimeMachineToLabsRibbon,
+  LabsToMissionRibbon,
+} from "../components/ui/SnakeRibbon";
+import {
   HomeToExplorerTransition,
   TimeMachineToLabsTransition,
   LabsToMissionTransition,
@@ -209,20 +215,32 @@ export const JourneyPage: React.FC = () => {
         {/* Chapter 01 — Home: Meet SPHEREx */}
         <ChapterHome onScrollToExplorer={() => scrollToChapter("explorer")} />
 
+        {/* Ribbon 01 — Home to Explorer: Animated Snake Text Ribbon */}
+        <HomeToExplorerRibbon />
+
         {/* Transition 01 — Home to Explorer: Departure into the Infrared */}
         <HomeToExplorerTransition />
 
         {/* Chapter 02 — Explorer: See Beyond the Visible */}
         <ChapterExplorer onScrollToNext={() => scrollToChapter("time-machine")} />
 
-        {/* Chapter 03 — Time Machine: Travel Through the Changing Sky (Hyperspace warp naturally transitions directly into REWIND) */}
+        {/* Ribbon 02 — Explorer to Time Machine: Animated Snake Text Ribbon */}
+        <ExplorerToTimeMachineRibbon />
+
+        {/* Chapter 03 — Time Machine: Travel Through the Changing Sky */}
         <ChapterTimeMachine onScrollToNext={() => scrollToChapter("labs")} />
+
+        {/* Ribbon 03 — Time Machine to Labs: Animated Snake Text Ribbon */}
+        <TimeMachineToLabsRibbon />
 
         {/* Transition 03 — Time Machine to Labs: Deceleration into Scientific Investigation */}
         <TimeMachineToLabsTransition />
 
         {/* Chapter 04 — Labs: The Science of Discovery */}
         <ChapterLabs onScrollToNext={() => scrollToChapter("mission")} />
+
+        {/* Ribbon 04 — Labs to Mission: Animated Snake Text Ribbon */}
+        <LabsToMissionRibbon />
 
         {/* Transition 04 — Labs to Mission: Expanding Atlas into Exploration */}
         <LabsToMissionTransition />

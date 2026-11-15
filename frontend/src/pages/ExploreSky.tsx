@@ -160,7 +160,7 @@ export const ExploreSky: React.FC = () => {
         </div>
 
         {/* Survey Layer Picker */}
-        <div className="flex items-center gap-2">
+        <div data-tour="sky-survey-select" className="flex items-center gap-2">
           <Layers className="w-4 h-4 text-[#9E9AA7]" />
           <span className="text-xs text-[#9E9AA7]">Survey:</span>
           <select
@@ -180,7 +180,7 @@ export const ExploreSky: React.FC = () => {
       <div className="bg-[#111117] border border-[#262635] rounded p-4 mb-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Quick jump buttons */}
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div data-tour="sky-quickjump" className="flex flex-wrap items-center gap-1.5">
             <span className="text-xs text-[#9E9AA7] mr-1">Quick Jump:</span>
             {FEATURED_OBJECTS.map((obj) => (
               <button
@@ -198,7 +198,7 @@ export const ExploreSky: React.FC = () => {
           </div>
 
           {/* Coordinate / Object Search Form */}
-          <form onSubmit={handleSearch} className="flex gap-2 min-w-[280px]">
+          <form data-tour="sky-target-search" onSubmit={handleSearch} className="flex gap-2 min-w-[280px]">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9E9AA7]" />
               <input
@@ -232,19 +232,21 @@ export const ExploreSky: React.FC = () => {
               RA: {selectedTarget.ra.toFixed(4)}° ({selectedTarget.ra_hms || selectedTarget.raHms}) · Dec: {selectedTarget.dec.toFixed(4)}° ({selectedTarget.dec_dms || selectedTarget.decDms})
             </span>
           </div>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => navigate(`/objects/${selectedTarget.slug || selectedTarget.id}`)}
-            rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-          >
-            Inspect in Object Explorer
-          </Button>
+          <div data-tour="sky-inspect-button">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => navigate(`/objects/${selectedTarget.slug || selectedTarget.id}`)}
+              rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+            >
+              Inspect in Object Explorer
+            </Button>
+          </div>
         </div>
       )}
 
       {/* Main Aladin Map Container */}
-      <div className="bg-[#08080C] border border-[#262635] rounded overflow-hidden relative mb-6" style={{ height: '62vh' }}>
+      <div data-tour="sky-map" className="bg-[#08080C] border border-[#262635] rounded overflow-hidden relative mb-6" style={{ height: '62vh' }}>
         <div ref={aladinContainerRef} className="w-full h-full" />
 
         {aladinStatus === 'initializing' && (

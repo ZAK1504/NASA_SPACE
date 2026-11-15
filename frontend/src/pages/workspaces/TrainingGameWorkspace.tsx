@@ -86,7 +86,7 @@ export const TrainingGameWorkspace: React.FC = () => {
           </p>
         </div>
 
-        <div className="game rounded-3xl border border-white/10 bg-black/60 backdrop-blur-xl p-6 shadow-2xl">
+        <div data-tour="training-canvas" className="game rounded-3xl border border-white/10 bg-black/60 backdrop-blur-xl p-6 shadow-2xl">
           <div className="game-top mono flex items-center justify-between pb-4 mb-4 border-b border-white/10 text-sm">
             <span className="flex items-center gap-1.5">
               <span>Score:</span> <b className="text-[var(--accent)] text-base">{score}</b>

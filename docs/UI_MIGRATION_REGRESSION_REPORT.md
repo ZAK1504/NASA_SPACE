@@ -286,6 +286,62 @@ In this milestone, all visual artifacts, abrupt background color changes, and th
   - Round-trip scroll restoration (`diff: 0px`): PASS
   - Mobile viewport (390x844) zero overflow: PASS
 
+---
+
+## 10. Final 3D Celestial Explorer, Snake Ribbons & Scientific Onboarding (November 15, 2026 Checkpoint)
+
+In this final milestone, Chapter 02 (Explorer) was elevated to a genuine 3D celestial sphere, continuous animated wave ribbons were deployed between all 5 chapters, and an interactive Driver.js scientific onboarding system was integrated across all scientific workspaces:
+
+### 1. Genuine 3D Celestial Sphere (`ExplorerShowcaseVisual.tsx`)
+- **Three.js All-Sky Mapping:** Replaced the flat 2D canvas with a full 3D celestial sphere textured with authentic SPHEREx DR1 equirectangular all-sky imagery derived from IPAC HiPS order 0 base tiles (`backend/data/cache/hips`).
+- **Spherical Coordinate Projection:** Implemented exact astronomical transformations ($\text{RA}, \text{Dec} \to x, y, z$). Positioned canonical coordinate circles (Celestial Equator in amber/gold at $y=0$, Ecliptic Plane in indigo/cyan tilted $23.44^\circ$).
+- **Canonical Science Beacons:** Projected 5 canonical scientific targets (Barnard's Star, WISE 0855, Epsilon Indi B, RW Aurigae, R Draconis) with luminous pulsating cores. Integrated front-hemisphere occlusion detection ($(\mathbf{normal} \cdot \mathbf{toCam}) > 0.05$) to prevent label clutter.
+- **Dynamic Interaction & Hover Modes:**
+  - Sky Mode: Idle rotation ($0.05\text{ rad/s}$), drag-to-rotate via `OrbitControls` with zoom/pan disabled to prevent scroll hijack.
+  - Object Mode: Smooth rotation to focus directly on canonical targets with telemetry reticle and floating astrophysical inspection card.
+  - Spectral Mode: Cycles authentic single-band infrared textures every 2.8s with real wavelength indicators ($0.75\ \mu\text{m}$, $1.33\ \mu\text{m}$, $2.36\ \mu\text{m}$, $4.72\ \mu\text{m}$).
+- **Seamless Framing:** Sized at $R=1.35$ with camera distance $4.8$ and transparent background (`alpha: true`, `setClearColor(0x000000, 0)`), eliminating rectangular card boundaries or frustum clipping.
+
+### 2. Four Continuous Animated Snake-Text Ribbons (`SnakeRibbon.tsx`)
+- Restored the flowing typographic SVG ribbons across all four inter-chapter boundaries in continuous document flow:
+  1. Home $\to$ Explorer: `LET'S EXPLORE ✦ BEYOND THE VISIBLE ✦ DISCOVER THE INFRARED UNIVERSE` (Gold to Indigo)
+  2. Explorer $\to$ Time Machine: `THROUGH SPACE & TIME ✦ THE UNIVERSE DOESN'T STAND STILL ✦ REWIND THE SKY` (Indigo to Amber)
+  3. Time Machine $\to$ Discovery Lab: `EVERY CHANGE TELLS A STORY ✦ INVESTIGATE THE EVIDENCE ✦ DISCOVER MORE` (Amber to Graphite)
+  4. Discovery Lab $\to$ Missions: `YOUR DISCOVERY BEGINS ✦ EXPLORE THE UNKNOWN ✦ THE NEXT DISCOVERY COULD BE YOURS` (Graphite to Gold)
+- Infinite horizontal wave translation via `@keyframes snake-ribbon-flow` ($L=340\text{px}$, 14s loop) with `@media (prefers-reduced-motion)` pause override.
+
+### 3. Chapter-Colored Workspace Travel Overlay (`WorkspaceTransitionOverlay.tsx`)
+- Standardized ~950ms total transition timing (420ms departure acceleration, route execution, 530ms arrival deceleration).
+- Removed all reticle and screen text for a clean, cinema-grade star streak travel effect.
+- Applied chapter-specific atmospheric color streaks:
+  - Home: Warm gold (`rgba(244, 162, 114, 0.45)`)
+  - Explorer: Cosmic indigo/cyan (`rgba(99, 102, 241, 0.50)`)
+  - Time Machine: High-contrast amber/orange (`rgba(255, 123, 61, 0.55)`)
+  - Discovery Lab: Slate/cyan (`rgba(56, 189, 248, 0.45)`)
+  - Missions: Stellar gold (`rgba(244, 162, 114, 0.50)`)
+- Workspaces mount strictly at `scrollY = 0`.
+- "Back to Journey" executes contracting inward streaks and restores the exact originating chapter and vertical scroll position under cover without flashing Home.
+
+### 4. Interactive Scientific Onboarding with Driver.js (`useGuidedTour.ts`)
+- **Centralized Registry:** Configured 10 comprehensive scientific tour definitions (`tourDefinitions.ts`) emphasizing *why* astronomical controls exist.
+- **Session Tracking (`sessionStorage`):** Automatically triggers on the user's first visit to each workspace per session after an 1100ms entrance delay.
+- **User Agency:** Popovers feature explicit "Skip Tour" button and "Skip all automatic tours for this session" link.
+- **Always Replayable:** Dedicated TopBar "Tour" button allows instantaneous manual re-launch at any time.
+- **Semantic Spotlighting:** Mapped explicit `data-tour` attributes to genuine controls across all workspaces (`sky-survey-select`, `time-epoch-slider`, `time-difference-toggle`, `stacking-controls`, etc.).
+
+### 5. Final Verification & Test Results
+- **Pytest Suite (`python -m pytest tests/`):** 43 passed in 34.50s (100% pass rate).
+- **Frontend Production Build (`npm run build`):** Built 1659 modules in 11.83s with 0 errors.
+- **Automated Verification Script (`verify_final_3d_ribbons_tours.cjs`):**
+  - `test1_3DCelestialSphere`: **true** (Three.js canvas 686×520px, celestial beacons projected, Barnard's Star & R Draconis visible on load)
+  - `test2_FourSnakeRibbons`: **true** (All 4 SVG ribbons mounted and flowing with correct copy)
+  - `test3_ChapterWorkspaceTravel`: **true** (Navigates to `/time-machine`, resets scroll to 0)
+  - `test4_DriverAutomaticOnboarding`: **true** (Spotlights target selector, skip controls active)
+  - `test5_DriverManualReplay`: **true** (TopBar Tour button relaunches tour on demand)
+  - `test6_LosslessJourneyReturn`: **true** (Restores hash `#time-machine` and `scrollY: 1988`)
+  - `mobileCheck`: **{ scrollWidth: 390, clientWidth: 390, hasOverflow: false }**
+
+
 
 
 

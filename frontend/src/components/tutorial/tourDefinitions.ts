@@ -9,10 +9,13 @@ export interface TourDefinition {
 }
 
 export const TOURS: Record<string, TourDefinition> = {
+  // --------------------------------------------------------------------------
+  // 1. JOURNEY OVERVIEW
+  // --------------------------------------------------------------------------
   'getting-started': {
     id: 'getting-started',
-    title: 'Getting Started with HORIZON',
-    description: 'A 60-second introduction to exploring NASA SPHEREx infrared observations and time-domain astronomy.',
+    title: 'Welcome to SPHEREx HORIZON',
+    description: 'A quick tour of the continuous storytelling Journey, 3D interactive instruments, and dedicated scientific workspaces.',
     steps: [
       {
         element: 'body',
@@ -24,51 +27,142 @@ export const TOURS: Record<string, TourDefinition> = {
         },
       },
       {
-        element: '[data-tour="nav-explore"]',
+        element: '[data-tour="navigation-header"]',
         popover: {
-          title: '🔭 1. All-Sky & Spectral Explorer',
-          description: 'Navigate the real sky atlas with Aladin Lite, search challenge targets, inspect Gaia DR3 vectors, and slide through 102 near-infrared channels.',
+          title: '🛰️ Main Navigation & 5 Storytelling Chapters',
+          description: 'Travel through five continuous chapters: Home (Meet the Spacecraft), Explore (Celestial Universe), Time Machine (Multi-Epoch Motion), Labs (Image Subtraction & Discovery), and Mission (Observatory & Training).',
           side: 'bottom',
         },
       },
       {
-        element: '[data-tour="nav-timemachine"]',
+        element: '[data-tour="chapter-progress-nav"]',
         popover: {
-          title: '⏳ 2. Time Machine (Core Challenge)',
-          description: 'Travel through two years of SPHEREx passes. Play multi-date observations like a movie, compare epochs side-by-side or in blink mode, and watch high-proper-motion targets move.',
-          side: 'bottom',
-        },
-      },
-      {
-        element: '[data-tour="nav-discovery"]',
-        popover: {
-          title: '🔬 3. Discovery Lab & Light Curves',
-          description: 'Run automated DAOStarFinder point-source centroiding, perform image subtraction, analyze Mira variable light curves, and record verified finds to your personal Discovery Journal.',
-          side: 'bottom',
-        },
-      },
-      {
-        element: '[data-tour="nav-mission"]',
-        popover: {
-          title: '🚀 4. Observatory & Missions',
-          description: 'Inspect the 3D SPHEREx spacecraft model, launch guided astronomy missions, and train your eyes to spot spectral color oddities in the interactive simulation.',
-          side: 'bottom',
+          title: '📍 Chapter Progress Navigator',
+          description: 'Track your current position in the Journey or click any chapter number (01 to 05) to smoothly glide to that section of the sky.',
+          side: 'left',
         },
       },
     ],
   },
 
+  // --------------------------------------------------------------------------
+  // 2. SKY EXPLORER (Aladin Lite v3 WebGL)
+  // --------------------------------------------------------------------------
+  'sky-explorer': {
+    id: 'sky-explorer',
+    title: 'Sky Explorer Guide',
+    description: 'Learn how to navigate the full celestial sphere with Aladin Lite v3 WebGL and compare infrared and optical surveys.',
+    targetRoute: '/explore',
+    steps: [
+      {
+        element: '[data-tour="sky-map"]',
+        popover: {
+          title: '🔭 Interactive Aladin Lite v3 Celestial Sphere',
+          description: 'This interactive canvas streams hierarchical celestial tiles (HiPS) directly from NASA/IPAC IRSA and CDS. Click and drag to pan across the celestial sphere, and scroll to zoom into deep space.',
+          side: 'bottom',
+        },
+      },
+      {
+        element: '[data-tour="sky-survey-select"]',
+        popover: {
+          title: '🛰️ Multi-Wavelength Survey Layers',
+          description: 'Switch between SPHEREx DR1 all-sky infrared, 2MASS near-infrared, AllWISE mid-infrared, and DSS2 optical surveys. Compare how cool brown dwarfs and dust-enshrouded protostars invisible in optical light shine brightly in infrared wavelengths.',
+          side: 'bottom',
+        },
+      },
+      {
+        element: '[data-tour="sky-quickjump"]',
+        popover: {
+          title: '🎯 Challenge Targets & Quick Jump',
+          description: 'Instantly center the telescope on any of the 5 canonical NASA challenge targets: Barnard’s Star, WISE 0855, Epsilon Indi B, RW Aurigae, or R Draconis.',
+          side: 'bottom',
+        },
+      },
+      {
+        element: '[data-tour="sky-target-search"]',
+        popover: {
+          title: '🔍 Coordinate & Object Resolver',
+          description: 'Enter any celestial coordinate (Right Ascension & Declination in degrees or HMS/DMS) or search any celestial object designation via SIMBAD and NED.',
+          side: 'bottom',
+        },
+      },
+      {
+        element: '[data-tour="sky-inspect-button"]',
+        popover: {
+          title: '🔬 Inspect in Object Explorer',
+          description: 'Click this action to seamlessly open the selected target in the Object Explorer to examine calibrated FITS cutouts, pixel statistics, and Gaia DR3 proper motion vectors.',
+          side: 'top',
+        },
+      },
+    ],
+  },
+
+  // --------------------------------------------------------------------------
+  // 3. OBJECT EXPLORER (Target Investigation & FITS Cutouts)
+  // --------------------------------------------------------------------------
+  'object-explorer': {
+    id: 'object-explorer',
+    title: 'Object Explorer Guide',
+    description: 'Investigate individual cosmic targets, explore standardized North-up astronomical cutouts, and inspect multi-wavelength catalogs.',
+    targetRoute: '/objects',
+    steps: [
+      {
+        element: '[data-tour="astronomical-viewer"]',
+        popover: {
+          title: '🔭 Standardized Astronomical FITS Cutout',
+          description: 'Authentic SPHEREx Level 2 FITS observation reprojected to a celestial tangent grid with standard astronomical orientation: North UP, East LEFT. The compass reticle shows celestial orientation.',
+          side: 'bottom',
+        },
+      },
+      {
+        element: '[data-tour="viewer-fov"]',
+        popover: {
+          title: '🔍 Configurable Field of View (FOV)',
+          description: 'Switch between 2′ (120″ close-up), 5′, 10′, 15′ (standard survey field), and 30′ wide fields. Each cutout is extracted directly from genuine calibrated FITS arrays.',
+          side: 'bottom',
+        },
+      },
+      {
+        element: '[data-tour="viewer-stretch"]',
+        popover: {
+          title: '📊 Non-Linear Normalization (Asinh)',
+          description: 'Asinh stretch preserves faint diffuse structures and diffraction wings without saturating bright stellar cores. You can also select Linear, Sqrt, or Log stretches.',
+          side: 'bottom',
+        },
+      },
+      {
+        element: '[data-tour="viewer-astrometry"]',
+        popover: {
+          title: '🧭 Gaia DR3 Proper Motion & Astrometry',
+          description: 'Examine high-precision Gaia DR3 proper motion vectors (mas/yr) and epoch-aware coordinate propagation. For fast-moving targets like Barnard’s Star (10.39″/yr), notice the substantial displacement across annual observation baselines.',
+          side: 'top',
+        },
+      },
+      {
+        element: '[data-tour="object-spectra-link"]',
+        popover: {
+          title: '🌈 Explore 102 Spectral Channels',
+          description: 'Jump directly to the Spectral Explorer to examine this target across all 102 near-infrared channels and extract its calibrated surface brightness profile (MJy/sr).',
+          side: 'top',
+        },
+      },
+    ],
+  },
+
+  // --------------------------------------------------------------------------
+  // 4. SPECTRAL EXPLORER (102-Band Near-Infrared Cube)
+  // --------------------------------------------------------------------------
   'spectral-explorer': {
     id: 'spectral-explorer',
     title: 'Spectral Explorer Guide',
     description: 'Learn how to navigate the 102 SPHEREx infrared channels and extract scientific spectra.',
-    targetRoute: '/spectral',
+    targetRoute: '/spectra',
     steps: [
       {
         element: '[data-tour="spectral-viewer"]',
         popover: {
           title: '🌐 Official SPHEREx DR1 HiPS Cube',
-          description: 'This interactive all-sky canvas displays genuine SPHEREx DR1 infrared imagery directly from NASA/IPAC IRSA. Pan and zoom across the Milky Way and deep space.',
+          description: 'This interactive canvas streams genuine SPHEREx DR1 calibrated infrared imagery directly from NASA/IPAC IRSA. Pan and zoom across the Milky Way and deep space.',
           side: 'top',
         },
       },
@@ -84,7 +178,7 @@ export const TOURS: Record<string, TourDefinition> = {
         element: '[data-tour="detector-bands"]',
         popover: {
           title: '📐 Six Linear Variable Filter Arrays',
-          description: 'Quickly jump between the 6 SPHEREx detector arrays (D1 to D6). Notice how different cosmic features appear at different temperatures and wavelengths.',
+          description: 'Quickly jump between the 6 SPHEREx detector arrays (D1 to D6). Notice how interstellar dust extinction, water-ice clouds (3.05 μm), and CO gas/ice (4.67 μm) appear at distinct infrared wavelengths.',
           side: 'top',
         },
       },
@@ -92,7 +186,7 @@ export const TOURS: Record<string, TourDefinition> = {
         element: '[data-tour="spectral-scan"]',
         popover: {
           title: '▶️ Wavelength Scan Playback & Preloader',
-          description: 'Click Play to animate through infrared wavelengths automatically. Notice the scan preparation engine that preloads high-resolution HiPS planes before playback to eliminate white-frame flashes and stuttering.',
+          description: 'Click Play to animate through infrared wavelengths automatically. The scan preparation engine preloads high-resolution HiPS planes before playback to eliminate white-frame flashes and stuttering.',
           side: 'top',
         },
       },
@@ -107,58 +201,12 @@ export const TOURS: Record<string, TourDefinition> = {
     ],
   },
 
-  'object-explorer': {
-    id: 'object-explorer',
-    title: 'Object Explorer Guide',
-    description: 'Investigate individual cosmic targets, explore standardized North-up astronomical cutouts, and inspect multi-wavelength catalogs.',
-    targetRoute: '/objects/barnards-star',
-    steps: [
-      {
-        element: '[data-tour="astronomical-viewer"]',
-        popover: {
-          title: '🔭 Standardized Astronomical Cutout',
-          description: 'Authentic SPHEREx Level 2 FITS observation reprojected to a celestial tangent grid with standard astronomical orientation: North UP, East LEFT.',
-          side: 'bottom',
-        },
-      },
-      {
-        element: '[data-tour="viewer-fov"]',
-        popover: {
-          title: '🔍 Configurable Field of View (FOV)',
-          description: 'Switch between 2′ (120″ close-up), 5′, 10′, 15′ (recommended default), and 30′ wide fields. Each cutout is extracted directly from the full FITS array.',
-          side: 'bottom',
-        },
-      },
-      {
-        element: '[data-tour="viewer-stretch"]',
-        popover: {
-          title: '📊 Non-Linear Normalization (Asinh)',
-          description: 'Asinh stretch preserves faint diffuse structures without saturating bright stellar cores. You can also select Linear, Sqrt, or Log.',
-          side: 'bottom',
-        },
-      },
-      {
-        element: '[data-tour="viewer-smooth"]',
-        popover: {
-          title: '🖼️ Smooth vs Native Pixels',
-          description: 'Toggle between presentation-quality bicubic smoothing and native 6.15″/pixel detector resolution for scientific evaluation.',
-          side: 'bottom',
-        },
-      },
-      {
-        element: '[data-tour="viewer-compass"]',
-        popover: {
-          title: '🧭 Celestial Compass & Scale Bar',
-          description: 'Standard celestial orientation indicators (N ↑, E ←) and physical angular scale bars provide authentic astronomical context.',
-          side: 'top',
-        },
-      },
-    ],
-  },
-
+  // --------------------------------------------------------------------------
+  // 5. TIME MACHINE (NASA Challenge Core Multi-Epoch Comparison)
+  // --------------------------------------------------------------------------
   'time-machine': {
     id: 'time-machine',
-    title: 'Time Machine Tour (NASA Challenge)',
+    title: 'Time Machine Tour (Core NASA Challenge)',
     description: 'Master multi-epoch time-domain observation playback, comparison modes, and motion tracking.',
     targetRoute: '/time-machine',
     steps: [
@@ -195,16 +243,19 @@ export const TOURS: Record<string, TourDefinition> = {
         },
       },
       {
-        element: '[data-tour="display-stretch"]',
+        element: '[data-tour="time-telemetry-motion"]',
         popover: {
-          title: '🎨 Display Palette & Asinh Stretch',
-          description: 'Select between Grayscale, Inferno, Viridis, or Magma, and toggle smooth display interpolation for presentation while preserving raw arrays.',
-          side: 'bottom',
+          title: '🧭 Astrometric Telemetry & Proper Motion',
+          description: 'Inspect baseline duration, Gaia DR3 annual proper motion vectors (mas/yr), catalog-predicted displacement versus independently measured image shifts, and detection flags.',
+          side: 'left',
         },
       },
     ],
   },
 
+  // --------------------------------------------------------------------------
+  // 6. DISCOVERY LAB (DAOStarFinder & Image Subtraction)
+  // --------------------------------------------------------------------------
   'discovery-lab': {
     id: 'discovery-lab',
     title: 'Discovery Lab & Source Detection',
@@ -228,6 +279,14 @@ export const TOURS: Record<string, TourDefinition> = {
         },
       },
       {
+        element: '[data-tour="stacking-controls"]',
+        popover: {
+          title: '📦 Scientific Co-Addition Stacking',
+          description: 'Combine multiple observation frames of the same field to improve signal-to-noise ratio (S/N) and verify faint candidate detections against background noise fluctuations.',
+          side: 'top',
+        },
+      },
+      {
         element: '[data-tour="journal-form"]',
         popover: {
           title: '📝 Log to Discovery Journal',
@@ -238,63 +297,51 @@ export const TOURS: Record<string, TourDefinition> = {
     ],
   },
 
-  'sky-explorer': {
-    id: 'sky-explorer',
-    title: 'Sky Explorer Guide',
-    description: 'Explore the full celestial sphere with Aladin Lite v3 WebGL and official multi-wavelength survey layers.',
-    targetRoute: '/explore',
+  // --------------------------------------------------------------------------
+  // 7. DISCOVERY JOURNAL (Saved Discoveries & Research Records)
+  // --------------------------------------------------------------------------
+  'discovery-journal': {
+    id: 'discovery-journal',
+    title: 'Discovery Journal Guide',
+    description: 'Manage saved astronomical investigations, review candidate classification tags, and export research findings.',
+    targetRoute: '/discoveries',
     steps: [
       {
-        element: 'body',
+        element: '[data-tour="journal-list"]',
         popover: {
-          title: '🌌 Aladin Lite v3 Celestial Sphere',
-          description: 'Pan, zoom, and explore the entire night sky using WebGL-accelerated CDS hierarchical HiPS tiles streamed from NASA/IPAC IRSA.',
-          side: 'bottom',
-          align: 'center',
-        },
-      },
-      {
-        element: '[data-tour="aladin-container"]',
-        popover: {
-          title: '🔭 Interactive Sky Canvas',
-          description: 'Click and drag to pan across the celestial sphere. Use scroll wheel or zoom controls to inspect stars, galaxies, and diffuse interstellar emission.',
-          side: 'top',
-        },
-      },
-      {
-        element: '[data-tour="survey-selector"]',
-        popover: {
-          title: '🛰️ Multi-Wavelength Survey Layers',
-          description: 'Switch between SPHEREx DR1 all-sky infrared, 2MASS near-infrared, AllWISE mid-infrared, and DSS2 optical surveys to compare celestial views.',
+          title: '📓 Saved Scientific Investigations',
+          description: 'Review your logged investigations, including target coordinates, observation dates, signed difference cutouts, and user confidence assessments.',
           side: 'bottom',
         },
       },
       {
-        element: '[data-tour="target-quickjump"]',
+        element: '[data-tour="journal-filter"]',
         popover: {
-          title: '🎯 Challenge Targets & Quick Jump',
-          description: 'Instantly center the telescope on any of the 5 canonical challenge targets or search SIMBAD / NED for any astronomical coordinate.',
+          title: '🏷️ Filter by Object & Classification',
+          description: 'Filter saved entries by challenge target or candidate type (e.g. High Proper Motion, Photometric Variable, Transient Candidate).',
+          side: 'bottom',
+        },
+      },
+      {
+        element: '[data-tour="journal-export"]',
+        popover: {
+          title: '💾 Export Research Data',
+          description: 'Export all saved investigations to standardized CSV or JSON formats for external astronomical analysis and scientific verification.',
           side: 'bottom',
         },
       },
     ],
   },
 
+  // --------------------------------------------------------------------------
+  // 8. LIGHT CURVES (Time-Series Photometry)
+  // --------------------------------------------------------------------------
   'light-curves': {
     id: 'light-curves',
     title: 'Photometric Light Curves Guide',
     description: 'Analyze time-series photometric variability across multiple SPHEREx observation dates.',
     targetRoute: '/light-curves',
     steps: [
-      {
-        element: 'body',
-        popover: {
-          title: '📈 Multi-Epoch Photometry',
-          description: 'Explore calibrated surface brightness and flux variations over time for variable stars, pulsating giants, and moving brown dwarfs.',
-          side: 'bottom',
-          align: 'center',
-        },
-      },
       {
         element: '[data-tour="light-curve-target"]',
         popover: {
@@ -307,13 +354,24 @@ export const TOURS: Record<string, TourDefinition> = {
         element: '[data-tour="light-curve-chart"]',
         popover: {
           title: '📊 Photometric Flux Chart',
-          description: 'Interactive time-series chart showing calibrated flux (MJy/sr) against observation date (MJD / UTC) with uncertainty error bars.',
+          description: 'Interactive time-series chart showing calibrated flux (MJy/sr) against observation date (MJD / UTC) with uncertainty error bars. Notice the periodic pulsation amplitude for Mira variables.',
+          side: 'top',
+        },
+      },
+      {
+        element: '[data-tour="light-curve-provenance"]',
+        popover: {
+          title: '🔬 Scientific Limitations & Data Provenance',
+          description: 'Review documented photometric extraction aperture radii, background subtraction parameters, and band-dependent calibration limits.',
           side: 'top',
         },
       },
     ],
   },
 
+  // --------------------------------------------------------------------------
+  // 9. GUIDED MISSIONS
+  // --------------------------------------------------------------------------
   'missions': {
     id: 'missions',
     title: 'Guided Astronomy Missions Guide',
@@ -321,25 +379,27 @@ export const TOURS: Record<string, TourDefinition> = {
     targetRoute: '/missions',
     steps: [
       {
-        element: 'body',
+        element: '[data-tour="missions-catalog"]',
         popover: {
           title: '🚀 Citizen Science Missions',
           description: 'Choose a scientific mission to investigate: Planet Nine Search, Cold Brown Dwarf Hunter, Young Stellar Object Flare, or Supernova Anomaly.',
           side: 'bottom',
-          align: 'center',
         },
       },
       {
-        element: '[data-tour="mission-cards"]',
+        element: '[data-tour="mission-briefing"]',
         popover: {
-          title: '📋 Mission Briefing & Objectives',
-          description: 'Each mission provides real coordinates, target metadata, and step-by-step scientific validation criteria.',
+          title: '📋 Mission Briefing & Scientific Verification Criteria',
+          description: 'Each mission provides verified coordinates, target metadata, and step-by-step validation criteria connecting you to the genuine scientific tools.',
           side: 'bottom',
         },
       },
     ],
   },
 
+  // --------------------------------------------------------------------------
+  // 10. ANOMALY TRAINING SIMULATION
+  // --------------------------------------------------------------------------
   'training-game': {
     id: 'training-game',
     title: 'Anomaly Training Simulation Guide',
@@ -347,12 +407,11 @@ export const TOURS: Record<string, TourDefinition> = {
     targetRoute: '/mission/training',
     steps: [
       {
-        element: 'body',
+        element: '[data-tour="training-canvas"]',
         popover: {
-          title: '🎮 Infrared Anomaly Training',
-          description: 'Interactive educational simulation designed to train human eyes to recognize subtle infrared wavelength variations, proper motion dipoles, and cosmic ray hits.',
+          title: '🎮 Infrared Anomaly Training Simulation',
+          description: 'Interactive educational simulation designed to train human eyes to recognize subtle infrared wavelength variations, proper motion dipoles, and cosmic ray hits before conducting real research.',
           side: 'bottom',
-          align: 'center',
         },
       },
     ],

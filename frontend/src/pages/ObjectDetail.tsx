@@ -212,6 +212,7 @@ export const ObjectDetail: React.FC = () => {
           {tabs.map((t) => (
             <button
               key={t.id}
+              data-tour={t.id === 'spectra' ? 'object-spectra-link' : undefined}
               onClick={() => setTab(t.id)}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 cursor-pointer ${
                 tab === t.id
@@ -263,7 +264,7 @@ export const ObjectDetail: React.FC = () => {
 
             {/* Scientific Properties Panel */}
             <div className="space-y-4">
-              <div className="bg-[#111117] border border-[#262635] rounded p-5">
+              <div data-tour="viewer-astrometry" className="bg-[#111117] border border-[#262635] rounded p-5">
                 <h3 className="text-sm font-semibold text-[#F3EFE8] mb-4">Astrometric & Physical Parameters</h3>
                 <dl className="space-y-2.5 text-sm">
                   <div className="flex justify-between items-center border-b border-[#262635]/50 pb-2">

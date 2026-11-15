@@ -207,6 +207,7 @@ export const DiscoveryLab: React.FC = () => {
           </button>
 
           <button
+            data-tour="stacking-controls"
             onClick={() => setActiveMode('stacking')}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${
               activeMode === 'stacking'

@@ -82,7 +82,7 @@ export const MyDiscoveries: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div data-tour="journal-export" className="flex items-center gap-2">
           {discoveries.length > 0 && (
             <Button
               variant="secondary"
@@ -111,17 +111,19 @@ export const MyDiscoveries: React.FC = () => {
           ))}
         </div>
       ) : discoveries.length === 0 ? (
-        <EmptyState
-          icon={<BookOpen className="w-12 h-12" />}
-          title="No discoveries logged yet"
-          description="Investigate astronomical objects in the Discovery Lab, identify candidate moving or variable features, and save them here."
-          action={{
-            label: 'Launch Discovery Lab',
-            onClick: () => navigate('/discovery-lab'),
-          }}
-        />
+        <div data-tour="journal-list">
+          <EmptyState
+            icon={<BookOpen className="w-12 h-12" />}
+            title="No discoveries logged yet"
+            description="Investigate astronomical objects in the Discovery Lab, identify candidate moving or variable features, and save them here."
+            action={{
+              label: 'Launch Discovery Lab',
+              onClick: () => navigate('/discovery-lab'),
+            }}
+          />
+        </div>
       ) : (
-        <div className="space-y-4">
+        <div data-tour="journal-list" className="space-y-4">
           {discoveries.map((disc) => (
             <div
               key={disc.id}

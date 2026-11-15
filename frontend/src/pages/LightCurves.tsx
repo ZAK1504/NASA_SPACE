@@ -137,7 +137,7 @@ export const LightCurves: React.FC = () => {
         </div>
 
         {/* Target Buttons */}
-        <div className="flex flex-wrap gap-2">
+        <div data-tour="light-curve-target" className="flex flex-wrap gap-2">
           {TARGETS.map((t) => (
             <button
               key={t.id}
@@ -167,7 +167,7 @@ export const LightCurves: React.FC = () => {
       ) : (
         <>
           {/* Main Chart Card */}
-          <div className="bg-[#111117] rounded-xl border border-[#262635] p-6 shadow-xl space-y-4">
+          <div data-tour="light-curve-chart" className="bg-[#111117] rounded-xl border border-[#262635] p-6 shadow-xl space-y-4">
             {/* Top Toolbar */}
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#262635]/60 pb-4">
               <div>
@@ -369,7 +369,7 @@ export const LightCurves: React.FC = () => {
             </div>
 
             {/* Scientific Diagnostics & Key Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+            <div data-tour="light-curve-provenance" className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
               <div className="bg-[#08080C] p-3 rounded-lg border border-[#262635]">
                 <div className="text-[10px] uppercase font-mono text-[#9E9AA7]">Variability Amplitude (Δm)</div>
                 <div className="text-xl font-bold font-mono text-[#F3B85B] mt-1">{data.amplitude_mag.toFixed(2)} mag</div>

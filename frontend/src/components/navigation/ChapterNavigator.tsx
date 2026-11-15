@@ -33,6 +33,7 @@ export const ChapterNavigator: React.FC<ChapterNavigatorProps> = ({
 
   return (
     <aside
+      data-tour="chapter-progress-nav"
       className="chapter-navigator fixed right-4 sm:right-6 md:right-8 top-1/2 -translate-y-1/2 z-30 hidden lg:flex flex-col items-end pointer-events-auto select-none pr-1"
       aria-label="Chapter Navigator"
     >

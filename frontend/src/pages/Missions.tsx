@@ -69,7 +69,7 @@ export const Missions: React.FC = () => {
         </button>
 
         {/* Mission Header */}
-        <div className="bg-[#111117] border border-[#262635] rounded p-6 mb-6">
+        <div data-tour="mission-briefing" className="bg-[#111117] border border-[#262635] rounded p-6 mb-6">
           <div className="flex items-center justify-between mb-3">
             <span className="font-mono text-xs text-[#F4A272]">{activeMission.subtitle}</span>
             <Badge variant={activeMission.difficulty === 'beginner' ? 'green' : 'amber'}>
@@ -237,7 +237,7 @@ export const Missions: React.FC = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div data-tour="missions-catalog" className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {missions.map((mission) => (
           <div
             key={mission.id}

@@ -1692,3 +1692,40 @@ html.js-reveal .rv.in {
   );
   pointer-events: none;
 }
+
+/* ============================================================
+   ANIMATED SNAKE RIBBONS (INTER-CHAPTER SEPARATORS)
+   ============================================================ */
+.snake-ribbon-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.snake-ribbon-svg {
+  display: block;
+  animation: snake-ribbon-flow 14s linear infinite;
+  transform: translateZ(0);
+}
+
+.snake-ribbon-svg.still {
+  animation: none !important;
+}
+
+@keyframes snake-ribbon-flow {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-340px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .snake-ribbon-svg {
+    animation: none !important;
+  }
+}
+

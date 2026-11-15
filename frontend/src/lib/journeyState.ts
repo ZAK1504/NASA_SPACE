@@ -11,6 +11,7 @@ export type TransitionDirection = "enter" | "return";
 export interface TransitionPayload {
   direction: TransitionDirection;
   path: string;
+  originChapter?: string;
   onNavigate: () => void;
 }
 
@@ -101,6 +102,7 @@ export function travelToWorkspace(
     activeListener({
       direction: "enter",
       path,
+      originChapter,
       onNavigate: performNavigation,
     });
   } else {
@@ -131,6 +133,9 @@ export function travelBackToJourney(
   navigate: NavigateFunction,
   defaultChapter = "home"
 ): void {
+  const saved = getJourneyReturnState();
+  const originChapter = saved?.originChapter || defaultChapter;
+
   const performNavigation = () => {
     returnToJourney(navigate, defaultChapter);
   };
@@ -138,7 +143,8 @@ export function travelBackToJourney(
   if (activeListener) {
     activeListener({
       direction: "return",
-      path: "/#" + (getJourneyReturnState()?.originChapter || defaultChapter),
+      path: "/#" + originChapter,
+      originChapter,
       onNavigate: performNavigation,
     });
   } else {

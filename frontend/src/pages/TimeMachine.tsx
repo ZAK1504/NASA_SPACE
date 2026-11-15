@@ -723,7 +723,7 @@ export const TimeMachine: React.FC = () => {
         {/* Right Column: Observation Details, Astrometry Context & Metadata (~35% width) */}
         <div className="lg:col-span-4 flex flex-col space-y-4">
           {/* 1. Observation Epoch Details Card */}
-          <div className="bg-[#111117] border border-[#262635] rounded-xl p-4 shadow-lg space-y-3">
+          <div data-tour="time-telemetry-motion" className="bg-[#111117] border border-[#262635] rounded-xl p-4 shadow-lg space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-[#262635]">
               <span className="text-xs font-semibold text-[#F3EFE8]">Observation Telemetry</span>
               <Badge variant={manifest && manifest.total_frames >= 2 ? "green" : "blue"}>

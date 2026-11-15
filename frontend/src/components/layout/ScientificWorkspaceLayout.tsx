@@ -39,7 +39,7 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { startTour } = useGuidedTour();
+  const { startTour, shouldAutoStart } = useGuidedTour();
 
   // CRITICAL: Ensure every newly opened dedicated workspace always starts at the top
   React.useEffect(() => {
@@ -52,10 +52,6 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
     document.body.scrollTop = 0;
   }, [location.pathname]);
 
-  const handleBackToJourney = () => {
-    travelBackToJourney(navigate, defaultChapter);
-  };
-
   // Determine route-specific tour ID
   const getResolvedTourId = (): string => {
     if (tourId) return tourId;
@@ -66,10 +62,29 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
     if (path.includes("/time") || workspaceType === "time-machine") return "time-machine";
     if (path.includes("/discovery") || activeTool === "discovery") return "discovery-lab";
     if (path.includes("/light-curves") || activeTool === "light-curves") return "light-curves";
-    if (path.includes("/discoveries")) return "discovery-lab";
+    if (path.includes("/discoveries") || activeTool === "discoveries") return "discovery-journal";
     if (path.includes("/missions") || path === "/mission") return "missions";
     if (path.includes("/training") || path === "/game") return "training-game";
     return "getting-started";
+  };
+
+  // Automatic first-visit tutorial introduction (delayed until travel overlay completes)
+  React.useEffect(() => {
+    const resolvedId = getResolvedTourId();
+    if (!resolvedId || resolvedId === "getting-started") return;
+
+    if (!shouldAutoStart(resolvedId)) return;
+
+    // Wait ~1100ms for travel transition to finish and elements to mount
+    const autoTimer = setTimeout(() => {
+      startTour(resolvedId, false);
+    }, 1100);
+
+    return () => clearTimeout(autoTimer);
+  }, [location.pathname]);
+
+  const handleBackToJourney = () => {
+    travelBackToJourney(navigate, defaultChapter);
   };
 
   return (
@@ -173,10 +188,10 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
           </div>
         )}
 
-        {/* Right: Page-Specific Tour Button */}
+        {/* Right: Page-Specific Tour Button (Manual replay always launches) */}
         <div className="flex items-center gap-3">
           <button
-            onClick={() => startTour(getResolvedTourId())}
+            onClick={() => startTour(getResolvedTourId(), true)}
             className="text-xs font-mono text-white/80 hover:text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full border border-white/10 hover:border-[var(--accent)] transition-all flex items-center gap-1.5 cursor-pointer"
             title={`Start ${title} guided tour`}
           >
