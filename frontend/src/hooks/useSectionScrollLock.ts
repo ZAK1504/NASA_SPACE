@@ -42,6 +42,9 @@ export function useSectionScrollLock({
   const chaptersRef = useRef(chapters);
   chaptersRef.current = chapters;
 
+  const onChapterChangeRef = useRef(onChapterChange);
+  onChapterChangeRef.current = onChapterChange;
+
   const accumulatedDeltaRef = useRef(0);
   const clearDeltaTimerRef = useRef<number | null>(null);
   const quietTimerRef = useRef<number | null>(null);
@@ -51,6 +54,10 @@ export function useSectionScrollLock({
 
   useEffect(() => {
     if (!enabled) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      (window as any).__isJourneyScrollLocked = false;
+      return;
+    }
 
     (window as any).__isJourneyScrollLocked = true;
 
@@ -111,7 +118,7 @@ export function useSectionScrollLock({
       stateRef.current = "TRANSITIONING";
       fixedDestinationIndexRef.current = safeIdx;
       activeChapterRef.current = targetId;
-      onChapterChange?.(targetId);
+      onChapterChangeRef.current?.(targetId);
 
       const targetY = getChapterScrollTarget(targetId);
 
@@ -248,7 +255,7 @@ export function useSectionScrollLock({
       const { top, height } = getChapterBounds(currentChapterId);
       const viewportHeight = window.innerHeight;
       const scrollY = window.scrollY;
-      const isTallChapter = height > viewportHeight + 40;
+      const isTallChapter = currentChapterId === "about" || height > viewportHeight * 1.6;
 
       if (isTallChapter) {
         const maxScrollInChapter = top + height - viewportHeight;
@@ -334,7 +341,7 @@ export function useSectionScrollLock({
         const viewportHeight = window.innerHeight;
         const scrollY = window.scrollY;
 
-        const isTallChapter = height > viewportHeight + 40;
+        const isTallChapter = currentChapterId === "about" || height > viewportHeight * 1.6;
         if (isTallChapter) {
           const maxScrollInChapter = top + height - viewportHeight;
           if (direction > 0 && scrollY < maxScrollInChapter - 20) return;
@@ -385,7 +392,7 @@ export function useSectionScrollLock({
       delete (window as any).__journeyNavigateToChapter;
       delete (window as any).__resetJourneyScrollState;
     };
-  }, [enabled, onChapterChange]);
+  }, [enabled]);
 }
 
 export default useSectionScrollLock;
