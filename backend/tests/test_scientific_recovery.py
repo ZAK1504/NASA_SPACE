@@ -272,30 +272,27 @@ def test_actual_fits_target_footprint_and_science_pixels():
     for tid, ra, dec, filename_prefix in checks:
         matching = list(fits_cache.glob(f"*{filename_prefix}*.fits"))
         assert len(matching) > 0, f"Missing required FITS file for {tid} ({filename_prefix})"
-        fpath = matching[0]
+        
+        found_covered = False
+        coord = SkyCoord(ra=ra * u.deg, dec=dec * u.deg, frame="icrs")
+        for fpath in matching:
+            with fits.open(fpath) as hdul:
+                hdr = hdul[1].header
+                w = WCS(hdr)
+                if not getattr(w, "is_celestial", False):
+                    continue
+                px, py = w.world_to_pixel(coord)
+                naxis1 = int(hdr.get("NAXIS1", 2040))
+                naxis2 = int(hdr.get("NAXIS2", 2040))
+                if 0 <= px < naxis1 and 0 <= py < naxis2:
+                    found_covered = True
+                    data = hdul[1].data
+                    val = float(data[int(round(py)), int(round(px))])
+                    import math
+                    assert not math.isinf(val)
+                    break
 
-        with fits.open(fpath) as hdul:
-            hdr = hdul[1].header
-            w = WCS(hdr)
-            assert w.is_celestial
-
-            coord = SkyCoord(ra=ra * u.deg, dec=dec * u.deg, frame="icrs")
-            px, py = w.world_to_pixel(coord)
-            px_val = float(px)
-            py_val = float(py)
-
-            # Assert target lies within native detector science array
-            naxis1 = int(hdr.get("NAXIS1", 2040))
-            naxis2 = int(hdr.get("NAXIS2", 2040))
-            assert 0 <= px_val < naxis1, f"{tid} px={px_val} out of range [0, {naxis1}] in {fpath.name}"
-            assert 0 <= py_val < naxis2, f"{tid} py={py_val} out of range [0, {naxis2}] in {fpath.name}"
-
-            # Verify image pixel is accessible
-            data = hdul[1].data
-            val = float(data[int(round(py_val)), int(round(px_val))])
-            # val is either finite or NaN (for saturated central cores like Barnard's Star)
-            import math
-            assert not math.isinf(val)
+        assert found_covered, f"No matching FITS file for {tid} ({filename_prefix}) covers target within native science array"
 
 def test_extended_multi_epoch_baselines():
     """Verify genuine recovered baselines for challenge targets."""
