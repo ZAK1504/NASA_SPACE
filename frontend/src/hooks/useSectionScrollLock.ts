@@ -29,6 +29,10 @@ export function useSectionScrollLock({
   const accumulatedDeltaRef = useRef(0);
   const clearDeltaTimerRef = useRef<number | null>(null);
   const scrollSettleTimerRef = useRef<number | null>(null);
+  const unlockTimerRef = useRef<number | null>(null);
+
+  const lastScrollYRef = useRef(0);
+  const scrollingDownRef = useRef(true);
 
   useEffect(() => {
     if (!enabled) return;
@@ -50,29 +54,31 @@ export function useSectionScrollLock({
       activeChapterRef.current = targetId;
       onChapterChange?.(targetId);
 
-      const el = document.getElementById(targetId);
-      if (el) {
-        if (window.__lenis) {
-          window.__lenis.scrollTo(el, {
-            offset: -70,
-            duration: 1.15,
-            lock: true,
-            easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-          });
-        } else {
-          const targetY = targetId === "home" ? 0 : Math.max(0, el.offsetTop - 70);
-          window.scrollTo({
-            top: targetY,
-            behavior: "smooth",
-          });
-        }
+      const targetY = getChapterScrollTarget(targetId);
+
+      if (window.__lenis) {
+        window.__lenis.scrollTo(targetY, {
+          duration: 1.15,
+          lock: true,
+          easing: (t: number) => 1 - Math.pow(1 - t, 3.5),
+          onComplete: () => {
+            isLockedRef.current = false;
+            accumulatedDeltaRef.current = 0;
+          },
+        });
+      } else {
+        window.scrollTo({
+          top: targetY,
+          behavior: "smooth",
+        });
       }
 
-      // Unlock after the transition completes smoothly
-      setTimeout(() => {
+      // Safety fallback unlock in case onComplete isn't called or Lenis is disabled
+      if (unlockTimerRef.current) window.clearTimeout(unlockTimerRef.current);
+      unlockTimerRef.current = window.setTimeout(() => {
         isLockedRef.current = false;
         accumulatedDeltaRef.current = 0;
-      }, 1050);
+      }, 1200);
     };
 
     // Helper: get current chapter index from actual scroll position
@@ -94,7 +100,7 @@ export function useSectionScrollLock({
     };
 
     // 1. Halfway Auto-Scroll Detection on Scroll Settle:
-    // If user opens halfway to the next page, automatically scroll down to complete the page arrival!
+    // If user opens halfway to the next page, or scrolls a bit forward, automatically scroll to lock the chapter in view!
     const handleScrollSettle = () => {
       if (isLockedRef.current) return;
 
@@ -111,11 +117,15 @@ export function useSectionScrollLock({
           const span = yBottom - yTop;
           const progress = (scrollY - yTop) / span;
 
-          // If opened halfway (>= 45%), automatically scroll DOWN to lock the next chapter!
-          if (progress >= 0.45) {
+          // User intent: "if i scroll a bit to other page the full page comes"
+          // "if i open half way it should automatically scroll down"
+          if (progress >= 0.45 || (scrollingDownRef.current && progress >= 0.18)) {
+            scrollToChapterIndex(i + 1);
+          } else if (!scrollingDownRef.current && progress <= 0.82) {
+            scrollToChapterIndex(i);
+          } else if (progress >= 0.5) {
             scrollToChapterIndex(i + 1);
           } else {
-            // If less than halfway, snap back to lock current chapter
             scrollToChapterIndex(i);
           }
           break;
@@ -124,11 +134,15 @@ export function useSectionScrollLock({
     };
 
     const onScroll = () => {
+      const currentY = window.scrollY;
+      scrollingDownRef.current = currentY >= lastScrollYRef.current;
+      lastScrollYRef.current = currentY;
+
       if (isLockedRef.current) return;
       if (scrollSettleTimerRef.current) {
         window.clearTimeout(scrollSettleTimerRef.current);
       }
-      scrollSettleTimerRef.current = window.setTimeout(handleScrollSettle, 110);
+      scrollSettleTimerRef.current = window.setTimeout(handleScrollSettle, 120);
     };
 
     // 2. Wheel Event Listener (Mouse Wheel & Trackpad)
@@ -158,10 +172,10 @@ export function useSectionScrollLock({
       }
       clearDeltaTimerRef.current = window.setTimeout(() => {
         accumulatedDeltaRef.current = 0;
-      }, 160);
+      }, 180);
 
       // Trigger threshold: subtle wheel flick or notch initiates smooth page lock
-      const THRESHOLD = 20;
+      const THRESHOLD = 35;
 
       if (Math.abs(accumulatedDeltaRef.current) >= THRESHOLD) {
         const dir = accumulatedDeltaRef.current > 0 ? 1 : -1;

@@ -23,8 +23,8 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
           data-tour="journey-hero"
           className="lg:col-span-6 flex flex-col justify-center"
           style={{
-            transform: `translateY(calc(var(--hero-scroll, 0) * -45px))`,
-            opacity: `calc(1 - var(--hero-scroll, 0) * 1.25)`,
+            transform: `translateY(calc(var(--hero-scroll, 0) * -30px))`,
+            opacity: `calc(1 - var(--hero-scroll, 0) * 1.05)`,
             willChange: "transform, opacity",
             transition: "none",
           }}
@@ -37,11 +37,11 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
             </p>
           </div>
 
-          {/* Massive Display Title */}
+          {/* Massive Display Title with prominent enlarged X */}
           <h1 className="text-6xl sm:text-8xl lg:text-9xl font-extralight tracking-tighter text-white leading-none mb-3 inline-flex items-baseline">
             <span>SPHERE</span>
-            <span className="text-[1.18em] font-light text-white ml-0.5">x</span>
-            <b className="text-[var(--accent)] font-normal">.</b>
+            <span className="text-[1.65em] font-normal text-[var(--accent)] mx-1 inline-block drop-shadow-[0_0_40px_rgba(244,162,114,0.55)]">x</span>
+            <b className="text-[var(--accent)] font-normal text-[0.85em]">.</b>
           </h1>
 
           {/* Subtitle */}
@@ -104,8 +104,8 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
           data-tour="journey-spacecraft"
           className="lg:col-span-6 flex items-center justify-center relative w-full h-[400px] sm:h-[460px] lg:h-[500px] pointer-events-auto select-none"
           style={{
-            transform: `translateX(calc(var(--hero-scroll, 0) * 40px)) translateY(calc(var(--hero-scroll, 0) * 25px)) scale(calc(1 - var(--hero-scroll, 0) * 0.1))`,
-            opacity: `calc(1 - var(--hero-scroll, 0) * 0.7)`,
+            transform: `translateY(calc(var(--hero-scroll, 0) * -20px)) scale(calc(1 - var(--hero-scroll, 0) * 0.08))`,
+            opacity: `calc(1 - var(--hero-scroll, 0) * 1.05)`,
             willChange: "transform, opacity",
             transition: "none",
           }}

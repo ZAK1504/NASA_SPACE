@@ -45,10 +45,14 @@ export const Navbar: React.FC<NavbarProps> = ({
     } else {
       const el = document.getElementById(targetId);
       if (el) {
+        const targetY = targetId === "home" ? 0 : Math.max(0, el.offsetTop - 70);
         if (window.__lenis) {
-          window.__lenis.scrollTo(el, { offset: -70, duration: 1.2 });
+          window.__lenis.scrollTo(targetY, {
+            duration: 1.15,
+            easing: (t: number) => 1 - Math.pow(1 - t, 3.5),
+          });
         } else {
-          el.scrollIntoView({ behavior: "smooth" });
+          window.scrollTo({ top: targetY, behavior: "smooth" });
         }
       }
     }
@@ -78,8 +82,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </svg>
           <span className="font-semibold tracking-tight inline-flex items-baseline">
             <span>SPHERE</span>
-            <span className="text-[1.32em] font-bold leading-none inline-block ml-0.5 text-white">x</span>
-            <span className="text-[var(--accent)] font-light ml-1.5">HORIZON</span>
+            <span className="text-[1.65em] font-black leading-none inline-block mx-0.5 text-[var(--accent)] drop-shadow-[0_0_12px_rgba(244,162,114,0.6)]">x</span>
+            <span className="text-[var(--accent)] font-light ml-1">HORIZON</span>
           </span>
         </a>
 

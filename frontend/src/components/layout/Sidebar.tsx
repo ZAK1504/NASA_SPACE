@@ -36,7 +36,7 @@ export const Sidebar: React.FC = () => {
             <div className="text-sm font-bold text-[#F3EFE8] tracking-widest flex items-center gap-1.5">
               <span className="inline-flex items-baseline">
                 <span>SPHERE</span>
-                <span className="text-[1.28em] font-extrabold text-[var(--accent)] ml-0.5">x</span>
+                <span className="text-[1.55em] font-black text-[var(--accent)] mx-0.5 leading-none">x</span>
               </span>
               <span className="text-[9px] px-1 py-0.2 rounded bg-[#F4A272]/10 text-[#F4A272] border border-[#F4A272]/30 font-mono">
                 DR1

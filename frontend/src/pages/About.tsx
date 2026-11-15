@@ -20,7 +20,7 @@ export const About: React.FC = () => (
       </div>
       <h1 className="text-3xl font-bold text-[#F3EFE8] mb-4 inline-flex items-baseline gap-1">
         <span>About SPHERE</span>
-        <span className="text-[1.32em] font-extrabold text-[var(--accent)] leading-none inline-block">x</span>
+        <span className="text-[1.65em] font-extrabold text-[var(--accent)] leading-none inline-block">x</span>
       </h1>
       <p className="text-[#9E9AA7] leading-relaxed">
         A citizen-science platform for exploring real NASA SPHERE<span className="text-[1.25em] font-bold leading-none inline-block text-[#F3EFE8] ml-0.5">x</span> telescope data.

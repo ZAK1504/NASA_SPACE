@@ -50,10 +50,18 @@ export const JourneyPage: React.FC = () => {
       window.history.replaceState(null, "", newHash);
     }
 
+    const targetY = chapterId === "home" ? 0 : Math.max(0, el.offsetTop - 70);
+
     if (window.__lenis) {
-      window.__lenis.scrollTo(el, { offset: -70, duration: 1.2 });
+      window.__lenis.scrollTo(targetY, {
+        duration: 1.15,
+        easing: (t: number) => 1 - Math.pow(1 - t, 3.5),
+      });
     } else {
-      el.scrollIntoView({ behavior: "smooth" });
+      window.scrollTo({
+        top: targetY,
+        behavior: "smooth",
+      });
     }
   };
 
