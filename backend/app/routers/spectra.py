@@ -1,4 +1,6 @@
 import os
+import re
+import uuid
 import urllib.request
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, Query, Response
@@ -13,6 +15,9 @@ router = APIRouter(prefix="/spectra", tags=["spectra"])
 
 HIPS_CACHE_DIR = settings.CACHE_DIR / "hips"
 HIPS_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+HIPS_DIR_REGEX = re.compile(r"^(Dir)?\d+$")
+HIPS_FILENAME_REGEX = re.compile(r"^Npix\d+(_\d+)?\.(png|fits)$")
 
 IPAC_HIPS_ROOT = "https://irsa.ipac.caltech.edu/data/hips/SPHEREx/spherex_allsky_cube"
 
@@ -85,7 +90,16 @@ def _get_channel_properties_text(channel: int) -> str:
 
 
 def _fetch_and_stream_tile(channel: Optional[int], order: int, dir_val: str, filename: str) -> Response:
-    """Retrieve and cache genuine SPHEREx DR1 HiPS PNG tiles directly from NASA IPAC."""
+    """Retrieve and cache genuine SPHEREx DR1 HiPS PNG tiles directly from NASA IPAC with strict path validation."""
+    if channel is not None and not (1 <= channel <= 102):
+        raise HTTPException(status_code=400, detail="Invalid spectral channel number.")
+    if not (0 <= order <= 10):
+        raise HTTPException(status_code=400, detail="Invalid HiPS order. Must be between 0 and 10.")
+    if not HIPS_DIR_REGEX.match(dir_val):
+        raise HTTPException(status_code=400, detail="Invalid HiPS directory identifier.")
+    if not HIPS_FILENAME_REGEX.match(filename):
+        raise HTTPException(status_code=400, detail="Invalid HiPS tile filename format.")
+
     dir_str = dir_val if dir_val.startswith("Dir") else f"Dir{dir_val}"
     name_clean = filename.split(".")[0]
     if "_" in name_clean:
@@ -94,7 +108,11 @@ def _fetch_and_stream_tile(channel: Optional[int], order: int, dir_val: str, fil
         pix_str = name_clean.replace("Npix", "")
 
     cache_key = f"ch{channel if channel is not None else 'root'}_order{order}_{dir_str}_pix{pix_str}.png"
-    cache_path = HIPS_CACHE_DIR / cache_key
+    cache_path = (HIPS_CACHE_DIR / cache_key).resolve()
+
+    # Enforce strict path jail
+    if not str(cache_path).startswith(str(HIPS_CACHE_DIR.resolve())):
+        raise HTTPException(status_code=400, detail="Invalid tile path traversal attempt.")
 
     if cache_path.exists() and cache_path.stat().st_size > 100:
         return FileResponse(
