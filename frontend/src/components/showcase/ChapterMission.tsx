@@ -59,7 +59,7 @@ export const ChapterMission: React.FC<ChapterMissionProps> = ({ onScrollToTop, o
       numberLabel="05 — YOUR NEXT DISCOVERY"
       displayTitle="MISSION."
       subtitle="The next discovery could be yours."
-      narrative="HORIZON gives students, explorers and citizen scientists the opportunity to investigate genuine astronomical observations and learn how discoveries are made."
+      narrative="sphereXplorer gives students, explorers and citizen scientists the opportunity to investigate genuine astronomical observations and learn how discoveries are made."
       actions={actions}
       visual={<MissionShowcaseVisual />}
     />

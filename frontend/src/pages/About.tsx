@@ -37,10 +37,10 @@ export const About: React.FC<AboutProps> = ({ defaultReturnChapter = "mission" }
     travelToWorkspace(navigate, "/explore", "explorer");
   };
 
-  // Logo Loop Animation Component with Authentic HORIZON Stack
+  // Logo Loop Animation Component with Authentic sphereXplorer Stack
   const LogoLoop = () => {
     return (
-      <div className="logo-loop-container" aria-label="Authentic technologies powering SPHEREx HORIZON">
+      <div className="logo-loop-container" aria-label="Authentic technologies powering sphereXplorer">
         <div className="logo-loop-track-wrapper">
           <div className="logo-loop-track">
             {/* Render logos two times for seamless 50% loop */}
@@ -353,7 +353,7 @@ export const About: React.FC<AboutProps> = ({ defaultReturnChapter = "mission" }
               />
 
               <AnimatedText
-                text="We built HORIZON to bring those opportunities directly into the hands of students, educators, and curious explorers everywhere. Through interactive sky spheres, multi-epoch observation playback, and calibrated photometry tools, we want users to move beyond simply looking at space—and begin asking their own scientific questions."
+                text="We built sphereXplorer to bring those opportunities directly into the hands of students, educators, and curious explorers everywhere. Through interactive sky spheres, multi-epoch observation playback, and calibrated photometry tools, we want users to move beyond simply looking at space—and begin asking their own scientific questions."
                 className="story-paragraph-pro"
                 delay={0.4}
               />

@@ -22,7 +22,7 @@ export const TechnologyMarquee: React.FC = () => {
       </div>
 
       {/* Seamless Infinite Marquee */}
-      <div className="logo-loop-container w-full" aria-label="Technologies used in SPHEREx HORIZON">
+      <div className="logo-loop-container w-full" aria-label="Technologies used in sphereXplorer">
         <div className="logo-loop-track-wrapper">
           <div className="logo-loop-track">
             {/* Primary Track */}

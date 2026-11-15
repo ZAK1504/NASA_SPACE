@@ -31,7 +31,7 @@ export const WhyWeBuilt: React.FC = () => {
               NASA's SPHEREx mission is transforming what an all-sky spectral survey can reveal. By observing the entire celestial sphere across <strong className="text-white font-medium">102 nominal infrared wavelength channels</strong> (0.75 μm – 5.0 μm) and sharing its observations publicly through open science, it provides unprecedented opportunities to investigate cosmic inflation, galaxy evolution, and interstellar biogenic ices.
             </p>
             <p>
-              We built <strong className="text-white font-medium">HORIZON</strong> to bring those opportunities directly into the hands of students, educators, and curious explorers everywhere. Through interactive sky spheres, multi-epoch observation playback, 102-channel spectral cross-sections, and calibrated photometry tools, we want users to move beyond simply looking at space — and begin asking their own scientific questions.
+              We built <strong className="text-white font-medium">sphereXplorer</strong> to bring those opportunities directly into the hands of students, educators, and curious explorers everywhere. Through interactive sky spheres, multi-epoch observation playback, 102-channel spectral cross-sections, and calibrated photometry tools, we want users to move beyond simply looking at space — and begin asking their own scientific questions.
             </p>
           </div>
 

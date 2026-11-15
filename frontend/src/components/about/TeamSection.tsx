@@ -109,7 +109,7 @@ export const TeamSection: React.FC = () => {
               </p>
             </div>
 
-            {/* Contributions to SPHEREx HORIZON */}
+            {/* Contributions to sphereXplorer */}
             <div className="mb-6">
               <h4 className="text-xs font-mono text-[var(--accent)] uppercase tracking-wider mb-3 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[var(--accent)]" />

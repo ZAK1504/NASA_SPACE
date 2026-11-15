@@ -14,14 +14,14 @@ export const TOURS: Record<string, TourDefinition> = {
   // --------------------------------------------------------------------------
   'getting-started': {
     id: 'getting-started',
-    title: 'Welcome to SPHEREx HORIZON',
+    title: 'Welcome to sphereXplorer',
     description: 'An interactive journey through the continuous storytelling chapters, 3D instruments, and dedicated scientific tools.',
     steps: [
       {
         element: '[data-tour="journey-hero"]',
         popover: {
-          title: '🌌 Welcome to SPHEREx HORIZON',
-          description: 'HORIZON lets you explore genuine NASA SPHEREx near-infrared observations, inspect astronomical objects, and investigate how the sky changes over time across 102 spectral bands.',
+          title: '🌌 Welcome to sphereXplorer',
+          description: 'sphereXplorer lets you explore genuine NASA SPHEREx near-infrared observations, inspect astronomical objects, and investigate how the sky changes over time across 102 spectral bands.',
           side: 'bottom',
           align: 'start',
         },
@@ -93,7 +93,7 @@ export const TOURS: Record<string, TourDefinition> = {
         element: '[data-tour="journey-about-section"]',
         popover: {
           title: '👥 Chapter 06: Behind the Horizon',
-          description: 'Meet the team behind SPHEREx HORIZON—Meteor Rizzlers from Kerala, India. Explore verified creator profiles, our 2025 NASA Space Apps Global Finalist journey, why we built the platform, and the open-science tech stack.',
+          description: 'Meet the team behind sphereXplorer—Meteor Rizzlers from Kerala, India. Explore verified creator profiles, our 2025 NASA Space Apps Global Finalist journey, why we built the platform, and the open-science tech stack.',
           side: 'top',
           align: 'center',
         },
@@ -313,7 +313,7 @@ export const TOURS: Record<string, TourDefinition> = {
         element: '[data-tour="comparison-modes"]',
         popover: {
           title: '🔀 Scientific Comparison Modes & Archive Metrics',
-          description: 'Switch between Side-by-Side, Interactive Split Slider, High-Speed Blink Mode, and Cross-Epoch Difference Map. When single-visit, HORIZON honestly displays archive discovery counts and prepared frame status.',
+          description: 'Switch between Side-by-Side, Interactive Split Slider, High-Speed Blink Mode, and Cross-Epoch Difference Map. When single-visit, sphereXplorer honestly displays archive discovery counts and prepared frame status.',
           side: 'bottom',
         },
       },

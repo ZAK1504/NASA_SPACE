@@ -162,11 +162,11 @@ const STORY_CHAPTERS: StoryChapter[] = [
     leadQuote: "Science belongs to anyone with the curiosity to ask and the courage to look.",
     narrative: [
       "The greatest achievement of modern astrophysics is not merely building powerful telescopes—it is ensuring that the universe belongs to everyone. Through NASA's Open Science initiative, genuine SPHEREx observations are delivered freely to the global public.",
-      "We built SPHEREx HORIZON so that students in classrooms, educators in planetariums, and citizen scientists in every corner of the world can directly interact with these genuine observations—without needing expensive institutional software or steep mathematical prerequisites.",
+      "We built sphereXplorer so that students in classrooms, educators in planetariums, and citizen scientists in every corner of the world can directly interact with these genuine observations—without needing expensive institutional software or steep mathematical prerequisites.",
       "Explore the sky in 3D, inspect 102 spectral bands, slide across time epochs, detect new transients, and log your findings in your personal discovery journal. The data is real. The questions are yours. Your journey begins now.",
     ],
     image: "/spherex_dr1_allsky_rgb.png",
-    imageCaption: "SPHEREx HORIZON All-Sky Infrared Panorama — Open to Citizen Scientists Worldwide",
+    imageCaption: "sphereXplorer All-Sky Infrared Panorama — Open to Citizen Scientists Worldwide",
     imageCredit: "Meteor Rizzlers / NASA Space Apps Challenge 2026",
     scienceLinks: [
       { label: "NASA Open Science Principles", url: "https://science.nasa.gov/open-science/" },
@@ -456,7 +456,7 @@ export const CosmicChronicle: React.FC<CosmicChronicleProps> = ({
                   ) : (
                     <div className="flex items-center gap-2 text-xs font-mono text-white/50">
                       <Bookmark className="w-3.5 h-3.5 text-[var(--accent)]" />
-                      <span>The Cosmic Chronicle · SPHEREx HORIZON</span>
+                      <span>The Cosmic Chronicle · sphereXplorer</span>
                     </div>
                   )}
 

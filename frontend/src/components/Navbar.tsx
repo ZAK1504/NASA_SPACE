@@ -73,7 +73,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           className="brand"
           href="#home"
           onClick={handleNavClick("home")}
-          aria-label="SPHEREx HORIZON home"
+          aria-label="sphereXplorer home"
         >
           <svg viewBox="-12 -12 24 24" width="22" height="22" aria-hidden="true">
             <circle r="9" fill="none" stroke="currentColor" strokeWidth="1.2" />
@@ -87,10 +87,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             />
             <circle r="2.2" fill="currentColor" />
           </svg>
-          <span className="font-semibold tracking-tight inline-flex items-baseline">
-            <span>SPHERE</span>
-            <span className="text-[1.65em] font-black leading-none inline-block mx-0.5 text-[var(--accent)] drop-shadow-[0_0_12px_rgba(244,162,114,0.6)]">x</span>
-            <span className="text-[var(--accent)] font-light ml-1">HORIZON</span>
+          <span className="font-semibold tracking-tight inline-flex items-baseline text-base sm:text-lg">
+            <span className="text-[#f3efe8]">sphere</span>
+            <span className="text-[1.35em] font-extrabold leading-none inline-block mx-0.5 text-[var(--accent)] drop-shadow-[0_0_10px_rgba(244,162,114,0.5)]">X</span>
+            <span className="text-[#f3efe8]">plorer</span>
           </span>
         </a>
 

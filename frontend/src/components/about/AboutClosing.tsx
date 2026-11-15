@@ -74,7 +74,7 @@ export const AboutClosing: React.FC<AboutClosingProps> = ({ defaultReturnChapter
 
         {/* Team Signature */}
         <div className="mt-16 pt-8 border-t border-white/10 w-full flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-white/40 gap-4">
-          <span>SPHEREx HORIZON · NASA Space Apps 2026</span>
+          <span>sphereXplorer · NASA Space Apps 2026</span>
           <span className="text-[var(--accent)] font-normal">Meteor Rizzlers · Kerala, India</span>
           <span>Open Science & Authentic Data</span>
         </div>

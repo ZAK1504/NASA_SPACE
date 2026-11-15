@@ -68,7 +68,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ member, onOpenDetail }) => {
           <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 mb-4">
             <div className="flex items-center gap-1.5 text-[10px] font-mono text-[var(--accent)] uppercase tracking-wider mb-1">
               <CheckCircle2 className="w-3 h-3 text-[var(--accent)]" />
-              <span>Key HORIZON Contribution</span>
+              <span>Key sphereXplorer Contribution</span>
             </div>
             <p className="text-xs text-white/80 line-clamp-2">
               {member.contributions[0]}

@@ -24,7 +24,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
     shortBio:
       "Bridging virtual and real-world space science through cutting-edge 3D orbital modeling, real-time spacecraft rendering, and mission architecture.",
     fullBio:
-      "Zakiel leads the Meteor Rizzlers team with a focus on real-time 3D simulation and immersive scientific visualization. In SPHEREx HORIZON, he architected the interactive 3D flight model of the SPHEREx space telescope, designed the cinematic journey visual transitions, and coordinated multi-system integration across frontend and backend services.",
+      "Zakiel leads the Meteor Rizzlers team with a focus on real-time 3D simulation and immersive scientific visualization. In sphereXplorer, he architected the interactive 3D flight model of the SPHEREx space telescope, designed the cinematic journey visual transitions, and coordinated multi-system integration across frontend and backend services.",
     skills: ["3D Modeling", "Real-Time Rendering", "Team Leadership", "Mission Architecture", "System Design"],
     contributions: [
       "Interactive SPHEREx 3D flight model with full drag rotation & PBR materials",
@@ -42,7 +42,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
     shortBio:
       "Specialized in astronomical physics simulations, multi-epoch celestial coordinate alignment, and high-precision API data retrieval.",
     fullBio:
-      "Roshith focuses on the mathematical and computational engines underpinning astronomical discovery. For HORIZON, he engineered the multi-epoch observation alignment logic that enables users to detect proper motion and stellar variability across genuine NASA/IPAC IRSA SPHEREx observations.",
+      "Roshith focuses on the mathematical and computational engines underpinning astronomical discovery. For sphereXplorer, he engineered the multi-epoch observation alignment logic that enables users to detect proper motion and stellar variability across genuine NASA/IPAC IRSA SPHEREx observations.",
     skills: ["Physics Simulation", "API Integration", "Astronomical Data Retrieval", "Orbital Mechanics", "Numerical Computation"],
     contributions: [
       "Multi-epoch observation alignment logic for time-domain transient detection",
@@ -60,7 +60,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
     shortBio:
       "Focused on high-performance backend systems, interactive sky maps, and creating intuitive, elegant interfaces for complex astronomical data.",
     fullBio:
-      "Sanjay bridges scientific computing with accessible, beautiful user interface architecture. In HORIZON, he structured the FastAPI backend service, integrated the CDS Aladin Lite v3 all-sky visualization layer, and designed the responsive HUD interface system with strict performance budgets.",
+      "Sanjay bridges scientific computing with accessible, beautiful user interface architecture. In sphereXplorer, he structured the FastAPI backend service, integrated the CDS Aladin Lite v3 all-sky visualization layer, and designed the responsive HUD interface system with strict performance budgets.",
     skills: ["Full-Stack Architecture", "FastAPI / Python", "React 19 & TypeScript", "UI/UX Architecture", "Aladin Lite Integration"],
     contributions: [
       "FastAPI backend architecture with automated in-memory FITS caching",
@@ -78,7 +78,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
     shortBio:
       "Expert in backend architecture, astronomical data processing, and intelligent conversational agents for interactive science education.",
     fullBio:
-      "Riyan specializes in systems architecture, large-scale astronomical data caching, and AI-assisted scientific discovery. He developed the Cosmic Copilot assistant, designed the Level 2 FITS extraction pipeline, and implemented the 102-channel spectral curve generation algorithms for HORIZON.",
+      "Riyan specializes in systems architecture, large-scale astronomical data caching, and AI-assisted scientific discovery. He developed the Cosmic Copilot assistant, designed the Level 2 FITS extraction pipeline, and implemented the 102-channel spectral curve generation algorithms for sphereXplorer.",
     skills: ["Conversational AI", "Data Processing", "Backend Architecture", "Resource Management", "Spectral Analysis"],
     contributions: [
       "Cosmic Copilot interactive assistant for contextual astronomical guidance",
@@ -96,7 +96,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
     shortBio:
       "Specialized in gamified scientific education, interactive exploration workflows, and compelling visual presentations for public engagement.",
     fullBio:
-      "Shwethin transforms complex astrophysical concepts into engaging, interactive learning experiences. For HORIZON, he designed the guided scientific missions, interactive discovery mechanisms, and educational presentation architecture that make deep-space research intuitive and exciting for all ages.",
+      "Shwethin transforms complex astrophysical concepts into engaging, interactive learning experiences. For sphereXplorer, he designed the guided scientific missions, interactive discovery mechanisms, and educational presentation architecture that make deep-space research intuitive and exciting for all ages.",
     skills: ["Interactive Exploration", "Gamification Design", "Asset Optimization", "Science Communication", "Presentation Design"],
     contributions: [
       "Guided scientific mission walkthroughs and interactive discovery milestones",
@@ -146,10 +146,10 @@ export const JOURNEY_MILESTONES: Milestone[] = [
   {
     year: "2026",
     badge: "THE NEW FRONTIER",
-    title: "SPHEREx HORIZON",
+    title: "sphereXplorer",
     subtitle: "From Planetary Defense to the Deep Infrared Cosmos",
     description:
-      "Returning for the 2026 NASA Space Apps Challenge, we expanded our scientific horizon. Inspired by NASA's upcoming SPHEREx space telescope, we built HORIZON: an all-sky cosmic discovery platform that transforms genuine Level 2 infrared FITS observations into an interactive, time-domain journey across 102 spectral channels.",
+      "Returning for the 2026 NASA Space Apps Challenge, we expanded our scientific horizon. Inspired by NASA's upcoming SPHEREx space telescope, we built sphereXplorer: an all-sky cosmic discovery platform that transforms genuine Level 2 infrared FITS observations into an interactive, time-domain journey across 102 spectral channels.",
     highlights: [
       "Authentic NASA/IPAC IRSA SPHEREx data integration across 102 infrared bands",
       "Multi-epoch time machine revealing stellar motion and photometric variability",

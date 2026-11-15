@@ -51,7 +51,7 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
 
           {/* Narrative */}
           <p className="text-xs sm:text-sm text-[var(--mut)] leading-relaxed mb-6 max-w-lg">
-            SPHEREx observes the universe through infrared light. HORIZON transforms genuine NASA observations
+            SPHEREx observes the universe through infrared light. sphereXplorer transforms genuine NASA observations
             into an interactive journey through the sky, time and scientific discovery.
           </p>
 
