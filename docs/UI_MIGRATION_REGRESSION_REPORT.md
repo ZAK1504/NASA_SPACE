@@ -119,9 +119,38 @@ Following the initial component migration, the navigation architecture was unifi
 5. **`#labs` (Labs):** Consolidated stage with internal sub-tabs `[Discovery | Light Curves]`, nested `[Difference & Stacking | My Discoveries Journal]`, sticky contextual bottom nav, and "Continue to Mission ↓" action.
 6. **`#mission` (Mission):** 3D spacecraft model with OrbitControls, mission specification HUD, star-color anomaly training simulation, guided science missions, and concluding navigation actions. ZERO bottom navigation bar.
 
-### Verification Matrix
-- **Backend Scientific Pytest:** 43 passed, 0 failed in 31.61s (100% pass rate).
-- **Frontend Production Build:** Built in 6.94s with 0 errors (`dist/assets/index-ax8UOQo9.js`, `dist/assets/index-DAYDs76Q.css`).
-- **Interactive Headless Journey:** 10 full-resolution screenshots captured across all sections verifying clean typography, correct sticky bottom bar behaviors, active top nav tracking, and smooth transitions.
-- **Documentation:** Complete architectural guide saved in `docs/CONTINUOUS_SCROLL_ARCHITECTURE.md`.
+---
+
+## 6. Two-Layer Architecture: The HORIZON Journey & Dedicated Scientific Workspaces
+
+Following executive review and direct alignment with **ZENVYX Solutions**' web experience, the architecture was elevated into a two-layer system:
+
+### Layer A: The HORIZON Journey (`/`)
+- A single, continuous, vertically scrolling storytelling journey featuring 5 chapter showcases:
+  1. `01 — THE BEGINNING` | `SPHEREx.`
+  2. `02 — BEYOND THE VISIBLE` | `EXPLORE.`
+  3. `03 — THROUGH SPACE AND TIME` | `REWIND.`
+  4. `04 — THE SCIENCE OF DISCOVERY` | `DISCOVER.`
+  5. `05 — YOUR NEXT DISCOVERY` | `MISSION.`
+- **Right-side Chapter Navigator:** Vertical progress track with `HOME 01`, `EXPLORE 02`, `TIME 03`, `LABS 04`, `MISSION 05` and dynamic orange active indicator.
+- **Strictly Lightweight:** Zero heavy Aladin Lite / 102-band datacubes mounted on `/`. Eliminates WebGL context contention and keeps scrolling pinned at 60 FPS.
+- **No Bottom Navigation:** Bottom navigation is completely absent from the Journey.
+
+### Layer B: Dedicated Scientific Workspaces
+- Dedicated full-page routes (`/explore`, `/objects`, `/spectra`, `/time-machine`, `/discovery-lab`, `/discoveries`, `/light-curves`, `/missions`, `/mission/training`).
+- Universal Scientific Workspace Shell (`ScientificWorkspaceLayout.tsx`):
+  - Sticky top bar with `← Back to Journey` button and active category breadcrumbs.
+  - Contextual bottom navigation only inside Explorer (`[Sky | Object | Spectral]`) and Labs (`[Discovery | Light Curves]`).
+  - Time Machine and Mission workspaces have ZERO bottom navigation.
+- **Lossless Round-Trip Scroll Restoration:** Navigating into a workspace saves originating chapter and exact scroll position. Clicking `← Back to Journey` restores the originating chapter and exact vertical scroll offset.
+
+### Comprehensive Automated Verification Results
+- **Pytest:** 43 passed in 27.72s (100% pass rate).
+- **Vite Build:** 1658 modules transformed, 0 errors, built in 7.05s.
+- **Puppeteer Headless Verification (`scripts/verify_journey.cjs`):**
+  - All 5 chapters verified at offsets: `home` (0px), `explorer` (828px), `time-machine` (1843px), `labs` (2622px), `mission` (3387px).
+  - Round-trip navigation: Explorer -> `/spectra` -> Back to Journey restores `scrollY: 828` at `/#explorer`.
+  - Round-trip navigation: Time Machine -> `/time-machine` -> Back to Journey restores `scrollY: 1843` at `/#time-machine`.
+  - Mobile responsiveness (390 x 844): `scrollWidth: 390`, `clientWidth: 390`, `hasOverflow: false` (Zero horizontal overflow).
+  - Comprehensive architectural guide documented in `docs/JOURNEY_WORKSPACE_ARCHITECTURE.md`.
 

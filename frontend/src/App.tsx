@@ -1,37 +1,69 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ContinuousHorizonApp } from "./pages/ContinuousHorizonApp";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import JourneyPage from "./pages/JourneyPage";
+import SkyExplorerWorkspace from "./pages/workspaces/SkyExplorerWorkspace";
+import ObjectExplorerWorkspace from "./pages/workspaces/ObjectExplorerWorkspace";
+import SpectralExplorerWorkspace from "./pages/workspaces/SpectralExplorerWorkspace";
+import TimeMachineWorkspace from "./pages/workspaces/TimeMachineWorkspace";
+import DiscoveryLabWorkspace from "./pages/workspaces/DiscoveryLabWorkspace";
+import MyDiscoveriesWorkspace from "./pages/workspaces/MyDiscoveriesWorkspace";
+import LightCurvesWorkspace from "./pages/workspaces/LightCurvesWorkspace";
+import MissionsWorkspace from "./pages/workspaces/MissionsWorkspace";
+import TrainingGameWorkspace from "./pages/workspaces/TrainingGameWorkspace";
 
 export function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Continuous Single-Page HORIZON Application */}
-        <Route path="/" element={<ContinuousHorizonApp />} />
-        <Route path="/home" element={<ContinuousHorizonApp />} />
-        <Route path="/explorer" element={<ContinuousHorizonApp />} />
-        <Route path="/explorer/:sub" element={<ContinuousHorizonApp />} />
-        <Route path="/explorer/object/:objectId" element={<ContinuousHorizonApp />} />
-        <Route path="/time" element={<ContinuousHorizonApp />} />
-        <Route path="/time-machine" element={<ContinuousHorizonApp />} />
-        <Route path="/lab" element={<ContinuousHorizonApp />} />
-        <Route path="/lab/:sub" element={<ContinuousHorizonApp />} />
-        <Route path="/labs" element={<ContinuousHorizonApp />} />
-        <Route path="/mission" element={<ContinuousHorizonApp />} />
-        <Route path="/missions" element={<ContinuousHorizonApp />} />
-        <Route path="/missions/:missionId" element={<ContinuousHorizonApp />} />
+        {/* Layer A — The HORIZON Journey (Continuous Storytelling Showcase) */}
+        <Route path="/" element={<JourneyPage />} />
+        <Route path="/home" element={<JourneyPage />} />
 
-        {/* Backward-Compatible Scientific Deep Links */}
-        <Route path="/explore" element={<ContinuousHorizonApp />} />
-        <Route path="/objects" element={<ContinuousHorizonApp />} />
-        <Route path="/objects/:objectId" element={<ContinuousHorizonApp />} />
-        <Route path="/spectra" element={<ContinuousHorizonApp />} />
-        <Route path="/discovery-lab" element={<ContinuousHorizonApp />} />
-        <Route path="/light-curves" element={<ContinuousHorizonApp />} />
-        <Route path="/discoveries" element={<ContinuousHorizonApp />} />
+        {/* Layer B — Dedicated Scientific Workspaces */}
+        {/* 1. Sky Explorer */}
+        <Route path="/explore" element={<SkyExplorerWorkspace />} />
+        <Route path="/explorer/sky" element={<SkyExplorerWorkspace />} />
+        <Route path="/explorer" element={<Navigate to="/explore" replace />} />
 
-        {/* Fallback */}
-        <Route path="*" element={<ContinuousHorizonApp />} />
+        {/* 2. Object Explorer & Detail */}
+        <Route path="/objects" element={<ObjectExplorerWorkspace />} />
+        <Route path="/objects/:objectId" element={<ObjectExplorerWorkspace />} />
+        <Route path="/explorer/object" element={<ObjectExplorerWorkspace />} />
+        <Route path="/explorer/object/:objectId" element={<ObjectExplorerWorkspace />} />
+
+        {/* 3. Spectral Explorer */}
+        <Route path="/spectra" element={<SpectralExplorerWorkspace />} />
+        <Route path="/explorer/spectral" element={<SpectralExplorerWorkspace />} />
+
+        {/* 4. SPHEREx Time Machine */}
+        <Route path="/time-machine" element={<TimeMachineWorkspace />} />
+        <Route path="/time" element={<TimeMachineWorkspace />} />
+
+        {/* 5. Discovery Lab */}
+        <Route path="/discovery-lab" element={<DiscoveryLabWorkspace />} />
+        <Route path="/lab/discovery" element={<DiscoveryLabWorkspace />} />
+        <Route path="/lab" element={<Navigate to="/discovery-lab" replace />} />
+        <Route path="/labs" element={<Navigate to="/discovery-lab" replace />} />
+
+        {/* 6. My Discoveries Journal */}
+        <Route path="/discoveries" element={<MyDiscoveriesWorkspace />} />
+        <Route path="/lab/my-discovery" element={<MyDiscoveriesWorkspace />} />
+
+        {/* 7. Photometric Light Curves */}
+        <Route path="/light-curves" element={<LightCurvesWorkspace />} />
+        <Route path="/lab/light-curves" element={<LightCurvesWorkspace />} />
+
+        {/* 8. Guided Science Missions */}
+        <Route path="/missions" element={<MissionsWorkspace />} />
+        <Route path="/missions/:missionId" element={<MissionsWorkspace />} />
+        <Route path="/mission" element={<MissionsWorkspace />} />
+
+        {/* 9. Training Simulation Mini-Game */}
+        <Route path="/mission/training" element={<TrainingGameWorkspace />} />
+        <Route path="/game" element={<TrainingGameWorkspace />} />
+
+        {/* Fallback to Journey */}
+        <Route path="*" element={<JourneyPage />} />
       </Routes>
     </BrowserRouter>
   );
