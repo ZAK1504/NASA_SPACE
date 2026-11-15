@@ -23,12 +23,13 @@ from app.schemas.comparison_schema import (
     TimeMachineFrame,
     CandidateDetection,
 )
+from app.services.resource_guard import LRUCache, resource_guard
 
 router = APIRouter(prefix="/comparison", tags=["comparison"])
 
-# Fast in-memory cache for computed comparisons
-COMPARISON_CACHE: Dict[str, Dict[str, Any]] = {}
-MANIFEST_CACHE: Dict[str, TimeMachineManifestResponse] = {}
+# Bounded in-memory caches for computed comparisons and manifests
+COMPARISON_CACHE = LRUCache(max_size=50)
+MANIFEST_CACHE = LRUCache(max_size=50)
 
 def _resolve_fits_file_for_obs(
     obs_id: str,
@@ -141,8 +142,9 @@ def compare_observations(req: ComparisonRequest = Body(...)):
         return COMPARISON_CACHE[cache_key]
 
     try:
-        # Resolve FITS files for Epoch 1 and Epoch 2
-        f1 = _resolve_fits_file_for_obs(obs_id_1, target_ra=ra, target_dec=dec, fallback_index=0)
+        with resource_guard.heavy_job():
+            # Resolve FITS files for Epoch 1 and Epoch 2
+            f1 = _resolve_fits_file_for_obs(obs_id_1, target_ra=ra, target_dec=dec, fallback_index=0)
         f2 = _resolve_fits_file_for_obs(obs_id_2, target_ra=ra, target_dec=dec, fallback_index=1)
 
         if f1 is None and f2 is None:
