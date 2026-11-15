@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../../services/api';
 import {
   Sparkles, X, Send, Compass, ArrowRight,
   HelpCircle, Minimize2, MessageSquare, ExternalLink
@@ -62,14 +63,7 @@ export const CosmicCopilot: React.FC = () => {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:8000/api/assistant/query', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: q }),
-      });
-
-      if (!res.ok) throw new Error('Query failed');
-      const data = await res.json();
+      const data = await api.queryAssistant(q);
 
       const copilotMsg: CopilotMessage = {
         id: (Date.now() + 1).toString(),

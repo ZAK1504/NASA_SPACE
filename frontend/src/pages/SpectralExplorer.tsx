@@ -30,12 +30,19 @@ const MOLECULAR_FEATURES = [
   { name: 'Pa-β Hydrogen', wavelength: 1.28, detector: 'D2', desc: 'Paschen-beta emission in accreting young stars like RW Aurigae.' },
 ];
 
+const getApiBase = (): string => {
+  return import.meta.env.VITE_API_BASE_URL || '/api';
+};
+
 const getHipsApiBase = (): string => {
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname || '127.0.0.1';
-    return `http://${host}:8000/api/spectra/hips`;
+  const base = getApiBase();
+  if (base.startsWith('http://') || base.startsWith('https://')) {
+    return `${base}/spectra/hips`;
   }
-  return 'http://127.0.0.1:8000/api/spectra/hips';
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}${base}/spectra/hips`;
+  }
+  return '/api/spectra/hips';
 };
 
 export const SpectralExplorer: React.FC = () => {
@@ -85,10 +92,8 @@ export const SpectralExplorer: React.FC = () => {
     setPreloading(true);
     setIsPreloaded(false);
 
-    const host = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1';
-
     // 1. Audit backend cache status
-    fetch(`http://${host}:8000/api/spectra/hips/preload/status?mode=${scanMode}`)
+    fetch(`${getApiBase()}/spectra/hips/preload/status?mode=${scanMode}`)
       .then((r) => r.json())
       .then((data) => {
         if (!isCancelled) {
@@ -103,7 +108,7 @@ export const SpectralExplorer: React.FC = () => {
 
     validChannels.forEach((ch) => {
       const img = new Image();
-      img.src = `http://${host}:8000/api/spectra/frame/${ch}`;
+      img.src = `${getApiBase()}/spectra/frame/${ch}`;
       img.onload = () => {
         if (!isCancelled) {
           loaded++;
@@ -520,7 +525,7 @@ export const SpectralExplorer: React.FC = () => {
           {viewerMode === 'scan' && !isGap && (
             <div className="relative w-full h-full flex items-center justify-center bg-[#08080C]">
               <img
-                src={`http://${typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1'}:8000/api/spectra/frame/${renderedChannel}`}
+                src={`${getApiBase()}/spectra/frame/${renderedChannel}`}
                 alt={`SPHEREx DR1 Channel ${renderedChannel}`}
                 className="max-w-full max-h-full object-contain select-none"
               />

@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export interface AstronomicalObject {
   id: string;
@@ -531,6 +531,16 @@ export const api = {
       }),
     });
     if (!res.ok) throw new Error('Failed to run image stacking co-addition');
+    return res.json();
+  },
+
+  async queryAssistant(message: string): Promise<{ response: string; actions?: Array<{ label: string; url: string }> }> {
+    const res = await fetch(`${API_BASE_URL}/assistant/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+    if (!res.ok) throw new Error('Assistant query failed');
     return res.json();
   },
 };
