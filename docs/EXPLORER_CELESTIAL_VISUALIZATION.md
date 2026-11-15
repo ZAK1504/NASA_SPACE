@@ -1,59 +1,44 @@
-# SPHEREx HORIZON — 3D Celestial Explorer Visualization
+# SPHEREx HORIZON — Explorer Astronomical Window Visualization
 
 ## Overview
 
-The Chapter 02 (Explorer) showcase features an authentic, interactive 3D celestial sphere rendered via Three.js (`frontend/src/components/showcase/ExplorerShowcaseVisual.tsx`). It replaces legacy flat 2D representations with a full spherical celestial coordinate globe mapped with genuine NASA/IPAC SPHEREx DR1 all-sky infrared imagery.
+The Chapter 02 (Explorer) showcase features an authentic, immersive **Celestial Window Panorama** (`frontend/src/components/showcase/ExplorerShowcaseVisual.tsx`). It replaces the legacy 3D celestial sphere with an art-directed window opening into the real infrared universe, seamlessly dissolving into the surrounding cosmic starfield without artificial planet-like shadows, circular outlines, or patchwork boundaries.
 
 ---
 
-## Technical Architecture
+## 1. Technical Investigation: Root Cause of Previous Sphere Artifacts
 
-### 1. Authentic All-Sky Texture Mapping
-Instead of synthetic noise or generic starfields, the celestial globe is textured with genuine SPHEREx DR1 equirectangular projections derived directly from authentic IPAC HiPS Order 0 FITS tiles located in `backend/data/cache/hips`:
-- **Composite False-Color Map (`spherex_dr1_composite.jpg`):** 3-band astronomical infrared composite (Red = 4.72 µm Array 6 / D6, Green = 1.33 µm Array 2 / D2, Blue = 0.75 µm Array 1 / D1).
-- **Single-Band Spectral Textures:**
-  - `spherex_band_075um.jpg` (Array 1 / D1, 0.75 µm — stellar photospheres and visible/NIR boundary)
-  - `spherex_band_133um.jpg` (Array 2 / D2, 1.33 µm — J-band interstellar extinction penetration)
-  - `spherex_band_236um.jpg` (Array 3 / D3, 2.36 µm — K-band molecular CO/H₂O absorption)
-  - `spherex_band_472um.jpg` (Array 6 / D6, 4.72 µm — cold brown dwarfs and ice bands)
+During the earlier 3D globe experiment, the celestial sphere displayed prominent triangular patches, brightness discontinuities, and texture seams:
 
-The textures are synthesized using `astropy_healpix` Morton bit-deinterleaving, mapping the 12 order 0 HEALPix base diamonds ($N_{\text{side}}=512$) into standard $2048 \times 1024$ equirectangular celestial coordinates ($\text{RA} \in [0^\circ, 360^\circ]$, $\text{Dec} \in [-90^\circ, +90^\circ]$).
+1. **HEALPix Order 0 Diamond Boundaries:** The SPHEREx all-sky survey tiles in `backend/data/cache/hips` are organized in the HEALPix tessellation hierarchy. At Order 0, the entire sky is partitioned into 12 base curvilinear diamonds ($N_{\text{side}}=512$).
+2. **Indexed Palette Interpolation:** Re-projecting 8-bit indexed colormap PNG tiles (`mode: P`) across spherical coordinates produced sharp discontinuities along the 12 base diamond boundaries, appearing as triangular patchwork facets when wrapped on a Three.js `SphereGeometry`.
+3. **Artificial Globe Aesthetic:** Presenting an all-sky infrared celestial map as a physical spinning globe created an artificial planet-like shadow and dark sphere look, conflicting with the feeling of peering outward into deep space.
 
-### 2. Spherical-to-Cartesian Coordinate Projection
-Astronomical targets and coordinate rings are mapped to the 3D sphere ($R = 1.35$) using standard equatorial coordinate transformations:
+---
 
-$$\phi = \frac{\text{RA}_{\text{deg}} \cdot \pi}{180}$$
-$$\theta = \frac{(90 - \text{Dec}_{\text{deg}}) \cdot \pi}{180}$$
+## 2. Architecture of the Celestial Window Panorama
 
-In Three.js right-handed Cartesian space ($+Y$ = North Celestial Pole, $+Z$ = observer forward, $+X$ = right):
+```mermaid
+flowchart LR
+    A["SPHEREx DR1 Infrared Sky\n(2048x1024 Seamless Panorama)"] --> B["High-DPI Canvas 2D Engine\n(Wrapped Horizontal Panning)"]
+    C["Pointer 3D Parallax Tilt\n(rotateX / rotateY Springs)"] --> D["Feathered Dissolve Mask\nradial-gradient(ellipse, black, transparent)"]
+    B --> D
+    E["Canonical Celestial Targets\n(RA / Dec Astrometry)"] --> F["Luminous Beacons & Proper Motion Reticles"]
+    D --> G["Seamless Cosmic Integration\n(0 Rectangular Borders, 0 Circular Rings)"]
+    F --> G
+```
 
-$$x = -R \cdot \sin(\theta) \cdot \cos(\phi)$$
-$$y = R \cdot \cos(\theta)$$
-$$z = R \cdot \sin(\theta) \cdot \sin(\phi)$$
+### Key Technical Achievements
+- **Seamless Feathered Dissolve Mask:** The celestial window uses an elliptical feathered alpha mask (`mask-image: radial-gradient(ellipse 88% 80% at 50% 50%, black 52%, transparent 98%)`), smoothly blending its boundaries into the deep cosmic backdrop without rectangular cards or thick circular borders.
+- **Pointer-Responsive 3D Parallax Tilt:** User pointer movement triggers subtle 3D perspective tilt (`perspective: 1200px`, `rotateX: -4.5°..+4.5°`, `rotateY: -6.5°..+6.5°`), providing depth and spatial immersion.
+- **Draggable Celestial Panning:** Users can click and drag horizontally across all 24 hours of Right Ascension. Idle drift automatically advances the panorama when not interacting.
+- **Equatorial Coordinate Grid:** Coordinate meridians and parallels are projected with precision: Celestial Equator at $\text{Dec} = 0^\circ$ in warm luminous gold (`#F4A272`), Declination parallels ($\pm 30^\circ, \pm 60^\circ$), and the Ecliptic Plane tilted at $23.44^\circ$ in cyan/indigo.
+- **Canonical Target Beacons:** Five canonical science targets (Barnard's Star, WISE 0855, Epsilon Indi B, RW Aurigae, R Draconis) are positioned at their exact celestial coordinates with proper motion drift vectors and interactive HUD inspection cards.
 
-### 3. Coordinate Grids
-- **Celestial Equator ($\text{Dec} = 0^\circ$):** Drawn in subtle amber/gold (`#F4A272`, opacity 0.35) at $y = 0$.
-- **Ecliptic Plane ($23.44^\circ$ obliquity):** Drawn in cyan/indigo (`#818CF8`, opacity 0.28) tilted along the celestial axis to show the plane of the Solar System.
+---
 
-### 4. Canonical Target Beacons & Occlusion Handling
-Five scientifically critical targets are positioned at their exact celestial coordinates:
-1. **Barnard's Star:** $\text{RA} = 269.45^\circ$, $\text{Dec} = +4.74^\circ$ (Fastest proper motion star, $10.39''/\text{yr}$)
-2. **WISE 0855−0714:** $\text{RA} = 133.80^\circ$, $\text{Dec} = -7.25^\circ$ (Coldest known sub-stellar brown dwarf, $\sim 250\text{ K}$)
-3. **Epsilon Indi B:** $\text{RA} = 331.04^\circ$, $\text{Dec} = -56.78^\circ$ (Binary T-dwarf system with methane absorption)
-4. **RW Aurigae:** $\text{RA} = 76.96^\circ$, $\text{Dec} = +30.40^\circ$ (Young stellar object with disrupted protoplanetary disk)
-5. **R Draconis:** $\text{RA} = 248.17^\circ$, $\text{Dec} = +66.70^\circ$ (Mira-type pulsating variable, 314-day period)
+## 3. Interactive Action Previews
 
-**Occlusion Logic:**
-During rotation, each beacon's world normal is tested against the camera vector:
-$$\mathbf{toCam} = \frac{\mathbf{camPos} - \mathbf{worldPos}}{\|\mathbf{camPos} - \mathbf{worldPos}\|}$$
-$$\text{visible} = (\mathbf{normal} \cdot \mathbf{toCam}) > 0.05$$
-When a target is on the far hemisphere, its HTML label is hidden and its pin core is rendered at reduced opacity ($0.18$), preventing front-to-back label clutter while maintaining 3D depth perception.
-
-### 5. Interactive States & Modes
-- **Sky Mode (Default):** Displays the full composite false-color infrared map with slow idle rotation ($0.05\text{ rad/s}$). Dragging rotates the sphere smoothly via `OrbitControls` with damping factor $0.05$ (vertical and horizontal scroll remain completely unblocked because zoom and pan are disabled).
-- **Object Mode:** Focuses camera directly onto canonical targets (e.g., Barnard's Star), illuminates targeting reticles, and opens an astrophysical inspection HUD detailing coordinates, proper motion, and spectral characteristics.
-- **Spectral Mode:** Dynamically cycles through authentic single-band infrared textures every 2.8 seconds, accompanied by active wavelength indicators ($0.75\ \mu\text{m} \to 1.33\ \mu\text{m} \to 2.36\ \mu\text{m} \to 4.72\ \mu\text{m}$).
-
-### 6. Performance Optimization
-- **IntersectionObserver:** When the Explorer section is scrolled out of the viewport, the render loop pauses automatically (`cancelAnimationFrame` / conditional update), saving GPU/CPU resources.
-- **Alpha Transparency:** Canvas background is fully transparent (`gl.setClearColor(0x000000, 0)`), seamlessly integrating with the ambient cosmic background without rectangular card borders.
+- **Explore the Sky (Default):** Displays the full composite infrared sky panorama, active coordinate meridians, and a subtle non-blocking caption (`SPHEREx DR1 · 102-Band Infrared All-Sky Panorama · Drag to Explore`).
+- **Explore Objects:** The panorama automatically glides and centers on Barnard's Star ($\text{RA} = 269.45^\circ$, $\text{Dec} = +4.74^\circ$), illuminates targeting reticles, and displays an astrophysical card with verified proper-motion rate ($\mu = 10.39''/\text{yr}$) and baseline displacement ($10.223''$).
+- **Explore the Spectrum:** Renders a multi-wavelength comparative inspection layer, cycling through authentic SPHEREx infrared channels ($0.75\ \mu\text{m} \to 1.33\ \mu\text{m} \to 2.36\ \mu\text{m} \to 4.72\ \mu\text{m}$) with interactive wavelength chips.

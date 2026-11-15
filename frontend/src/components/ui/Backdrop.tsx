@@ -47,10 +47,13 @@ export const Backdrop: React.FC<BackdropProps> = ({ activeSection = "home" }) =>
 
       // 2. Compute smooth normalized weight for each chapter
       const weights = new Array(CHAPTERS.length).fill(0);
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - vh);
+      const scrollY = window.scrollY;
+      const endScrollProgress = Math.max(0, Math.min(1, (scrollY - (maxScroll - vh * 0.75)) / (vh * 0.75)));
 
       if (vCenter <= centers[0]) {
         weights[0] = 1;
-      } else if (vCenter >= centers[centers.length - 1]) {
+      } else if (vCenter >= centers[centers.length - 1] || endScrollProgress >= 1) {
         weights[weights.length - 1] = 1;
       } else {
         // Find which span between centers[i] and centers[i+1] contains vCenter
@@ -59,7 +62,11 @@ export const Backdrop: React.FC<BackdropProps> = ({ activeSection = "home" }) =>
           const c2 = centers[i + 1];
           if (vCenter >= c1 && vCenter <= c2) {
             const span = Math.max(1, c2 - c1);
-            const t = (vCenter - c1) / span;
+            let t = (vCenter - c1) / span;
+            // Smoothly accelerate toward 1.0 as the user reaches the end of Journey
+            if (i === centers.length - 2 && endScrollProgress > 0) {
+              t = Math.max(t, endScrollProgress);
+            }
             const easeT = smoothstep(0, 1, t);
             weights[i] = 1 - easeT;
             weights[i + 1] = easeT;

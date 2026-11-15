@@ -1671,26 +1671,12 @@ html.js-reveal .rv.in {
   transform-origin: left;
 }
 
-/* --- Transition 4: Labs → Mission "Expanding Atlas" (Transparent atmospheric glow) --- */
+/* --- Transition 4: Labs → Mission "Expanding Atlas" (Transparent atmospheric flow) --- */
 .labs-to-mission-transition {
   background: transparent;
   position: relative;
-  overflow: hidden;
-}
-
-.labs-to-mission-transition::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  background: radial-gradient(
-    ellipse 70% 80% at 50% 100%,
-    rgba(220, 160, 60, 0.12),
-    transparent 70%
-  );
-  pointer-events: none;
+  border: none;
+  box-shadow: none;
 }
 
 /* ============================================================

@@ -18,7 +18,6 @@ import {
 import {
   HomeToExplorerTransition,
   TimeMachineToLabsTransition,
-  LabsToMissionTransition,
 } from "../components/sections/ChapterTransition";
 import { CommandPalette } from "../components/navigation/CommandPalette";
 import { CosmicCopilot } from "../components/assistant/CosmicCopilot";
@@ -241,9 +240,6 @@ export const JourneyPage: React.FC = () => {
 
         {/* Ribbon 04 — Labs to Mission: Animated Snake Text Ribbon */}
         <LabsToMissionRibbon />
-
-        {/* Transition 04 — Labs to Mission: Expanding Atlas into Exploration */}
-        <LabsToMissionTransition />
 
         {/* Chapter 05 — Mission: Your Discovery Begins */}
         <ChapterMission onScrollToTop={() => scrollToChapter("home")} />

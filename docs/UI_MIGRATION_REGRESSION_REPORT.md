@@ -341,6 +341,47 @@ In this final milestone, Chapter 02 (Explorer) was elevated to a genuine 3D cele
   - `test6_LosslessJourneyReturn`: **true** (Restores hash `#time-machine` and `scrollY: 1988`)
   - `mobileCheck`: **{ scrollWidth: 390, clientWidth: 390, hasOverflow: false }**
 
+---
+
+## 11. Final Explorer Visual Correction, Seamless End-Section Background, Mission Layout & Cinematic Light-Sweep Transition (November 15, 2026 Milestone)
+
+In this milestone, four major visual and interaction refinements were executed:
+
+### 1. Replacement of Patchwork Globe with Celestial Window Panorama (`ExplorerShowcaseVisual.tsx`)
+- **Root Cause of Artifacts:** HEALPix Order 0 base tiles partitioned the sky into 12 base diamonds. Re-projecting 8-bit indexed colormap PNG tiles onto a physical Three.js sphere created triangular patchwork seams, brightness steps, and an artificial planet shadow.
+- **Celestial Window Solution:** Replaced the sphere with an interactive, curved astronomical panorama window. Applied an elliptical feathered dissolve mask (`mask-image: radial-gradient(ellipse 88% 80% at 50% 50%, black 52%, transparent 98%)`), completely eliminating rectangular borders, dark circular slabs, and artificial outlines.
+- **Interactive Depth & Motion:** Integrated pointer-responsive 3D perspective tilt (`rotateX`, `rotateY`), horizontal drag-to-pan across all 24h Right Ascension, gentle idle drift, coordinate grid (Equator in warm gold, Ecliptic tilted at 23.44°), and 5 canonical targets with astrometry inspection cards.
+- **Action Preview Modes:** Maintained interactive hover previews for "Explore the Sky" (all-sky survey), "Explore Objects" (glides to Barnard's Star with Gaia DR3 telemetry), and "Explore the Spectrum" (cycles authentic SPHEREx infrared channels with interactive wavelength chips).
+
+### 2. Elimination of Remaining End-of-Journey Background Seams (`JourneyPage.tsx`, `cinematic.css`, `Backdrop.tsx`)
+- **Seam Cause:** Legacy `.labs-to-mission-transition::after` contained a `radial-gradient` centered at `50% 100%` with `height: 100%`, which created a sharp cutoff line at the bottom boundary. In addition, `Backdrop.tsx`'s viewport center comparison failed to reach `#mission`'s center at the document bottom, causing opacity interpolation to stall.
+- **Correction:** Removed the redundant transition element and its cutoff `::after` gradient. Updated `Backdrop.tsx` with smooth end-of-page scroll progress calculation, guaranteeing that the environment seamlessly and completely settles into the rich Mission atmosphere. The animated snake-text ribbon sits directly on the continuous cosmic starfield.
+
+### 3. Mission Celestial Destination Atlas & Button Consistency (`MissionShowcaseVisual.tsx`, `ChapterMission.tsx`)
+- **Separated Atlas Regions:** Reorganized into 4 clearly demarcated visual zones: compact header, unobstructed celestial coordinate map (NO overlapping inspection card), 5 target-selection chips, and a separate selected-target information card below the map.
+- **Scientific Label Precision:** Corrected Barnard's Star description to distinguish the predicted catalogue displacement ($10.223''$ across the 359-day observation baseline) from the verified annual proper-motion rate ($\mu = 10.39''/\text{yr}$).
+- **Coordinated Button Dimensions:** Standardized "Begin Your Mission" and "Play Mini Game" actions with identical physical dimensions ($56\text{px}$ height, `h-14`, font-size $14\text{px}$, font-weight $600$, border-radius $16\text{px}$, matching padding and icon alignment).
+
+### 4. Cinematic Atmospheric Light-Sweep Route Transition (`WorkspaceTransitionOverlay.tsx`)
+- **New Motion Language:** Completely eliminated the space-flight star tunnel, camera zoom, star trails, decorative headings, fake telemetry, and circular portals.
+- **Atmospheric Veil:** Replaced with an art-directed luminous wave of light sweeping across the viewport. Originating chapter palettes are inherited (Home: warm gold/copper, Explorer: indigo/violet, Time Machine: amber/orange, Labs: graphite/cool-white, Mission: midnight blue/gold).
+- **Choreography & Timing:** Quick ~780ms duration. Route executes at midpoint ($t = 0.45$) under the veil, mounting workspaces at `scrollY = 0`. Complementary reverse sweep executes on "Back to Journey", restoring the exact originating chapter and vertical scroll offset with zero flash of Home.
+- **Tutorial Coordination:** Guaranteed that automatic Driver.js tours only begin after the light sweep has finished and the overlay is dismissed.
+
+### 5. Verification & Audit Results
+- **Pytest Suite (`python -m pytest tests/`):** 43 passed in 44.03s (100% pass rate).
+- **Frontend Production Build (`npm run build`):** Built 1659 modules in 7.19s with 0 errors.
+- **Automated Verification Script (`verify_all_final_corrections.cjs`):**
+  - `testA_ExplorerVisual`: **true** (Seamless celestial panorama window, 5 canonical beacons, hover previews verified)
+  - `testB_EndOfJourneySeamRemoved`: **true** (Cutoff pseudo-element removed, continuous atmosphere verified)
+  - `testC_MissionAtlasLayout`: **true** (Unobstructed map, non-overlapping card, proper motion label verified)
+  - `testD_MissionButtonDimensions`: **true** (Both buttons 56px height, 600 weight, matching padding)
+  - `testE_NewLightSweepTransition`: **true** (Light sweep active, enters `/time-machine` at scrollY 0)
+  - `testF_ReturnJourneyRestoration`: **true** (Returns to `/#time-machine` with scrollY 1988 restored)
+  - `testG_DriverJSTutorialCoordination`: **true** (Driver.js tutorial launches cleanly after transition)
+  - `mobileCheck`: **{ scrollWidth: 390, clientWidth: 390, hasOverflow: false }**
+
+
 
 
 

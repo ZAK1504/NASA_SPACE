@@ -1,59 +1,64 @@
-# SPHEREx HORIZON — Journey Transitions & Workspace Choreography
+# SPHEREx HORIZON — Journey Transitions & Cinematic Light-Sweep Reveal
 
 ## Overview
 
-The SPHEREx HORIZON application connects its continuous five-chapter storytelling Journey to dedicated scientific workspaces through a unified, cinema-grade transition architecture. This document details the implementation and verification of inter-chapter flow and workspace travel choreography.
+This document specifies the architecture and verification of the **Cinematic Atmospheric Light-Sweep Reveal** and the complete elimination of end-of-Journey background seams.
 
 ---
 
-## 1. Inter-Chapter Animated Snake Ribbons
+## 1. Cinematic Light-Sweep Route Transition (`WorkspaceTransitionOverlay.tsx`)
 
-Between each consecutive chapter on the Journey page, a continuous SVG animated wave ribbon connects the visual environments (`frontend/src/components/ui/SnakeRibbon.tsx`):
+The simulated space-flight star tunnel has been completely replaced by an art-directed atmospheric light-sweep transition:
 
-| Transition | Ribbon Text & Copy | Gradient Palette | Wave Characteristics |
-| :--- | :--- | :--- | :--- |
-| **Ch 01 (Home) $\to$ Ch 02 (Explorer)** | `LET'S EXPLORE ✦ BEYOND THE VISIBLE ✦ DISCOVER THE INFRARED UNIVERSE` | Gold (`#F4A272`) $\to$ Indigo (`#818CF8`) | Seamless sine wave, $A = 14\text{px}$, $\lambda = 340\text{px}$ |
-| **Ch 02 (Explorer) $\to$ Ch 03 (Time Machine)** | `THROUGH SPACE & TIME ✦ THE UNIVERSE DOESN'T STAND STILL ✦ REWIND THE SKY` | Indigo (`#818CF8`) $\to$ Amber (`#FF7B3D`) | Seamless sine wave, $A = 14\text{px}$, $\lambda = 340\text{px}$ |
-| **Ch 03 (Time Machine) $\to$ Ch 04 (Discovery Lab)** | `EVERY CHANGE TELLS A STORY ✦ INVESTIGATE THE EVIDENCE ✦ DISCOVER MORE` | Amber (`#FF7B3D`) $\to$ Graphite (`#94A3B8`) | Seamless sine wave, $A = 14\text{px}$, $\lambda = 340\text{px}$ |
-| **Ch 04 (Discovery Lab) $\to$ Ch 05 (Missions)** | `YOUR DISCOVERY BEGINS ✦ EXPLORE THE UNKNOWN ✦ THE NEXT DISCOVERY COULD BE YOURS` | Graphite (`#94A3B8`) $\to$ Gold (`#F4A272`) | Seamless sine wave, $A = 14\text{px}$, $\lambda = 340\text{px}$ |
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant Button as Scientific CTA
+    participant Overlay as WorkspaceTransitionOverlay
+    participant Router as React Router
+    participant Workspace as Target Workspace
 
-### Technical Execution
-- **Seamless Wave Period:** The path `d` pattern repeats exactly every $340\text{px}$, allowing infinite horizontal looping via CSS `@keyframes snake-ribbon-flow` translating from $X = 0$ to $X = -340\text{px}$ over 14 seconds without any visible jitter or seams.
-- **Accessibility:** Respects `@media (prefers-reduced-motion: reduce)`, pausing continuous translation while preserving the subtle curved typographic display.
-- **Atmospheric Blending:** Each ribbon's gradient matches the exit atmosphere of the preceding chapter and the entrance atmosphere of the succeeding chapter, creating an organic visual blend.
+    User->>Button: Click "Launch Time Machine"
+    Button->>Overlay: travelToWorkspace(path, chapter)
+    Overlay->>Overlay: Begin Atmospheric Light Sweep (covering, 0-360ms)
+    Note over Overlay: Luminous celestial veil sweeps across viewport
+    Overlay->>Router: onNavigate() at t = 360ms (Midpoint veil peak)
+    Router->>Workspace: Mount workspace at scrollY = 0
+    Overlay->>Overlay: Arrival Reveal (revealing, 360-780ms)
+    Note over Overlay: Soft luminous veil sweeps away and dissolves
+    Overlay->>Overlay: Transition to idle (Overlay removed)
+    Workspace->>User: Interactive Workspace Ready (Driver.js tutorial begins at t = 1100ms)
+```
 
----
-
-## 2. Chapter-Colored Workspace Travel Overlay
-
-When launching a dedicated workspace (e.g., from Explorer to Sky Explorer, or Time Machine to Time Machine Workspace), a non-intrusive cinematic travel sequence bridges the page navigation:
-
-### Choreography & Timing
-- **Total Duration:** $\sim 950\text{ms}$
-- **Phase 1: Departure Acceleration ($0 - 420\text{ms}$)**
-  - Ambient radial glow deepens to the chapter's dominant theme color.
-  - Outward relativistic star streaks radiate from the viewport center.
-  - Reticle and screen text are completely omitted to prevent visual clutter and artificial delay.
-- **Phase 2: Route Execution ($420\text{ms}$)**
-  - Router navigates to the target workspace route.
-  - Workspace DOM mounts with window scroll set immediately to top (`scrollY = 0`).
-- **Phase 3: Arrival Deceleration ($420 - 950\text{ms}$)**
-  - Radial flash resolves gently into the workspace header.
-  - Overlay fades to $0$ opacity, revealing the scientific workspace.
-
-### Color Palettes by Chapter
-- **Home / Spacecraft:** Deep warm gold radial aura (`rgba(244, 162, 114, 0.45)`).
-- **Explorer:** Deep cosmic indigo / cyan streak aura (`rgba(99, 102, 241, 0.50)`).
-- **Time Machine:** High-contrast amber / orange warp field (`rgba(255, 123, 61, 0.55)`).
-- **Discovery Lab:** Analytical slate / cyan streak aura (`rgba(56, 189, 248, 0.45)`).
-- **Missions:** Rich stellar gold aura (`rgba(244, 162, 114, 0.50)`).
+### Visual Motion & Design Guarantees
+- **No Space Tunnel:** Zero flying stars, zero forward/backward zoom, zero camera acceleration, zero distracting star trails.
+- **No Decorative Text:** Zero loading headings, zero "WARPING..." badges, zero fake scientific telemetry, zero circular portals.
+- **Originating Chapter Color Palettes:**
+  - **Home:** Warm golden and copper light (`rgba(244, 162, 114, 0.95)`, accent `rgba(224, 122, 72, 0.65)`).
+  - **Explorer:** Deep cosmic indigo and violet light (`rgba(129, 140, 248, 0.95)`, accent `rgba(168, 85, 247, 0.65)`).
+  - **Time Machine:** Warm amber and orange light (`rgba(255, 123, 61, 0.95)`, accent `rgba(245, 158, 11, 0.65)`).
+  - **Labs:** Restrained neutral graphite and cool-white light (`rgba(148, 163, 184, 0.95)`, accent `rgba(203, 213, 225, 0.65)`).
+  - **Mission:** Midnight blue with soft golden light (`rgba(59, 130, 246, 0.95)`, accent `rgba(244, 162, 114, 0.65)`).
+- **Complementary Return Sequence:** "Back to Journey" executes a complementary reverse light sweep, restoring the exact originating chapter and vertical scroll position under the veil with zero flash of Home.
+- **Tutorial Coordination:** Automatic Driver.js tutorials wait 1100ms after route mounting, ensuring the transition overlay has completely dissolved before onboarding popovers appear.
 
 ---
 
-## 3. Lossless Return to Journey with Scroll Restoration
+## 2. Elimination of End-of-Journey Background Seams
 
-Returning to the Journey from any workspace via the "Back to Journey" button (`journeyState.ts`) follows a complementary reverse sequence:
-1. **Journey Origin Tracking:** `journeyState.recordJourneyPosition(chapterId, scrollY)` preserves the exact vertical pixel scroll offset and originating chapter ID prior to departure.
-2. **Reverse Inward Streaks:** The transition overlay plays inward contracting star streaks representing return deceleration.
-3. **Covered Scroll Restoration:** While the transition overlay is completely opaque at $t \approx 300\text{ms}$, the window scroll is restored instantly to the exact saved $Y$ position (`window.scrollTo({ top: savedY, behavior: 'instant' })`) and the URL hash is set to the originating chapter (e.g., `/#time-machine`).
-4. **Zero Flash of Top/Home:** The user never experiences an intermediate flash of the Home chapter or scroll jumping.
+### Root Cause Analysis
+1. **Redundant Transition Pseudo-Element:** A legacy `.labs-to-mission-transition::after` element had a `radial-gradient(ellipse 70% 80% at 50% 100%, ...)` placed at the bottom edge (`bottom: 0`) inside an `overflow: hidden` container. Because the gradient center was at `y = 100%`, it terminated abruptly at the bottom boundary, creating a hard horizontal contrast line.
+2. **Backdrop Bottom-of-Page Interpolation:** Previously, `Backdrop.tsx` compared `vCenter` (viewport center) solely against chapter centers. Because the document ends right after `#mission`, `#mission`'s center never reaches `vCenter`, causing the Mission atmospheric layer to stall at ~0.77 opacity with Labs layer remaining at ~0.23 opacity.
+
+### Resolution
+- Purged `.labs-to-mission-transition::after` from `cinematic.css` and removed the redundant transition container from `JourneyPage.tsx`. The flowing `LabsToMissionRibbon` now sits directly on the continuous cosmic atmosphere.
+- Updated `Backdrop.tsx` with smooth end-of-page scroll progress calculation, guaranteeing that as the user approaches the end of the Journey, the atmosphere smoothly and completely settles into the rich Mission environment (`weights[4] = 1.0`, `weights[3] = 0.0`).
+
+---
+
+## 3. Mission Celestial Destination Atlas & Button Sizing
+
+- **Atlas Layout:** Organized into 4 clearly separated visual regions: compact header, unobstructed celestial map (NO overlapping card), target-selection chips, and a separate target information area below.
+- **Scientific Label Accuracy:** Corrected the description of Barnard's Star to explicitly distinguish the predicted catalogue displacement ($10.223''$ over the 359-day baseline) from the annual proper motion rate ($\mu = 10.39''/\text{yr}$).
+- **Coordinated Button Sizing:** Both "Begin Your Mission" and "Play Mini Game" have identical dimensions ($56\text{px}$ height, `h-14`, font-size $14\text{px}$, font-weight $600$, border-radius $16\text{px}$).
