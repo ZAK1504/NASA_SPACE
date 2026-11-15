@@ -38,8 +38,10 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
           </div>
 
           {/* Massive Display Title */}
-          <h1 className="text-6xl sm:text-8xl lg:text-9xl font-extralight tracking-tighter text-white uppercase leading-none mb-3">
-            SPHEREx<b className="text-[var(--accent)] font-normal">.</b>
+          <h1 className="text-6xl sm:text-8xl lg:text-9xl font-extralight tracking-tighter text-white leading-none mb-3 inline-flex items-baseline">
+            <span>SPHERE</span>
+            <span className="text-[1.18em] font-light text-white ml-0.5">x</span>
+            <b className="text-[var(--accent)] font-normal">.</b>
           </h1>
 
           {/* Subtitle */}

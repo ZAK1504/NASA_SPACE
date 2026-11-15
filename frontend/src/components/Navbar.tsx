@@ -76,8 +76,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             />
             <circle r="2.2" fill="currentColor" />
           </svg>
-          <span className="font-semibold tracking-tight">
-            SPHEREx <span className="text-[var(--accent)] font-light">HORIZON</span>
+          <span className="font-semibold tracking-tight inline-flex items-baseline">
+            <span>SPHERE</span>
+            <span className="text-[1.32em] font-bold leading-none inline-block ml-0.5 text-white">x</span>
+            <span className="text-[var(--accent)] font-light ml-1.5">HORIZON</span>
           </span>
         </a>
 

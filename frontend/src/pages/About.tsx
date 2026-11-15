@@ -18,9 +18,12 @@ export const About: React.FC = () => (
         <CircleDot className="w-6 h-6 text-[#F4A272]" />
         <span className="font-mono text-xs text-[#9E9AA7] uppercase tracking-widest">About</span>
       </div>
-      <h1 className="text-3xl font-bold text-[#F3EFE8] mb-4">About SPHEREX</h1>
+      <h1 className="text-3xl font-bold text-[#F3EFE8] mb-4 inline-flex items-baseline gap-1">
+        <span>About SPHERE</span>
+        <span className="text-[1.32em] font-extrabold text-[var(--accent)] leading-none inline-block">x</span>
+      </h1>
       <p className="text-[#9E9AA7] leading-relaxed">
-        A citizen-science platform for exploring real NASA SPHEREx telescope data.
+        A citizen-science platform for exploring real NASA SPHERE<span className="text-[1.25em] font-bold leading-none inline-block text-[#F3EFE8] ml-0.5">x</span> telescope data.
       </p>
     </div>
 
@@ -29,9 +32,13 @@ export const About: React.FC = () => (
         <div className="flex items-center gap-2 mb-4">
           <Badge variant="blue">NASA Mission</Badge>
         </div>
-        <h2 className="text-lg font-semibold text-[#F3EFE8] mb-3">The SPHEREx Mission</h2>
+        <h2 className="text-lg font-semibold text-[#F3EFE8] mb-3 inline-flex items-baseline gap-1">
+          <span>The SPHERE</span>
+          <span className="text-[1.32em] font-extrabold text-[var(--accent)] leading-none inline-block">x</span>
+          <span>Mission</span>
+        </h2>
         <p className="text-sm text-[#9E9AA7] leading-relaxed mb-3">
-          SPHEREx (Spectro-Photometer for the History of the Universe, Epoch of
+          SPHERE<span className="text-[1.25em] font-bold text-white leading-none inline-block ml-0.5">x</span> (Spectro-Photometer for the History of the Universe, Epoch of
           Reionization and Ices Explorer) is a NASA space telescope performing an all-sky
           survey in near-infrared wavelengths. Its 102 spectral channels cover 0.75 to 5
           micrometers, allowing it to measure positions and distances of hundreds of
@@ -39,7 +46,7 @@ export const About: React.FC = () => (
           regions.
         </p>
         <p className="text-sm text-[#9E9AA7] leading-relaxed">
-          SPHEREx will help scientists understand the initial conditions of the universe,
+          SPHERE<span className="text-[1.25em] font-bold text-white leading-none inline-block ml-0.5">x</span> will help scientists understand the initial conditions of the universe,
           the history of galaxy formation, and the prevalence of biologically important
           molecules throughout our galaxy.
         </p>
