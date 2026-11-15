@@ -124,14 +124,15 @@ export const BrandWordmark: React.FC<BrandWordmarkProps> = ({
 
       {/* 2. Continuous Typographic Wordmark with Zero Gap */}
       <span className={`brand-wordmark inline-flex items-center tracking-tight font-sans ${sizeClasses}`}>
-        {/* Lowercase warm off-white "sphere" */}
+        {/* Lowercase warm off-white "sphere" — subtly enlarged for balanced readability while keeping XPLORER dominant */}
         <span
           className="wordmark-sphere font-medium text-[#F3EFE8] leading-none"
           style={{
-            fontSize: "0.86em",
-            marginRight: "-0.12em", // Optical kerning: completely eliminates the gap between 'e' and 'X'
-            transform: "translateY(-0.02em)", // Perfectly aligns 'sphere' to vertical centre of 'XPLORER'
+            fontSize: "0.98em",
+            marginRight: "-0.095em", // Seamless continuous optical kerning: zero gap between 'e' and 'X'
+            transform: "translateY(-0.02em)", // Custom alignment: aligns with the center axis of the ending 'e'
             display: "inline-block",
+            letterSpacing: "-0.015em",
           }}
         >
           sphere

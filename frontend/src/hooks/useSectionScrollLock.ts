@@ -47,6 +47,7 @@ export function useSectionScrollLock({
   const quietTimerRef = useRef<number | null>(null);
   const safetyTimerRef = useRef<number | null>(null);
   const lastWheelTimeRef = useRef(0);
+  const arrivalTimestampRef = useRef(0);
 
   useEffect(() => {
     if (!enabled) return;
@@ -87,17 +88,17 @@ export function useSectionScrollLock({
       return closestIdx;
     };
 
-    // Helper: arm/refresh the momentum quiet timer
-    const armMomentumQuietTimer = () => {
+    // Helper: arm/refresh the momentum quiet timer with brief, responsive delay
+    const armMomentumQuietTimer = (delay = 130) => {
       if (quietTimerRef.current) {
         window.clearTimeout(quietTimerRef.current);
       }
-      // Require 320ms of silence on the wheel bus before returning to IDLE
+      // Require 130ms of silence on the wheel bus before returning to IDLE
       quietTimerRef.current = window.setTimeout(() => {
         stateRef.current = "IDLE";
         fixedDestinationIndexRef.current = null;
         accumulatedDeltaRef.current = 0;
-      }, 320);
+      }, delay);
     };
 
     // Helper: initiate controlled single-chapter transition
@@ -119,16 +120,29 @@ export function useSectionScrollLock({
       if (safetyTimerRef.current) window.clearTimeout(safetyTimerRef.current);
 
       const onArrival = () => {
-        // Transition to WAITING_FOR_MOMENTUM_TO_END
+        const now = performance.now();
+        const timeSinceLastWheel = now - lastWheelTimeRef.current;
+
+        // If no wheel events arrived in the last 120ms of the transition,
+        // the gesture has completely ended. Return to IDLE immediately so the next gesture responds instantly!
+        if (timeSinceLastWheel > 120) {
+          stateRef.current = "IDLE";
+          fixedDestinationIndexRef.current = null;
+          accumulatedDeltaRef.current = 0;
+          return;
+        }
+
+        // Transition to WAITING_FOR_MOMENTUM_TO_END to consume trailing decelerating inertia
         stateRef.current = "WAITING_FOR_MOMENTUM_TO_END";
-        armMomentumQuietTimer();
+        arrivalTimestampRef.current = now;
+        armMomentumQuietTimer(130);
       };
 
       if (window.__lenis) {
         window.__lenis.scrollTo(targetY, {
-          duration: 0.85,
+          duration: 0.62,
           lock: true,
-          easing: (t: number) => 1 - Math.pow(1 - t, 3),
+          easing: (t: number) => 1 - Math.pow(1 - t, 4),
           onComplete: onArrival,
         });
       } else {
@@ -136,11 +150,11 @@ export function useSectionScrollLock({
           top: targetY,
           behavior: "smooth",
         });
-        safetyTimerRef.current = window.setTimeout(onArrival, 850);
+        safetyTimerRef.current = window.setTimeout(onArrival, 620);
       }
 
       // Fallback safety timeout in case onComplete isn't called (e.g. background tab)
-      safetyTimerRef.current = window.setTimeout(onArrival, 1200);
+      safetyTimerRef.current = window.setTimeout(onArrival, 900);
     };
 
     // Expose programmatic navigation hook on window for explicit nav / workspace returns
@@ -162,12 +176,12 @@ export function useSectionScrollLock({
 
     // Wheel Event Listener (Precision Trackpads & Mouse Wheels)
     const handleWheel = (e: WheelEvent) => {
-      // Allow internal scrolling in interactive canvas, modal popovers, copilot chat, storybook, etc.
+      // Allow internal scrolling in interactive modal popovers, copilot chat, storybook, etc.
+      // (Note: .satellite-canvas is intentionally omitted so scrolling over the 3D spacecraft advances the Journey naturally)
       const element = e.target instanceof Element ? e.target : null;
       if (
         element &&
         (element.closest("[data-lenis-prevent]") ||
-          element.closest(".satellite-canvas") ||
           element.closest(".driver-popover") ||
           element.closest(".cosmic-copilot") ||
           element.closest(".story-workspace") ||
@@ -181,22 +195,10 @@ export function useSectionScrollLock({
       if (e.ctrlKey || e.metaKey) return;
 
       const now = performance.now();
+      const lastWheel = lastWheelTimeRef.current;
       lastWheelTimeRef.current = now;
 
-      // 1. If actively TRANSITIONING or WAITING FOR MOMENTUM TO END:
-      // Suppress native scroll, stop Lenis, and consume all trailing inertial wheel events!
-      if (stateRef.current === "TRANSITIONING" || stateRef.current === "WAITING_FOR_MOMENTUM_TO_END") {
-        (e as any).lenisStopPropagation = true;
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        if (stateRef.current === "WAITING_FOR_MOMENTUM_TO_END") {
-          // Trackpad is still sending residual momentum after arrival; refresh quiet timer!
-          armMomentumQuietTimer();
-        }
-        return;
-      }
-
-      // 2. Normalizing delta across modes (pixels vs lines vs pages)
+      // 1. Normalizing delta across modes (pixels vs lines vs pages)
       const delta =
         e.deltaMode === 1
           ? e.deltaY * 18
@@ -204,10 +206,43 @@ export function useSectionScrollLock({
           ? e.deltaY * window.innerHeight
           : e.deltaY;
 
-      // Ignore zero or micro-drift
+      // Ignore zero or micro-drift (<0.5px)
       if (Math.abs(delta) < 0.5) return;
 
-      // 3. Section Boundary Check for Taller Chapters (e.g. Chapter 06 About)
+      // 2. If actively TRANSITIONING:
+      // Suppress native scroll, stop Lenis, and consume all trailing inertial wheel events!
+      if (stateRef.current === "TRANSITIONING") {
+        (e as any).lenisStopPropagation = true;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        return;
+      }
+
+      // 3. If WAITING FOR MOMENTUM TO END:
+      if (stateRef.current === "WAITING_FOR_MOMENTUM_TO_END") {
+        (e as any).lenisStopPropagation = true;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        const timeSinceArrival = now - arrivalTimestampRef.current;
+        const timeSincePrevWheel = now - lastWheel;
+
+        // Check for genuine new deliberate gesture vs residual decelerating inertia:
+        // A new deliberate gesture has a distinct pause (>80ms) or a strong delta spike (|delta| >= 24)
+        // after the destination has settled for at least 140ms.
+        if (timeSinceArrival >= 140 && (timeSincePrevWheel > 80 || Math.abs(delta) >= 24)) {
+          stateRef.current = "IDLE";
+          fixedDestinationIndexRef.current = null;
+          accumulatedDeltaRef.current = 0;
+          // Fall through to process as a new gesture immediately!
+        } else {
+          // Trailing decelerating inertia: refresh brief quiet timer
+          armMomentumQuietTimer(130);
+          return;
+        }
+      }
+
+      // 4. Section Boundary Check for Taller Chapters (e.g. Chapter 06 About)
       const currentIdx = getCurrentChapterIndex();
       const currentChapterId = chaptersRef.current[currentIdx];
       const { top, height } = getChapterBounds(currentChapterId);
@@ -217,19 +252,19 @@ export function useSectionScrollLock({
 
       if (isTallChapter) {
         const maxScrollInChapter = top + height - viewportHeight;
-        if (delta > 0 && scrollY < maxScrollInChapter - 25) {
+        if (delta > 0 && scrollY < maxScrollInChapter - 20) {
           // Allow natural downward scroll within the chapter
           accumulatedDeltaRef.current = 0;
           return;
         }
-        if (delta < 0 && scrollY > top + 25) {
+        if (delta < 0 && scrollY > top + 20) {
           // Allow natural upward scroll within the chapter
           accumulatedDeltaRef.current = 0;
           return;
         }
       }
 
-      // 4. Direction Reversal Check: reset accumulation if direction flips
+      // 5. Direction Reversal Check: reset accumulation if direction flips
       if (
         (accumulatedDeltaRef.current > 0 && delta < 0) ||
         (accumulatedDeltaRef.current < 0 && delta > 0)
@@ -248,10 +283,11 @@ export function useSectionScrollLock({
       }
       clearDeltaTimerRef.current = window.setTimeout(() => {
         accumulatedDeltaRef.current = 0;
-      }, 200);
+      }, 220);
 
-      // Deliberate gesture threshold (prevents micro-flicks from triggering)
-      const THRESHOLD = 55;
+      // Highly responsive deliberate gesture threshold:
+      // Single mouse-wheel notch (~20-100px) or quick trackpad flick immediately crosses 18!
+      const THRESHOLD = 18;
 
       if (Math.abs(accumulatedDeltaRef.current) >= THRESHOLD) {
         const direction = accumulatedDeltaRef.current > 0 ? 1 : -1;
@@ -280,7 +316,6 @@ export function useSectionScrollLock({
       if (
         element &&
         (element.closest("[data-lenis-prevent]") ||
-          element.closest(".satellite-canvas") ||
           element.closest(".cosmic-copilot") ||
           element.closest("iframe"))
       ) {
@@ -289,7 +324,7 @@ export function useSectionScrollLock({
 
       const touchEndY = e.changedTouches[0]?.clientY ?? touchStartY;
       const deltaY = touchStartY - touchEndY;
-      const TOUCH_THRESHOLD = 45;
+      const TOUCH_THRESHOLD = 36;
 
       if (Math.abs(deltaY) >= TOUCH_THRESHOLD) {
         const direction = deltaY > 0 ? 1 : -1;
@@ -302,8 +337,8 @@ export function useSectionScrollLock({
         const isTallChapter = height > viewportHeight + 40;
         if (isTallChapter) {
           const maxScrollInChapter = top + height - viewportHeight;
-          if (direction > 0 && scrollY < maxScrollInChapter - 25) return;
-          if (direction < 0 && scrollY > top + 25) return;
+          if (direction > 0 && scrollY < maxScrollInChapter - 20) return;
+          if (direction < 0 && scrollY > top + 20) return;
         }
 
         const nextIdx = currentIdx + direction;
