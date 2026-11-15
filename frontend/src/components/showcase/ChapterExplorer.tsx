@@ -20,7 +20,7 @@ export const ChapterExplorer: React.FC<ChapterExplorerProps> = ({ onScrollToNext
   };
 
   const actions = (
-    <div data-tour="journey-explorer-actions" className="grid grid-cols-1 md:grid-cols-3 gap-3.5 w-full max-w-4xl mx-auto">
+    <div data-tour="journey-explorer-actions" className="flex flex-col gap-2.5 w-full">
       {/* Action 1: Sky Explorer */}
       <button
         onClick={() => handleOpenWorkspace("sky")}
@@ -28,21 +28,20 @@ export const ChapterExplorer: React.FC<ChapterExplorerProps> = ({ onScrollToNext
         onFocus={() => setHoveredMode("sky")}
         onMouseLeave={() => setHoveredMode(null)}
         onBlur={() => setHoveredMode(null)}
-        className="group p-4 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex flex-col items-center justify-center text-center cursor-pointer w-full hover:-translate-y-0.5"
+        className="group p-3.5 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
       >
-        <div className="w-11 h-11 rounded-xl bg-indigo-500/15 border border-indigo-400/30 flex items-center justify-center text-indigo-300 group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm mb-3">
-          <Compass className="w-5 h-5 group-hover:rotate-45 transition-transform" />
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-400/30 flex items-center justify-center text-indigo-300 group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm">
+            <Compass className="w-4 h-4 group-hover:rotate-45 transition-transform" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
+              Explore the Sky
+            </div>
+            <div className="text-xs text-[var(--mut)]">All-sky celestial sphere with Aladin Lite</div>
+          </div>
         </div>
-        <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors mb-1">
-          Explore the Sky
-        </div>
-        <div className="text-xs text-[var(--mut)] mb-3 leading-relaxed">
-          All-sky celestial sphere with Aladin Lite
-        </div>
-        <div className="inline-flex items-center gap-1.5 text-xs font-mono tracking-wider uppercase text-white/60 group-hover:text-[var(--accent)] mt-auto">
-          <span>Launch</span>
-          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-        </div>
+        <ArrowRight className="w-4 h-4 text-white/50 group-hover:text-[var(--accent)] group-hover:translate-x-1 transition-all" />
       </button>
 
       {/* Action 2: Object Explorer */}
@@ -52,21 +51,20 @@ export const ChapterExplorer: React.FC<ChapterExplorerProps> = ({ onScrollToNext
         onFocus={() => setHoveredMode("object")}
         onMouseLeave={() => setHoveredMode(null)}
         onBlur={() => setHoveredMode(null)}
-        className="group p-4 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex flex-col items-center justify-center text-center cursor-pointer w-full hover:-translate-y-0.5"
+        className="group p-3.5 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
       >
-        <div className="w-11 h-11 rounded-xl bg-orange-500/15 border border-orange-400/30 flex items-center justify-center text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm mb-3">
-          <Eye className="w-5 h-5 group-hover:scale-110 transition-transform" />
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-orange-500/15 border border-orange-400/30 flex items-center justify-center text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm">
+            <Eye className="w-4 h-4 group-hover:scale-110 transition-transform" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
+              Explore Objects
+            </div>
+            <div className="text-xs text-[var(--mut)]">Stars, brown dwarfs and Gaia proper motion vectors</div>
+          </div>
         </div>
-        <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors mb-1">
-          Explore Objects
-        </div>
-        <div className="text-xs text-[var(--mut)] mb-3 leading-relaxed">
-          Stars, brown dwarfs & Gaia proper motion
-        </div>
-        <div className="inline-flex items-center gap-1.5 text-xs font-mono tracking-wider uppercase text-white/60 group-hover:text-[var(--accent)] mt-auto">
-          <span>Inspect</span>
-          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-        </div>
+        <ArrowRight className="w-4 h-4 text-white/50 group-hover:text-[var(--accent)] group-hover:translate-x-1 transition-all" />
       </button>
 
       {/* Action 3: Spectral Explorer */}
@@ -76,21 +74,20 @@ export const ChapterExplorer: React.FC<ChapterExplorerProps> = ({ onScrollToNext
         onFocus={() => setHoveredMode("spectral")}
         onMouseLeave={() => setHoveredMode(null)}
         onBlur={() => setHoveredMode(null)}
-        className="group p-4 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex flex-col items-center justify-center text-center cursor-pointer w-full hover:-translate-y-0.5"
+        className="group p-3.5 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
       >
-        <div className="w-11 h-11 rounded-xl bg-purple-500/15 border border-purple-400/30 flex items-center justify-center text-purple-300 group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm mb-3">
-          <Layers className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-400/30 flex items-center justify-center text-purple-300 group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm">
+            <Layers className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
+              Explore the Spectrum
+            </div>
+            <div className="text-xs text-[var(--mut)]">102 channels, molecular markers & spectrum extraction</div>
+          </div>
         </div>
-        <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors mb-1">
-          Explore the Spectrum
-        </div>
-        <div className="text-xs text-[var(--mut)] mb-3 leading-relaxed">
-          102 bands & molecular water/ice markers
-        </div>
-        <div className="inline-flex items-center gap-1.5 text-xs font-mono tracking-wider uppercase text-white/60 group-hover:text-[var(--accent)] mt-auto">
-          <span>Analyze</span>
-          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-        </div>
+        <ArrowRight className="w-4 h-4 text-white/50 group-hover:text-[var(--accent)] group-hover:translate-x-1 transition-all" />
       </button>
     </div>
   );

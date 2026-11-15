@@ -6,7 +6,7 @@ const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
 const ARTIFACT_DIR = 'C:\\Users\\lenovo\\.gemini\\antigravity\\brain\\b9c61274-a07a-43bb-aec8-39db96649db1';
 
 (async () => {
-  console.log('--- STARTING VERIFICATION: ZERO SEPARATORS, CENTRAL ALIGNMENT & HALFWAY SCROLL LOCK ---');
+  console.log('--- STARTING VERIFICATION: TWO-COLUMN COMPACT LAYOUT, LESS SPACE BELOW, ZERO SEPARATORS & HALFWAY SCROLL LOCK ---');
   const browser = await puppeteer.launch({
     executablePath: CHROME_PATH,
     headless: true,
@@ -36,30 +36,28 @@ const ARTIFACT_DIR = 'C:\\Users\\lenovo\\.gemini\\antigravity\\brain\\b9c61274-a
 
   console.log('Separator & Ribbon Audit Results:', separatorAudit);
 
-  console.log('\n--- TEST 2: Central Alignment Audit Across All 5 Chapters ---');
-  const alignmentAudit = await page.evaluate(() => {
+  console.log('\n--- TEST 2: Two-Column Compact Layout & Section Heights Audit ---');
+  const layoutAudit = await page.evaluate(() => {
     const chapters = ['home', 'explorer', 'time-machine', 'labs', 'mission'];
     return chapters.map(id => {
       const el = document.getElementById(id);
       if (!el) return { id, found: false };
-      const h1OrH2 = el.querySelector('h1, h2');
-      const textCenter = el.classList.contains('text-center') || (h1OrH2 && window.getComputedStyle(h1OrH2).textAlign === 'center');
-      const flexCenter = el.classList.contains('items-center') || el.classList.contains('justify-center');
+      const rect = el.getBoundingClientRect();
+      const grid = el.querySelector('.grid');
+      const hasTwoColumns = grid ? (grid.classList.contains('lg:grid-cols-12') || window.getComputedStyle(grid).gridTemplateColumns.split(' ').length >= 2) : false;
       return {
         id,
         found: true,
-        textCenter,
-        flexCenter,
-        h1OrH2TagName: h1OrH2 ? h1OrH2.tagName : null,
-        h1OrH2Text: h1OrH2 ? h1OrH2.textContent?.trim().slice(0, 30) : null
+        heightPx: Math.round(rect.height),
+        hasTwoColumns,
       };
     });
   });
-  console.log('Alignment Audit Results:', alignmentAudit);
+  console.log('Layout & Height Audit Results:', layoutAudit);
 
-  console.log('\n--- TEST 3: Capture Centered Home Chapter ---');
-  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'centered_01_home.png') });
-  console.log('Saved centered_01_home.png');
+  console.log('\n--- TEST 3: Capture Compact Two-Column Home Chapter ---');
+  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'twocol_01_home.png') });
+  console.log('Saved twocol_01_home.png');
 
   console.log('\n--- TEST 4: Halfway Scroll Down Test (User opens page halfway -> Auto-scrolls down) ---');
   const explorerTop = await page.evaluate(() => {
@@ -67,7 +65,7 @@ const ARTIFACT_DIR = 'C:\\Users\\lenovo\\.gemini\\antigravity\\brain\\b9c61274-a
     return el ? Math.max(0, el.offsetTop - 70) : 0;
   });
 
-  // Manually scroll to 52% of the way between Home (0) and Explorer
+  // Manually scroll halfway (52% progress towards Explorer)
   const halfwayY = Math.round(explorerTop * 0.52);
   console.log(`Setting scroll halfway between Home and Explorer: ${halfwayY}px (target=${explorerTop}px)`);
   await page.evaluate((y) => {
@@ -75,7 +73,7 @@ const ARTIFACT_DIR = 'C:\\Users\\lenovo\\.gemini\\antigravity\\brain\\b9c61274-a
     window.dispatchEvent(new Event('scroll'));
   }, halfwayY);
 
-  // Wait for the settle detector (110ms debounce) + Lenis smooth glide (1150ms)
+  // Wait for settle detector + Lenis smooth glide
   await new Promise(r => setTimeout(r, 1600));
 
   const afterHalfwayScrollY = await page.evaluate(() => window.scrollY);
@@ -84,11 +82,11 @@ const ARTIFACT_DIR = 'C:\\Users\\lenovo\\.gemini\\antigravity\\brain\\b9c61274-a
   const halfwayAutoScrollSuccess = halfwayDiff <= 2;
   console.log(`Halfway Auto-Scroll Down Success: ${halfwayAutoScrollSuccess}`);
 
-  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'centered_02_explorer.png') });
-  console.log('Saved centered_02_explorer.png');
+  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'twocol_02_explorer.png') });
+  console.log('Saved twocol_02_explorer.png');
 
   console.log('\n--- TEST 5: Scroll Lock Down to Time Machine ---');
-  await page.mouse.move(700, 450);
+  await page.mouse.move(300, 400); // Hover over left text column
   await page.mouse.wheel({ deltaY: 120 });
   await new Promise(r => setTimeout(r, 1600));
 
@@ -98,10 +96,11 @@ const ARTIFACT_DIR = 'C:\\Users\\lenovo\\.gemini\\antigravity\\brain\\b9c61274-a
     return el ? Math.max(0, el.offsetTop - 70) : 0;
   });
   console.log(`Scroll to Time Machine: current=${tmScrollY}, target=${tmTop}, diff=${Math.abs(tmScrollY - tmTop)}`);
-  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'centered_03_time_machine.png') });
-  console.log('Saved centered_03_time_machine.png');
+  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'twocol_03_time_machine.png') });
+  console.log('Saved twocol_03_time_machine.png');
 
   console.log('\n--- TEST 6: Scroll Lock Down to Labs ---');
+  await page.mouse.move(300, 400);
   await page.mouse.wheel({ deltaY: 120 });
   await new Promise(r => setTimeout(r, 1600));
 
@@ -111,10 +110,11 @@ const ARTIFACT_DIR = 'C:\\Users\\lenovo\\.gemini\\antigravity\\brain\\b9c61274-a
     return el ? Math.max(0, el.offsetTop - 70) : 0;
   });
   console.log(`Scroll to Labs: current=${labsScrollY}, target=${labsTop}, diff=${Math.abs(labsScrollY - labsTop)}`);
-  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'centered_04_labs.png') });
-  console.log('Saved centered_04_labs.png');
+  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'twocol_04_labs.png') });
+  console.log('Saved twocol_04_labs.png');
 
   console.log('\n--- TEST 7: Scroll Lock Down to Mission ---');
+  await page.mouse.move(300, 400);
   await page.mouse.wheel({ deltaY: 120 });
   await new Promise(r => setTimeout(r, 1600));
 
@@ -124,12 +124,12 @@ const ARTIFACT_DIR = 'C:\\Users\\lenovo\\.gemini\\antigravity\\brain\\b9c61274-a
     return el ? Math.max(0, el.offsetTop - 70) : 0;
   });
   console.log(`Scroll to Mission: current=${missionScrollY}, target=${missionTop}, diff=${Math.abs(missionScrollY - missionTop)}`);
-  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'centered_05_mission.png') });
-  console.log('Saved centered_05_mission.png');
+  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'twocol_05_mission.png') });
+  console.log('Saved twocol_05_mission.png');
 
   const finalSummary = {
     separatorAudit,
-    alignmentAudit,
+    layoutAudit,
     halfwayAutoScrollTest: {
       initialHalfwayY: halfwayY,
       settledScrollY: afterHalfwayScrollY,
@@ -144,8 +144,8 @@ const ARTIFACT_DIR = 'C:\\Users\\lenovo\\.gemini\\antigravity\\brain\\b9c61274-a
     }
   };
 
-  fs.writeFileSync(path.join(ARTIFACT_DIR, 'centered_scroll_lock_results.json'), JSON.stringify(finalSummary, null, 2));
-  console.log('Saved centered_scroll_lock_results.json');
+  fs.writeFileSync(path.join(ARTIFACT_DIR, 'twocol_scroll_lock_results.json'), JSON.stringify(finalSummary, null, 2));
+  console.log('Saved twocol_scroll_lock_results.json');
 
   await browser.close();
   console.log('--- VERIFICATION COMPLETE ---');

@@ -1,7 +1,7 @@
 import React from "react";
 import ChapterShowcase from "./ChapterShowcase";
 import LabsShowcaseVisual from "./LabsShowcaseVisual";
-import { FlaskConical, TrendingUp, ArrowRight, BookOpen, Layers } from "lucide-react";
+import { FlaskConical, TrendingUp, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { travelToWorkspace } from "../../lib/journeyState";
 
@@ -13,45 +13,47 @@ export const ChapterLabs: React.FC<ChapterLabsProps> = ({ onScrollToNext }) => {
   const navigate = useNavigate();
 
   const actions = (
-    <div data-tour="journey-labs-actions" className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl mx-auto">
+    <div data-tour="journey-labs-actions" className="flex flex-col gap-3 w-full">
       {/* Action 1: Discovery Lab */}
       <button
         onClick={() => travelToWorkspace(navigate, "/discovery-lab", "labs")}
-        className="group p-5 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex flex-col items-center justify-center text-center cursor-pointer w-full hover:-translate-y-0.5"
+        className="group p-3.5 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
       >
-        <div className="w-12 h-12 rounded-xl bg-purple-500/15 border border-purple-400/30 flex items-center justify-center text-purple-300 group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm mb-3">
-          <FlaskConical className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-400/30 flex items-center justify-center text-purple-300 group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm">
+            <FlaskConical className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
+              Enter Discovery Lab
+            </div>
+            <div className="text-xs text-[var(--mut)]">
+              DAOStarFinder detection, 3-panel difference & My Discoveries journal
+            </div>
+          </div>
         </div>
-        <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors mb-1">
-          Enter Discovery Lab
-        </div>
-        <div className="text-xs text-[var(--mut)] mb-3 leading-relaxed">
-          DAOStarFinder detection, 3-panel difference & My Discoveries journal
-        </div>
-        <div className="inline-flex items-center gap-1.5 text-xs font-mono tracking-wider uppercase text-white/60 group-hover:text-[var(--accent)] mt-auto">
-          <span>Open Lab</span>
-          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-        </div>
+        <ArrowRight className="w-4 h-4 text-white/50 group-hover:text-[var(--accent)] group-hover:translate-x-1 transition-all" />
       </button>
 
       {/* Action 2: Light Curves */}
       <button
         onClick={() => travelToWorkspace(navigate, "/light-curves", "labs")}
-        className="group p-5 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex flex-col items-center justify-center text-center cursor-pointer w-full hover:-translate-y-0.5"
+        className="group p-3.5 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
       >
-        <div className="w-12 h-12 rounded-xl bg-orange-500/15 border border-orange-400/30 flex items-center justify-center text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm mb-3">
-          <TrendingUp className="w-6 h-6 group-hover:scale-110 transition-transform" />
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-orange-500/15 border border-orange-400/30 flex items-center justify-center text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm">
+            <TrendingUp className="w-4 h-4 group-hover:scale-110 transition-transform" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
+              Explore Light Curves
+            </div>
+            <div className="text-xs text-[var(--mut)]">
+              Multi-epoch photometric variability for Mira pulsators & brown dwarfs
+            </div>
+          </div>
         </div>
-        <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors mb-1">
-          Explore Light Curves
-        </div>
-        <div className="text-xs text-[var(--mut)] mb-3 leading-relaxed">
-          Multi-epoch photometric variability for Mira pulsators & brown dwarfs
-        </div>
-        <div className="inline-flex items-center gap-1.5 text-xs font-mono tracking-wider uppercase text-white/60 group-hover:text-[var(--accent)] mt-auto">
-          <span>View Curves</span>
-          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-        </div>
+        <ArrowRight className="w-4 h-4 text-white/50 group-hover:text-[var(--accent)] group-hover:translate-x-1 transition-all" />
       </button>
     </div>
   );
