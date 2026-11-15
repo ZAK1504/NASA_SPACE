@@ -11,4 +11,5 @@ astroquery>=0.4.7
 photutils>=1.11.0
 reproject>=0.13.0
 pyvo>=1.5.0
+groq>=0.11.0
 pytest>=8.0.0

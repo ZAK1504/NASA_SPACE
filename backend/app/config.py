@@ -1,8 +1,13 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Set writable matplotlib config dir
 os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
+
+# Load environment variables from .env if present
+BASE_DIR_ENV = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR_ENV / ".env")
 
 class Settings:
     PROJECT_NAME: str = "SPHEREx Cosmic Discovery Platform API"
@@ -22,6 +27,7 @@ class Settings:
     FITS_CACHE_DIR: Path = CACHE_DIR / "fits"
     PREVIEW_CACHE_DIR: Path = CACHE_DIR / "previews"
     QUERY_CACHE_DIR: Path = CACHE_DIR / "queries"
+    COPILOT_DB_PATH: Path = DATA_DIR / "copilot_budget.db"
     
     # CORS
     CORS_ORIGINS: list = [
@@ -34,6 +40,21 @@ class Settings:
     # Supabase (optional persistent storage)
     SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
     SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
+
+    # Cosmic Copilot AI Configuration (Groq LLM)
+    COSMIC_AI_ENABLED: bool = os.getenv("COSMIC_AI_ENABLED", "true").lower() in ("true", "1", "yes")
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+    COSMIC_AI_MAX_OUTPUT_TOKENS: int = int(os.getenv("COSMIC_AI_MAX_OUTPUT_TOKENS", "700"))
+    COSMIC_AI_TIMEOUT_SECONDS: int = int(os.getenv("COSMIC_AI_TIMEOUT_SECONDS", "25"))
+    COSMIC_AI_GLOBAL_RPM: int = int(os.getenv("COSMIC_AI_GLOBAL_RPM", "15"))
+    COSMIC_AI_GLOBAL_RPD: int = int(os.getenv("COSMIC_AI_GLOBAL_RPD", "300"))
+    COSMIC_AI_SESSION_RPM: int = int(os.getenv("COSMIC_AI_SESSION_RPM", "5"))
+    COSMIC_AI_SESSION_RPD: int = int(os.getenv("COSMIC_AI_SESSION_RPD", "30"))
+    COSMIC_AI_IP_RPM: int = int(os.getenv("COSMIC_AI_IP_RPM", "8"))
+    COSMIC_AI_IP_RPD: int = int(os.getenv("COSMIC_AI_IP_RPD", "60"))
+    COSMIC_AI_MAX_CONCURRENT: int = int(os.getenv("COSMIC_AI_MAX_CONCURRENT", "2"))
+    COSMIC_AI_DAILY_TOKEN_BUDGET: int = int(os.getenv("COSMIC_AI_DAILY_TOKEN_BUDGET", "150000"))
 
 settings = Settings()
 

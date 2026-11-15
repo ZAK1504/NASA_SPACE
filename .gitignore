@@ -39,3 +39,10 @@ Thumbs.db
 *.swo
 .env
 .env.local
+.env.*
+!.env.example
+*.sqlite
+*.sqlite3
+*.db
+backend/data/copilot_budget.db
+
