@@ -25,6 +25,7 @@ pnpm-debug.log*
 
 # Caches & large data files
 backend/data/cache/
+backend/data/sessions/
 *.fits
 *.fit
 *.tar.gz

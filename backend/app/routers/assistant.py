@@ -41,7 +41,7 @@ KNOWLEDGE_BASE = {
 }
 
 @router.post("/query")
-def ask_assistant(message: str = Body(..., embed=True)) -> Dict[str, Any]:
+def ask_assistant(message: str = Body(..., embed=True, max_length=2000)) -> Dict[str, Any]:
     """
     Intelligent astronomical copilot that provides educational guidance,
     answers science questions, and provides direct navigation actions.

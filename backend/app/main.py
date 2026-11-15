@@ -49,13 +49,16 @@ app.include_router(targets.router, prefix=settings.API_PREFIX)
 @app.get("/api/health")
 def health_check():
     """Health check endpoint indicating server and archive status."""
-    return {
+    resp = {
         "status": "healthy",
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "archive_endpoint": settings.IRSA_TAP_URL,
-        "cache_directory": str(settings.CACHE_DIR)
+        "cache_configured": True
     }
+    if settings.APP_ENV != "production":
+        resp["cache_directory"] = str(settings.CACHE_DIR)
+    return resp
 
 @app.get("/")
 def root():
