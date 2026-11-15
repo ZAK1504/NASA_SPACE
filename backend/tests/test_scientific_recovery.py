@@ -282,12 +282,14 @@ def test_actual_fits_target_footprint_and_science_pixels():
                 if not getattr(w, "is_celestial", False):
                     continue
                 px, py = w.world_to_pixel(coord)
+                px_val = float(px)
+                py_val = float(py)
                 naxis1 = int(hdr.get("NAXIS1", 2040))
                 naxis2 = int(hdr.get("NAXIS2", 2040))
-                if 0 <= px < naxis1 and 0 <= py < naxis2:
+                if 0 <= px_val < naxis1 and 0 <= py_val < naxis2:
                     found_covered = True
                     data = hdul[1].data
-                    val = float(data[int(round(py)), int(round(px))])
+                    val = float(data[int(round(py_val)), int(round(px_val))])
                     import math
                     assert not math.isinf(val)
                     break
