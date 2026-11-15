@@ -1,11 +1,17 @@
 /**
  * Resolves the API base URL with production-safe same-origin routing:
- * 1. If import.meta.env.VITE_API_BASE_URL is provided, use it.
- * 2. If running in a browser environment on a non-localhost domain (e.g. spherexplore.earth),
- *    default to same-origin '/api' to avoid hardcoded localhost calls.
- * 3. In local development environments, fallback to 'http://localhost:8000/api'.
+ * 1. If running on production spherexplore.earth domain, route directly to backend.spherexplore.earth/api.
+ * 2. If import.meta.env.VITE_API_BASE_URL is provided, use it.
+ * 3. If running in a browser environment on a non-localhost domain, default to '/api'.
+ * 4. In local development environments, fallback to 'http://localhost:8000/api'.
  */
 export const getApiBaseUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname.endsWith('spherexplore.earth')) {
+      return 'https://backend.spherexplore.earth/api';
+    }
+  }
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '');
   }
@@ -19,6 +25,23 @@ export const getApiBaseUrl = (): string => {
 };
 
 export const API_BASE_URL = getApiBaseUrl();
+
+/**
+ * Robust fetch with configurable timeout (defaults to 20s) to prevent stuck network states.
+ */
+export const fetchWithTimeout = async (
+  url: string,
+  options: RequestInit = {},
+  timeoutMs = 20000
+): Promise<Response> => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: options.signal || controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+};
 
 export const getApiUrl = (endpoint: string): string => {
   const base = getApiBaseUrl();
@@ -319,23 +342,29 @@ export const api = {
     if (cached) return cached;
 
     const promise = (async () => {
-      const res = await fetch(`${API_BASE_URL}/comparison/align`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          obs_id_1: params.obsId1,
-          obs_id_2: params.obsId2,
-          target_name: params.targetName || 'Target',
-          center_ra: params.centerRa,
-          center_dec: params.centerDec,
-          cutout_size_arcsec: params.cutoutSizeArcsec || 180.0,
-          stretch: params.stretch || 'asinh',
-          colormap: params.colormap || 'inferno',
-          smooth: params.smooth || false,
-        }),
-      });
-      if (!res.ok) throw new Error('Failed to compare observations');
-      return res.json();
+      try {
+        const res = await fetchWithTimeout(`${API_BASE_URL}/comparison/align`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            obs_id_1: params.obsId1,
+            obs_id_2: params.obsId2,
+            target_name: params.targetName || 'Target',
+            center_ra: params.centerRa,
+            center_dec: params.centerDec,
+            cutout_size_arcsec: params.cutoutSizeArcsec || 180.0,
+            stretch: params.stretch || 'asinh',
+            colormap: params.colormap || 'inferno',
+            smooth: params.smooth || false,
+          }),
+        }, 25000);
+        if (!res.ok) throw new Error(`Failed to compare observations: ${res.status} ${res.statusText}`);
+        return await res.json();
+      } catch (err) {
+        // Evict failed promise so future retry requests can succeed
+        comparisonCache.delete(cacheKey);
+        throw err;
+      }
     })();
 
     comparisonCache.set(cacheKey, promise);
@@ -351,7 +380,7 @@ export const api = {
     colormap?: string;
     smooth?: boolean;
   }): Promise<TimeMachineManifestResponse> {
-    const res = await fetch(`${API_BASE_URL}/comparison/manifest`, {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/comparison/manifest`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -363,8 +392,8 @@ export const api = {
         colormap: params.colormap || 'inferno',
         smooth: params.smooth || false,
       }),
-    });
-    if (!res.ok) throw new Error('Failed to fetch Time Machine manifest');
+    }, 25000);
+    if (!res.ok) throw new Error(`Failed to fetch Time Machine manifest: ${res.status} ${res.statusText}`);
     return res.json();
   },
 
@@ -543,7 +572,7 @@ export const api = {
     measured_snr_gain: number;
     scientific_notes: string[];
   }> {
-    const res = await fetch(`${API_BASE_URL}/processing/stack`, {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/processing/stack`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -555,7 +584,7 @@ export const api = {
         ra: params.ra,
         dec: params.dec,
       }),
-    });
+    }, 25000);
     if (!res.ok) throw new Error('Failed to run image stacking co-addition');
     return res.json();
   },

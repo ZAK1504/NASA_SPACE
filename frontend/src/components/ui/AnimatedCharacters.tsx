@@ -12,7 +12,8 @@ export const AnimatedCharacters: React.FC<AnimatedCharactersProps> = ({
   className = "",
   delay = 0,
 }) => {
-  const characters = text.split("");
+  // Split into words so complete words never break mid-word across lines
+  const words = text.split(" ");
 
   const container = {
     hidden: { opacity: 0 },
@@ -53,17 +54,26 @@ export const AnimatedCharacters: React.FC<AnimatedCharactersProps> = ({
       whileInView="visible"
       viewport={{ once: true }}
     >
-      {characters.map((char, index) => (
-        <motion.span
-          key={index}
-          variants={child}
-          style={{
-            display: "inline-block",
-            whiteSpace: char === " " ? "pre" : "normal",
-          }}
+      {words.map((word, wordIdx) => (
+        <span
+          key={wordIdx}
+          style={{ display: "inline-block", whiteSpace: "nowrap" }}
         >
-          {char}
-        </motion.span>
+          {word.split("").map((char, charIdx) => (
+            <motion.span
+              key={charIdx}
+              variants={child}
+              style={{
+                display: "inline-block",
+              }}
+            >
+              {char}
+            </motion.span>
+          ))}
+          {wordIdx < words.length - 1 && (
+            <span style={{ display: "inline-block", whiteSpace: "pre" }}>{" "}</span>
+          )}
+        </span>
       ))}
     </motion.span>
   );

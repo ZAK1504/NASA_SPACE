@@ -248,15 +248,17 @@ async def ask_assistant(
             "source": "scope_restricted"
         }
 
-    # 2. Check deterministic knowledge base responses
-    for key, entry in DETERMINISTIC_RESPONSES.items():
-        if key in q:
-            return {
-                "response": entry["text"],
-                "actions": entry["actions"],
-                "suggested_questions": copilot_ai_service.generate_suggested_questions(entry["text"], raw_message),
-                "source": "scientific_knowledge_base"
-            }
+    # 2. Check deterministic knowledge base responses (only for terse 1-2 word glossary lookups)
+    # When natural language questions arrive, Groq AI takes over dynamically.
+    if len(q.split()) <= 2:
+        for key, entry in DETERMINISTIC_RESPONSES.items():
+            if key == q or (key in q and len(q.split()) <= 2):
+                return {
+                    "response": entry["text"],
+                    "actions": entry["actions"],
+                    "suggested_questions": copilot_ai_service.generate_suggested_questions(entry["text"], raw_message),
+                    "source": "scientific_knowledge_base"
+                }
 
     # 3. If AI is enabled and within budget, gather stream into single response
     if copilot_budget_service.is_ai_enabled() and not copilot_budget_service.is_circuit_open():
