@@ -1,4 +1,4 @@
-# SPHEREx HORIZON — Interactive Cosmic Discovery Platform
+# sphereXPLORER — Interactive Cosmic Discovery Platform
 
 [![NASA Space Apps Challenge 2026](https://img.shields.io/badge/NASA%20Space%20Apps-2026-blue.svg)](https://www.spaceappschallenge.org/)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
