@@ -123,7 +123,7 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
         {workspaceType === "explorer" && (
           <div className="flex items-center gap-1 bg-white/5 p-1 rounded-full border border-white/10 text-xs">
             <button
-              onClick={() => navigate("/explore")}
+              onClick={() => navigate("/explore", { state: location.state })}
               className={`px-3 py-1 rounded-full text-xs font-mono transition-all cursor-pointer ${
                 activeTool === "sky"
                   ? "bg-[var(--accent)] text-black font-semibold shadow-sm"
@@ -133,7 +133,7 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
               Sky
             </button>
             <button
-              onClick={() => navigate("/objects")}
+              onClick={() => navigate("/objects", { state: location.state })}
               className={`px-3 py-1 rounded-full text-xs font-mono transition-all cursor-pointer ${
                 activeTool === "object"
                   ? "bg-[var(--accent)] text-black font-semibold shadow-sm"
@@ -143,7 +143,7 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
               Object
             </button>
             <button
-              onClick={() => navigate("/spectra")}
+              onClick={() => navigate("/spectra", { state: location.state })}
               className={`px-3 py-1 rounded-full text-xs font-mono transition-all cursor-pointer ${
                 activeTool === "spectral"
                   ? "bg-[var(--accent)] text-black font-semibold shadow-sm"
@@ -158,7 +158,7 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
         {workspaceType === "labs" && (
           <div className="flex items-center gap-1 bg-white/5 p-1 rounded-full border border-white/10 text-xs">
             <button
-              onClick={() => navigate("/discovery-lab")}
+              onClick={() => navigate("/discovery-lab", { state: location.state })}
               className={`px-3 py-1 rounded-full text-xs font-mono transition-all cursor-pointer ${
                 activeTool === "discovery"
                   ? "bg-[var(--accent)] text-black font-semibold shadow-sm"
@@ -168,7 +168,7 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
               Discovery
             </button>
             <button
-              onClick={() => navigate("/discoveries")}
+              onClick={() => navigate("/discoveries", { state: location.state })}
               className={`px-3 py-1 rounded-full text-xs font-mono transition-all cursor-pointer ${
                 activeTool === "discoveries"
                   ? "bg-[var(--accent)] text-black font-semibold shadow-sm"
@@ -178,7 +178,7 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
               Journal
             </button>
             <button
-              onClick={() => navigate("/light-curves")}
+              onClick={() => navigate("/light-curves", { state: location.state })}
               className={`px-3 py-1 rounded-full text-xs font-mono transition-all cursor-pointer ${
                 activeTool === "light-curves"
                   ? "bg-[var(--accent)] text-black font-semibold shadow-sm"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Backdrop from "../components/ui/Backdrop";
@@ -66,42 +66,37 @@ export const JourneyPage: React.FC = () => {
     }
   };
 
-  // Restore previous scroll position or handle deep hash on mount
-  useEffect(() => {
+  // Authoritative synchronous scroll restoration: runs BEFORE browser paint to prevent any visible scroll jumps
+  useLayoutEffect(() => {
     const savedState = getJourneyReturnState();
     const hash = location.hash.replace("#", "").toLowerCase();
 
     const restoreTarget = location.state?.targetChapter || savedState?.originChapter || (hash && CHAPTER_IDS.includes(hash) ? hash : null);
     const targetScrollY = location.state?.targetScrollY ?? savedState?.scrollY;
 
-    if (restoreTarget && restoreTarget !== "home") {
+    if (restoreTarget) {
       setActiveChapter(restoreTarget);
 
-      const restore = () => {
-        if (targetScrollY && targetScrollY > 100) {
-          if (window.__lenis) {
-            window.__lenis.scrollTo(targetScrollY, { immediate: true });
-          } else {
-            window.scrollTo(0, targetScrollY);
-          }
-        } else {
-          const el = document.getElementById(restoreTarget);
-          if (el) {
-            if (window.__lenis) {
-              window.__lenis.scrollTo(el, { immediate: true, offset: -70 });
-            } else {
-              el.scrollIntoView({ behavior: "auto" });
-            }
-          }
+      let finalScroll = 0;
+      if (targetScrollY && targetScrollY > 0) {
+        finalScroll = targetScrollY;
+      } else if (restoreTarget !== "home") {
+        const el = document.getElementById(restoreTarget);
+        if (el) {
+          finalScroll = Math.max(0, el.offsetTop - 70);
         }
-      };
+      }
 
-      // Single synchronized restore pass — prevents delayed second scroll jump
-      const restoreRaf = requestAnimationFrame(restore);
-      clearJourneyReturnState();
-      return () => cancelAnimationFrame(restoreRaf);
+      if (finalScroll > 0) {
+        window.scrollTo({ top: finalScroll, left: 0, behavior: "instant" });
+        document.documentElement.scrollTop = finalScroll;
+        document.body.scrollTop = finalScroll;
+        if (window.__lenis) {
+          window.__lenis.scrollTo(finalScroll, { immediate: true });
+        }
+      }
     }
-  }, [location]);
+  }, [location.pathname, location.hash]);
 
   // Global hotkey: Ctrl+K or Cmd+K for Command Palette
   useEffect(() => {
@@ -119,23 +114,34 @@ export const JourneyPage: React.FC = () => {
   // Peaks as Explorer leaves the viewport and Time Machine emerges, settling to zero once centered
   useEffect(() => {
     let raf = 0;
+    let expBottomOffset = 0;
+    let tmTopOffset = 0;
+
+    const measureWarpOffsets = () => {
+      const expEl = document.getElementById("explorer");
+      const tmEl = document.getElementById("time-machine");
+      if (expEl && tmEl) {
+        expBottomOffset = expEl.offsetTop + expEl.offsetHeight;
+        tmTopOffset = tmEl.offsetTop;
+      }
+    };
+    measureWarpOffsets();
+
     const update = () => {
       raf = 0;
       const h = window.innerHeight;
+      const scrollY = window.scrollY;
 
-      const expEl = document.getElementById("explorer");
-      const tmEl = document.getElementById("time-machine");
+      if (expBottomOffset > 0 && tmTopOffset > 0) {
+        const expBottom = expBottomOffset - scrollY;
+        const tmTop = tmTopOffset - scrollY;
 
-      if (expEl && tmEl) {
-        const expRect = expEl.getBoundingClientRect();
-        const tmRect = tmEl.getBoundingClientRect();
-
-        // Active warp zone: bottom of explorer is between 80% viewport and scrolled off,
-        // while time-machine top is between bottom of screen and centering (h * 0.4)
-        if (expRect.bottom < h * 0.85 && tmRect.top > h * 0.1) {
+        // Active warp zone: bottom of explorer is between 85% viewport and scrolled off,
+        // while time-machine top is between bottom of screen and centering (h * 0.1)
+        if (expBottom < h * 0.85 && tmTop > h * 0.1) {
           const zoneStart = h * 0.85;
           const zoneEnd = h * 0.1;
-          const progress = Math.max(0, Math.min(1, (zoneStart - tmRect.top) / (zoneStart - zoneEnd)));
+          const progress = Math.max(0, Math.min(1, (zoneStart - tmTop) / (zoneStart - zoneEnd)));
           // Smooth sine bell curve (0 -> 1 -> 0)
           const warp = Math.sin(progress * Math.PI);
           window.__horizonWarpFactor = warp;
@@ -146,12 +152,16 @@ export const JourneyPage: React.FC = () => {
       window.__horizonWarpFactor = 0;
     };
     const on = () => { if (!raf) raf = requestAnimationFrame(update); };
+    const onResize = () => {
+      measureWarpOffsets();
+      on();
+    };
     update();
     window.addEventListener("scroll", on, { passive: true });
-    window.addEventListener("resize", on);
+    window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("scroll", on);
-      window.removeEventListener("resize", on);
+      window.removeEventListener("resize", onResize);
       cancelAnimationFrame(raf);
       window.__horizonWarpFactor = 0;
     };

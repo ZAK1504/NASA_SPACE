@@ -141,7 +141,7 @@ export const SpectralExplorer: React.FC = () => {
           const hipsBase = getHipsApiBase();
           aladinInstanceRef.current = A.aladin(aladinContainerRef.current, {
             survey: `${hipsBase}/${currentChannel}`,
-            projection: 'AITOFF',
+            projection: 'AIT',
             fov: 180,
             target: `${selectedObject.ra} ${selectedObject.dec}`,
             cooFrame: 'J2000',
@@ -185,6 +185,28 @@ export const SpectralExplorer: React.FC = () => {
 
     return () => {
       isMounted = false;
+      if (aladinInstanceRef.current) {
+        try {
+          aladinInstanceRef.current.stopAnimation?.();
+          aladinInstanceRef.current.removeLayers?.();
+          aladinInstanceRef.current.removeOverlays?.();
+        } catch (e) {
+          // ignore
+        }
+      }
+      if (aladinContainerRef.current) {
+        try {
+          const canvases = aladinContainerRef.current.querySelectorAll('canvas');
+          canvases.forEach((c) => {
+            const gl = c.getContext('webgl2') || c.getContext('webgl');
+            gl?.getExtension('WEBGL_lose_context')?.loseContext();
+          });
+          aladinContainerRef.current.innerHTML = '';
+        } catch (e) {
+          // ignore
+        }
+      }
+      aladinInstanceRef.current = null;
     };
   }, []);
 

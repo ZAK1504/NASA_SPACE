@@ -87,6 +87,28 @@ export const ExploreSky: React.FC = () => {
 
     return () => {
       isMounted = false;
+      if (aladinInstanceRef.current) {
+        try {
+          aladinInstanceRef.current.stopAnimation?.();
+          aladinInstanceRef.current.removeLayers?.();
+          aladinInstanceRef.current.removeOverlays?.();
+        } catch (e) {
+          // ignore
+        }
+      }
+      if (aladinContainerRef.current) {
+        try {
+          const canvases = aladinContainerRef.current.querySelectorAll('canvas');
+          canvases.forEach((c) => {
+            const gl = c.getContext('webgl2') || c.getContext('webgl');
+            gl?.getExtension('WEBGL_lose_context')?.loseContext();
+          });
+          aladinContainerRef.current.innerHTML = '';
+        } catch (e) {
+          // ignore
+        }
+      }
+      aladinInstanceRef.current = null;
     };
   }, []);
 

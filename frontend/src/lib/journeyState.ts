@@ -33,6 +33,15 @@ const STORAGE_KEY = "horizon_journey_state";
 /** Save the current Journey chapter and scroll position before opening a dedicated workspace. */
 export function saveJourneyState(chapterId: string): void {
   try {
+    const isInsideJourney = typeof window !== 'undefined' && (window.location.pathname === "/" || window.location.pathname === "/home");
+    // If navigating between related workspaces, preserve the original originating Journey context!
+    if (!isInsideJourney) {
+      const existing = getJourneyReturnState();
+      if (existing && existing.scrollY !== undefined && existing.originChapter) {
+        return;
+      }
+    }
+
     const state: JourneyReturnState = {
       originChapter: chapterId,
       scrollY: window.scrollY,

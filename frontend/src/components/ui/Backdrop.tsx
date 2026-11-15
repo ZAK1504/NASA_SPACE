@@ -27,28 +27,34 @@ export const Backdrop: React.FC<BackdropProps> = ({ activeSection = "home" }) =>
       return x * x * (3 - 2 * x);
     };
 
+    // Cache chapter center offsets to prevent forced synchronous layout thrashing on scroll
+    let cachedOffsets: number[] = [];
+    const measureOffsets = () => {
+      const vh = window.innerHeight;
+      cachedOffsets = CHAPTERS.map((id, i) => {
+        const el = document.getElementById(id);
+        if (el) {
+          return el.offsetTop + el.offsetHeight * 0.5;
+        }
+        return i * vh * 1.4;
+      });
+    };
+    measureOffsets();
+
     const updateBlending = () => {
       rafId = 0;
       const vh = window.innerHeight;
       const vCenter = vh * 0.5;
+      const scrollY = window.scrollY;
 
-      // 1. Locate current centers of all chapters
-      const centers: number[] = [];
-      for (let i = 0; i < CHAPTERS.length; i++) {
-        const el = document.getElementById(CHAPTERS[i]);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          centers.push(rect.top + rect.height * 0.5);
-        } else {
-          // Fallback estimated positions if an element isn't in DOM
-          centers.push(i * vh * 1.4);
-        }
-      }
+      // 1. Calculate current viewport-relative center for each chapter using cached offsets (zero DOM thrashing)
+      const centers = cachedOffsets.length === CHAPTERS.length
+        ? cachedOffsets.map((off) => off - scrollY)
+        : CHAPTERS.map((_, i) => i * vh * 1.4 - scrollY);
 
       // 2. Compute smooth normalized weight for each chapter
       const weights = new Array(CHAPTERS.length).fill(0);
       const maxScroll = Math.max(1, document.documentElement.scrollHeight - vh);
-      const scrollY = window.scrollY;
       const endScrollProgress = Math.max(0, Math.min(1, (scrollY - (maxScroll - vh * 0.75)) / (vh * 0.75)));
 
       if (vCenter <= centers[0]) {
@@ -94,13 +100,18 @@ export const Backdrop: React.FC<BackdropProps> = ({ activeSection = "home" }) =>
       if (!rafId) rafId = requestAnimationFrame(updateBlending);
     };
 
+    const onResize = () => {
+      measureOffsets();
+      if (!rafId) rafId = requestAnimationFrame(updateBlending);
+    };
+
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", onResize);
     updateBlending();
 
     return () => {
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("resize", onResize);
       if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);

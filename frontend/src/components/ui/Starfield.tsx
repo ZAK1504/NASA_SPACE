@@ -74,6 +74,10 @@ export const Starfield: React.FC<StarfieldProps> = ({ warpFactor = 0 }) => {
     };
 
     const draw = (t: number) => {
+      if (document.hidden) {
+        raf = requestAnimationFrame(draw);
+        return;
+      }
       ctx.clearRect(0, 0, w, h);
       const sy = window.scrollY;
 

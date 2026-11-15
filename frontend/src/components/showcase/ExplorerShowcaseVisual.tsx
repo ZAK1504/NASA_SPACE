@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useMemo } from "react";
-import { Sparkles, Radio, Layers, Compass, Eye, ArrowRight, Target, Activity } from "lucide-react";
+import { Sparkles, Radio, Layers, ArrowRight, Activity, Target } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { travelToWorkspace } from "../../lib/journeyState";
 
@@ -7,14 +7,13 @@ export interface ExplorerShowcaseVisualProps {
   activeMode?: "sky" | "object" | "spectral";
 }
 
-interface TargetStar {
+interface CelestialTarget {
   id: string;
   name: string;
   designation: string;
   type: string;
-  xPct: number; // percentage within canvas (0 - 100)
-  yPct: number;
-  labelPlacement: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  x: number; // Authoritative SVG viewBox coordinates (0 - 540)
+  y: number; // (0 - 460)
   color: string;
   glowColor: string;
   size: number;
@@ -22,118 +21,172 @@ interface TargetStar {
   decDms: string;
   fact: string;
   pmNote: string;
-  pmVector?: { dx: number; dy: number; label: string };
-  wavelengthNote: string;
-  bandBrightness: { [bandId: string]: number }; // relative flux multiplier per band (0.2 to 1.5)
+  pmVector?: { targetX: number; targetY: number; label: string };
+  labelPlacement: {
+    badgeX: number;
+    badgeY: number;
+    badgeW: number;
+    badgeH: number;
+    elbowX: number;
+    elbowY: number;
+  };
+  bandFlux: { [bandId: string]: number }; // relative flux multiplier per band
 }
 
-const CANONICAL_TARGETS: TargetStar[] = [
+/**
+ * Single Authoritative Celestial Targets in unified SVG coordinate space (540 x 460).
+ * Every star marker, neon connector, light pulse, leader line and reticle is derived
+ * from these exact coordinates, guaranteeing 100% geometric alignment.
+ */
+const CELESTIAL_TARGETS: CelestialTarget[] = [
   {
     id: "rw-aurigae",
     name: "RW Aurigae",
     designation: "V* RW Aur",
     type: "Young Stellar Object Binary",
-    xPct: 22,
-    yPct: 24,
-    labelPlacement: "top-left",
+    x: 110,
+    y: 115,
     color: "#FDE68A",
-    glowColor: "rgba(253, 230, 138, 0.55)",
-    size: 4.8,
+    glowColor: "rgba(253, 230, 138, 0.70)",
+    size: 5.2,
     raHms: "05h 07m 50s",
     decDms: "+30° 24′ 05″",
     fact: "Pre-main sequence binary system with tidally disrupted circumstellar protoplanetary disk.",
     pmNote: "μ = 0.02″/yr (Pre-main sequence)",
-    wavelengthNote: "Mid-IR excess from warm silicate dust bridge",
-    bandBrightness: { "075um": 1.1, "133um": 1.2, "236um": 1.3, "472um": 1.4 },
+    labelPlacement: {
+      badgeX: 20,
+      badgeY: 35,
+      badgeW: 115,
+      badgeH: 36,
+      elbowX: 65,
+      elbowY: 75,
+    },
+    bandFlux: { "075um": 1.1, "133um": 1.25, "236um": 1.35, "472um": 1.45 },
   },
   {
     id: "barnards-star",
     name: "Barnard's Star",
     designation: "GJ 699",
     type: "High Proper-Motion M4V Dwarf",
-    xPct: 48,
-    yPct: 40,
-    labelPlacement: "top-right",
+    x: 270,
+    y: 190, // Central Discovery Hub of the survey network
     color: "#F4A272",
-    glowColor: "rgba(244, 162, 114, 0.65)",
-    size: 5.4,
+    glowColor: "rgba(244, 162, 114, 0.85)",
+    size: 6.2,
     raHms: "17h 57m 48s",
     decDms: "+04° 44′ 22″",
     fact: "Fastest proper motion star known; traverses 10.223″ predicted displacement across 359-day baseline.",
     pmNote: "μ = 10.39″/yr (10.223″ / 359d baseline)",
-    pmVector: { dx: 14, dy: -18, label: "μ = 10.39″/yr" },
-    wavelengthNote: "Brilliant in near-IR channels (0.75–2.4 µm)",
-    bandBrightness: { "075um": 1.3, "133um": 1.5, "236um": 1.4, "472um": 0.8 },
+    pmVector: { targetX: 308, targetY: 142, label: "μ = 10.39″/yr" },
+    labelPlacement: {
+      badgeX: 285,
+      badgeY: 110,
+      badgeW: 125,
+      badgeH: 36,
+      elbowX: 310,
+      elbowY: 155,
+    },
+    bandFlux: { "075um": 1.3, "133um": 1.5, "236um": 1.4, "472um": 0.8 },
   },
   {
     id: "r-draconis",
     name: "R Draconis",
     designation: "V* R Dra",
-    type: "Mira-type Pulsating Variable",
-    xPct: 78,
-    yPct: 28,
-    labelPlacement: "top-right",
+    type: "Mira-type Pulsating Giant",
+    x: 435,
+    y: 120,
     color: "#FB7185",
-    glowColor: "rgba(251, 113, 133, 0.60)",
-    size: 5.0,
+    glowColor: "rgba(251, 113, 133, 0.75)",
+    size: 5.6,
     raHms: "16h 32m 40s",
     decDms: "+66° 42′ 10″",
     fact: "Pulsating carbon giant with a 314-day cycle, varying by >5 magnitudes across infrared epochs.",
     pmNote: "Variable pulsator (Period: 314 days)",
-    wavelengthNote: "Prominent CO ice absorption at 4.67 µm",
-    bandBrightness: { "075um": 0.6, "133um": 0.9, "236um": 1.3, "472um": 1.6 },
+    labelPlacement: {
+      badgeX: 405,
+      badgeY: 38,
+      badgeW: 115,
+      badgeH: 36,
+      elbowX: 450,
+      elbowY: 80,
+    },
+    bandFlux: { "075um": 0.6, "133um": 0.9, "236um": 1.3, "472um": 1.65 },
   },
   {
     id: "wise-0855",
     name: "WISE 0855−0714",
-    designation: "WISE J0855-0714",
-    type: "Sub-stellar Cold Brown Dwarf",
-    xPct: 25,
-    yPct: 72,
-    labelPlacement: "bottom-left",
+    designation: "WISE J0855",
+    type: "Substellar ~250 K Brown Dwarf",
+    x: 125,
+    y: 345,
     color: "#F59E0B",
-    glowColor: "rgba(245, 158, 11, 0.60)",
-    size: 4.4,
+    glowColor: "rgba(245, 158, 11, 0.75)",
+    size: 5.0,
     raHms: "08h 55m 11s",
     decDms: "−07° 14′ 43″",
     fact: "Coldest known brown dwarf (~250 K) with atmospheric water-ice and methane cloud signatures.",
     pmNote: "μ = 8.12″/yr (7.981″ / 359d baseline)",
-    pmVector: { dx: -12, dy: 8, label: "μ = 8.12″/yr" },
-    wavelengthNote: "Detected in mid-IR D5/D6 arrays (3.8–5.0 µm)",
-    bandBrightness: { "075um": 0.2, "133um": 0.4, "236um": 0.9, "472um": 1.8 },
+    pmVector: { targetX: 95, targetY: 375, label: "μ = 8.12″/yr" },
+    labelPlacement: {
+      badgeX: 20,
+      badgeY: 395,
+      badgeW: 135,
+      badgeH: 36,
+      elbowX: 75,
+      elbowY: 380,
+    },
+    bandFlux: { "075um": 0.25, "133um": 0.45, "236um": 0.95, "472um": 1.85 },
   },
   {
     id: "epsilon-indi-b",
     name: "Epsilon Indi B",
     designation: "HD 209100B",
     type: "Binary T-Dwarf System",
-    xPct: 72,
-    yPct: 70,
-    labelPlacement: "bottom-right",
+    x: 415,
+    y: 340,
     color: "#818CF8",
-    glowColor: "rgba(129, 140, 248, 0.60)",
-    size: 4.6,
+    glowColor: "rgba(129, 140, 248, 0.75)",
+    size: 5.2,
     raHms: "22h 04m 11s",
     decDms: "−56° 46′ 58″",
     fact: "T1 + T6 substellar binary separated by ~402″ from primary star Epsilon Indi A.",
     pmNote: "μ = 4.71″/yr (4.630″ / 359d baseline)",
-    pmVector: { dx: 10, dy: 10, label: "μ = 4.71″/yr" },
-    wavelengthNote: "Methane absorption bands at 1.66 µm & 2.20 µm",
-    bandBrightness: { "075um": 0.5, "133um": 1.1, "236um": 1.4, "472um": 1.3 },
+    pmVector: { targetX: 445, targetY: 370, label: "μ = 4.71″/yr" },
+    labelPlacement: {
+      badgeX: 385,
+      badgeY: 395,
+      badgeW: 135,
+      badgeH: 36,
+      elbowX: 440,
+      elbowY: 378,
+    },
+    bandFlux: { "075um": 0.5, "133um": 1.1, "236um": 1.4, "472um": 1.35 },
   },
 ];
 
-// Primary Celestial Discovery Path Trajectory + Survey Asterism
-const DISCOVERY_PATH_SEGMENTS: Array<[string, string, boolean]> = [
-  // [NodeA, NodeB, isPrimaryTrajectory]
-  ["rw-aurigae", "barnards-star", true],
-  ["barnards-star", "r-draconis", true],
-  ["r-draconis", "epsilon-indi-b", true],
-  ["epsilon-indi-b", "wise-0855", true],
-  ["wise-0855", "rw-aurigae", true],
-  // Central Survey Interlinks
-  ["barnards-star", "wise-0855", false],
-  ["barnards-star", "epsilon-indi-b", false],
+/**
+ * Intentional Constellation Discovery Network Connections:
+ * Central hub connections from Barnard's Star radiating to all four frontier quadrants,
+ * plus outer celestial survey perimeter arcs linking related astrophysical regimes.
+ */
+interface PathConnection {
+  id: string;
+  from: string;
+  to: string;
+  curvature: number; // lateral offset in SVG units for smooth Bézier arc
+  isHub: boolean;
+}
+
+const DISCOVERY_CONNECTIONS: PathConnection[] = [
+  // 1. Central Hub Discovery Spokes (Barnard's Star to all regimes)
+  { id: "hub-rw", from: "barnards-star", to: "rw-aurigae", curvature: -16, isHub: true },
+  { id: "hub-rdra", from: "barnards-star", to: "r-draconis", curvature: 16, isHub: true },
+  { id: "hub-wise", from: "barnards-star", to: "wise-0855", curvature: 18, isHub: true },
+  { id: "hub-eps", from: "barnards-star", to: "epsilon-indi-b", curvature: -18, isHub: true },
+  // 2. Outer Astrometric Survey Arcs
+  { id: "arc-rw-wise", from: "rw-aurigae", to: "wise-0855", curvature: -22, isHub: false },
+  { id: "arc-rdra-eps", from: "r-draconis", to: "epsilon-indi-b", curvature: 22, isHub: false },
+  { id: "arc-substellar", from: "wise-0855", to: "epsilon-indi-b", curvature: 14, isHub: false },
 ];
 
 const SPECTRAL_BANDS = [
@@ -143,58 +196,42 @@ const SPECTRAL_BANDS = [
   { id: "472um", lambda: "4.72 μm", array: "Array 6 (D6)", desc: "Mid-IR · Cold Brown Dwarfs & Interstellar Ices", color: "#FB7185" },
 ];
 
-/**
- * Celestial Discovery Path.
- * Replaces scattered dots with an intentional, connected astronomical survey asterism:
- * - Visibly refined, glowing celestial connection trajectories with dual-pass rendering
- * - Travelling light pulses / quantum photon wavepackets continuously traversing segments
- * - Selected-target illumination with pulse acceleration toward the active celestial node
- * - Elegant leader lines connecting star nodes to aerospace-grade typography labels
- * - Seamless, 100% transparent footprint that harmonizes with the Journey galaxy background
- */
 export const ExplorerShowcaseVisual: React.FC<ExplorerShowcaseVisualProps> = ({
   activeMode = "sky",
 }) => {
   const navigate = useNavigate();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const [selectedTarget, setSelectedTarget] = useState<TargetStar | null>(null);
+  const [selectedTarget, setSelectedTarget] = useState<CelestialTarget | null>(null);
   const [hoveredTargetId, setHoveredTargetId] = useState<string | null>(null);
   const [activeBandIdx, setActiveBandIdx] = useState<number>(0);
+  const [pulseTime, setPulseTime] = useState<number>(0);
 
-  // Parallax spring state
+  // Parallax spring offset
   const [mouseParallax, setMouseParallax] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  const stateRef = useRef({
-    time: 0,
-    isVisible: true,
-    activeMode: "sky" as "sky" | "object" | "spectral",
-    targetX: 0,
-    targetY: 0,
-    currentX: 0,
-    currentY: 0,
-    selectedId: null as string | null,
-    hoveredId: null as string | null,
-    activeBandId: "075um",
-  });
+  // Continuous animation ticker for travelling light pulses (60fps)
+  useEffect(() => {
+    let raf = 0;
+    let last = performance.now();
+    const tick = (now: number) => {
+      const dt = Math.min((now - last) / 1000, 0.1);
+      last = now;
+      setPulseTime((prev) => (prev + dt) % 1000);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
-  // Keep stateRef in sync for smooth 60fps RAF access
-  stateRef.current.activeMode = activeMode;
-  stateRef.current.selectedId = selectedTarget?.id || null;
-  stateRef.current.hoveredId = hoveredTargetId;
-  stateRef.current.activeBandId = SPECTRAL_BANDS[activeBandIdx].id;
-
-  // Mode changes from parent CTA hover
+  // Synchronize active mode with parent hover
   useEffect(() => {
     if (activeMode === "object") {
-      setSelectedTarget(CANONICAL_TARGETS[1]); // Default to Barnard's Star
+      setSelectedTarget(CELESTIAL_TARGETS[1]); // Default to Barnard's Star
     } else if (activeMode === "sky") {
       setSelectedTarget(null);
     }
   }, [activeMode]);
 
-  // Spectral band cycle when in spectral mode
+  // Cycle spectral bands when in spectral mode
   useEffect(() => {
     if (activeMode !== "spectral") return;
     const interval = setInterval(() => {
@@ -203,452 +240,426 @@ export const ExplorerShowcaseVisual: React.FC<ExplorerShowcaseVisualProps> = ({
     return () => clearInterval(interval);
   }, [activeMode]);
 
-  // Subtle ambient celestial background motes
-  const ambientStars = useMemo(() => {
-    const stars = [];
-    for (let i = 0; i < 36; i++) {
-      const angle = (i * 137.5 * Math.PI) / 180;
-      const r = Math.sqrt((i + 1) / 36) * 44;
-      const x = 50 + Math.cos(angle) * r + Math.sin(i * 1.3) * 2;
-      const y = 50 + Math.sin(angle) * r * 0.85 + Math.cos(i * 1.9) * 2;
-      const zDepth = 0.3 + ((i * 19) % 70) / 100;
-      const radius = 0.7 + ((i * 11) % 14) / 10;
-      const baseAlpha = 0.18 + ((i * 29) % 45) / 100;
-      const pulseSpeed = 0.8 + ((i * 13) % 15) / 10;
-      const colors = ["#F8FAFC", "#E2E8F0", "#C7D2FE", "#DDD6FE", "#FEF3C7"];
-      stars.push({ x, y, zDepth, radius, baseAlpha, pulseSpeed, color: colors[i % colors.length] });
-    }
-    return stars;
+  // Target lookups
+  const targetMap = useMemo(() => {
+    const map = new Map<string, CelestialTarget>();
+    CELESTIAL_TARGETS.forEach((t) => map.set(t.id, t));
+    return map;
   }, []);
 
-  // Main Canvas Render Loop (Luminous Pathways & Travelling Light Pulses)
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d", { alpha: true });
-    if (!ctx) return;
+  // Active target identifier
+  const activeTargetId = selectedTarget?.id || hoveredTargetId;
+  const activeBand = SPECTRAL_BANDS[activeBandIdx];
 
-    let rafId = 0;
-    const container = containerRef.current;
+  // Compute Quadratic Bézier geometry for every connection path
+  const pathsGeometry = useMemo(() => {
+    return DISCOVERY_CONNECTIONS.map((conn) => {
+      const nodeA = targetMap.get(conn.from);
+      const nodeB = targetMap.get(conn.to);
+      if (!nodeA || !nodeB) return null;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          stateRef.current.isVisible = e.isIntersecting;
-        });
-      },
-      { threshold: 0.05 }
-    );
-    if (container) observer.observe(container);
+      const midX = (nodeA.x + nodeB.x) / 2;
+      const midY = (nodeA.y + nodeB.y) / 2;
+      const dx = nodeB.x - nodeA.x;
+      const dy = nodeB.y - nodeA.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const normalX = -dy / len;
+      const normalY = dx / len;
 
-    const render = (now: number) => {
-      rafId = requestAnimationFrame(render);
-      if (!stateRef.current.isVisible) return;
+      const ctrlX = midX + normalX * conn.curvature;
+      const ctrlY = midY + normalY * conn.curvature;
 
-      const dt = 0.016;
-      stateRef.current.time += dt;
-      const t = stateRef.current.time;
+      const d = `M ${nodeA.x} ${nodeA.y} Q ${ctrlX} ${ctrlY} ${nodeB.x} ${nodeB.y}`;
 
-      // Smooth parallax spring
-      stateRef.current.currentX += (stateRef.current.targetX - stateRef.current.currentX) * 0.08;
-      stateRef.current.currentY += (stateRef.current.targetY - stateRef.current.currentY) * 0.08;
+      return {
+        ...conn,
+        nodeA,
+        nodeB,
+        ctrlX,
+        ctrlY,
+        d,
+      };
+    }).filter(Boolean) as Array<PathConnection & {
+      nodeA: CelestialTarget;
+      nodeB: CelestialTarget;
+      ctrlX: number;
+      ctrlY: number;
+      d: string;
+    }>;
+  }, [targetMap]);
 
-      const px = stateRef.current.currentX;
-      const py = stateRef.current.currentY;
+  // Subtle decorative background cluster motes (fixed seed for deterministic layout)
+  const ambientMotes = useMemo(() => {
+    const motes = [];
+    for (let i = 0; i < 28; i++) {
+      const angle = (i * 137.5 * Math.PI) / 180;
+      const r = Math.sqrt((i + 1) / 28) * 190;
+      const x = 270 + Math.cos(angle) * r;
+      const y = 230 + Math.sin(angle) * r * 0.82;
+      const radius = 0.8 + ((i * 17) % 12) / 10;
+      const alpha = 0.2 + ((i * 23) % 40) / 100;
+      motes.push({ x, y, radius, alpha });
+    }
+    return motes;
+  }, []);
 
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const W = canvas.width / dpr;
-      const H = canvas.height / dpr;
-
-      // 100% transparent clear — leaves the global Journey galaxy starfield untouched!
-      ctx.clearRect(0, 0, W, H);
-
-      const activeTargetId = stateRef.current.selectedId || stateRef.current.hoveredId;
-      const currentMode = stateRef.current.activeMode;
-      const currentBand = stateRef.current.activeBandId;
-
-      // 1. Ethereal Central Celestial Survey Core Glow
-      const centerGrad = ctx.createRadialGradient(
-        W * 0.5 + px * 3,
-        H * 0.48 + py * 3,
-        20,
-        W * 0.5 + px * 3,
-        H * 0.48 + py * 3,
-        Math.min(W, H) * 0.5
-      );
-      if (currentMode === "spectral") {
-        centerGrad.addColorStop(0, "rgba(168, 85, 247, 0.16)");
-        centerGrad.addColorStop(0.4, "rgba(129, 140, 248, 0.08)");
-        centerGrad.addColorStop(0.7, "rgba(244, 162, 114, 0.03)");
-        centerGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      } else {
-        centerGrad.addColorStop(0, "rgba(244, 162, 114, 0.12)");
-        centerGrad.addColorStop(0.35, "rgba(129, 140, 248, 0.07)");
-        centerGrad.addColorStop(0.7, "rgba(168, 85, 247, 0.02)");
-        centerGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      }
-      ctx.fillStyle = centerGrad;
-      ctx.beginPath();
-      ctx.arc(W * 0.5 + px * 3, H * 0.48 + py * 3, Math.min(W, H) * 0.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 2. Faint Astronomical Survey Grid / Celestial Meridian (In Sky Mode)
-      if (currentMode === "sky") {
-        ctx.save();
-        ctx.lineWidth = 1;
-        ctx.setLineDash([4, 8]);
-        ctx.strokeStyle = "rgba(147, 197, 253, 0.10)";
-        
-        // Horizontal Declination Parallel
-        ctx.beginPath();
-        ctx.ellipse(W * 0.5 + px * 2, H * 0.48 + py * 2, W * 0.44, H * 0.22, 0, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Diagonal Survey Sweep
-        ctx.beginPath();
-        ctx.moveTo(W * 0.1 + px * 2, H * 0.82 + py * 2);
-        ctx.lineTo(W * 0.9 + px * 2, H * 0.18 + py * 2);
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      // 3. Render Luminous Connection Trajectories (Dual-Pass Stroke)
-      DISCOVERY_PATH_SEGMENTS.forEach(([idA, idB, isPrimary], segIdx) => {
-        const starA = CANONICAL_TARGETS.find((s) => s.id === idA);
-        const starB = CANONICAL_TARGETS.find((s) => s.id === idB);
-        if (!starA || !starB) return;
-
-        const ax = (starA.xPct / 100) * W + px * 6;
-        const ay = (starA.yPct / 100) * H + py * 6;
-        const bx = (starB.xPct / 100) * W + px * 6;
-        const by = (starB.yPct / 100) * H + py * 6;
-
-        const isConnectedToActive =
-          activeTargetId && (starA.id === activeTargetId || starB.id === activeTargetId);
-
-        ctx.save();
-
-        // Pass A: Outer Ambient Luminous Glow
-        ctx.beginPath();
-        ctx.moveTo(ax, ay);
-        ctx.lineTo(bx, by);
-
-        if (isConnectedToActive) {
-          ctx.lineWidth = 6;
-          ctx.strokeStyle = "rgba(244, 162, 114, 0.35)";
-          ctx.stroke();
-        } else if (isPrimary) {
-          ctx.lineWidth = 3.5;
-          ctx.strokeStyle = currentMode === "spectral"
-            ? "rgba(168, 85, 247, 0.18)"
-            : "rgba(244, 162, 114, 0.15)";
-          ctx.stroke();
-        } else {
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = "rgba(129, 140, 248, 0.10)";
-          ctx.stroke();
-        }
-
-        // Pass B: Inner Crisp Core Beam
-        ctx.beginPath();
-        ctx.moveTo(ax, ay);
-        ctx.lineTo(bx, by);
-
-        if (isConnectedToActive) {
-          ctx.lineWidth = 2.4;
-          ctx.strokeStyle = "rgba(244, 162, 114, 0.95)";
-          ctx.stroke();
-        } else if (currentMode === "spectral") {
-          // Dynamic spectral dispersion gradient
-          const segGrad = ctx.createLinearGradient(ax, ay, bx, by);
-          segGrad.addColorStop(0, starA.color);
-          segGrad.addColorStop(1, starB.color);
-          ctx.lineWidth = isPrimary ? 1.8 : 1.2;
-          ctx.strokeStyle = segGrad;
-          ctx.setLineDash(isPrimary ? [] : [3, 4]);
-          ctx.stroke();
-        } else if (isPrimary) {
-          ctx.lineWidth = 1.6;
-          // Ethereal golden-amber survey trajectory line
-          ctx.strokeStyle = "rgba(244, 162, 114, 0.55)";
-          ctx.stroke();
-        } else {
-          ctx.lineWidth = 1.0;
-          ctx.strokeStyle = "rgba(129, 140, 248, 0.30)";
-          ctx.setLineDash([4, 6]);
-          ctx.stroke();
-        }
-
-        ctx.restore();
-
-        // 4. Travelling Light Pulses / Quantum Photon Wavepackets along Segments
-        const pulseSpeed = isConnectedToActive ? 0.65 : 0.35;
-        const pulseCount = isPrimary ? 2 : 1;
-
-        for (let p = 0; p < pulseCount; p++) {
-          const phaseOffset = (segIdx * 0.23 + p * 0.5) % 1.0;
-          const progress = (t * pulseSpeed + phaseOffset) % 1.0;
-
-          // If connected to active star and starB is active, pulse flows towards it
-          const forward = (!isConnectedToActive || starB.id === activeTargetId);
-          const actualProgress = forward ? progress : 1.0 - progress;
-
-          const lx = ax + (bx - ax) * actualProgress;
-          const ly = ay + (by - ay) * actualProgress;
-
-          ctx.save();
-          // Outer pulse glow
-          const pGrad = ctx.createRadialGradient(lx, ly, 0, lx, ly, isConnectedToActive ? 8 : 5);
-          pGrad.addColorStop(0, "#FFFFFF");
-          pGrad.addColorStop(0.4, isConnectedToActive ? "rgba(244, 162, 114, 0.85)" : "rgba(199, 210, 254, 0.7)");
-          pGrad.addColorStop(1, "rgba(244, 162, 114, 0)");
-
-          ctx.fillStyle = pGrad;
-          ctx.beginPath();
-          ctx.arc(lx, ly, isConnectedToActive ? 8 : 5, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Intense photon head
-          ctx.fillStyle = "#FFFFFF";
-          ctx.beginPath();
-          ctx.arc(lx, ly, isConnectedToActive ? 2.2 : 1.5, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.restore();
-        }
-      });
-
-      // 5. Render Barnard's Star Proper Motion Vector (When Active/Hovered or Object Mode)
-      const barnard = CANONICAL_TARGETS.find((s) => s.id === "barnards-star");
-      if (barnard && (currentMode === "object" || activeTargetId === "barnards-star")) {
-        const bx = (barnard.xPct / 100) * W + px * 6;
-        const by = (barnard.yPct / 100) * H + py * 6;
-        const vecDx = 28;
-        const vecDy = -36;
-
-        ctx.save();
-        ctx.strokeStyle = "#F4A272";
-        ctx.lineWidth = 1.8;
-        ctx.setLineDash([3, 3]);
-
-        ctx.beginPath();
-        ctx.moveTo(bx, by);
-        ctx.lineTo(bx + vecDx, by + vecDy);
-        ctx.stroke();
-
-        // Arrow head
-        ctx.setLineDash([]);
-        ctx.fillStyle = "#F4A272";
-        ctx.beginPath();
-        ctx.arc(bx + vecDx, by + vecDy, 3, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.font = "9px ui-monospace, SFMono-Regular, Menlo, monospace";
-        ctx.fillStyle = "#F4A272";
-        ctx.fillText("μ = 10.39″/yr", bx + vecDx + 6, by + vecDy + 3);
-        ctx.restore();
-      }
-
-      // 6. Ambient background star motes
-      ambientStars.forEach((star) => {
-        const sx = (star.x / 100) * W + px * star.zDepth * 8;
-        const sy = (star.y / 100) * H + py * star.zDepth * 8;
-
-        const alpha = Math.max(
-          0.08,
-          star.baseAlpha + Math.sin(t * star.pulseSpeed + star.x) * 0.12
-        );
-
-        ctx.fillStyle = star.color;
-        ctx.globalAlpha = alpha;
-        ctx.beginPath();
-        ctx.arc(sx, sy, star.radius, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      ctx.globalAlpha = 1.0;
-    };
-
-    rafId = requestAnimationFrame(render);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      observer.disconnect();
-    };
-  }, [ambientStars]);
-
-  // Pointer movement for gentle parallax depth
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
     const nx = (e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
     const ny = (e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
-    stateRef.current.targetX = nx;
-    stateRef.current.targetY = ny;
     setMouseParallax({ x: nx, y: ny });
   };
 
   const handlePointerLeave = () => {
-    stateRef.current.targetX = 0;
-    stateRef.current.targetY = 0;
     setMouseParallax({ x: 0, y: 0 });
   };
 
-  const activeBand = SPECTRAL_BANDS[activeBandIdx];
-
   return (
     <div
-      ref={containerRef}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
-      className="explorer-showcase-visual relative w-full max-w-[480px] h-[400px] sm:h-[440px] flex items-center justify-center select-none overflow-visible mx-auto"
+      className="explorer-showcase-visual relative w-full max-w-[500px] aspect-[54/46] flex items-center justify-center select-none overflow-visible mx-auto"
       style={{ touchAction: "pan-y" }}
     >
-      {/* 1. Underlying 100% Transparent Pathway & Pulse Canvas */}
-      <canvas
-        ref={canvasRef}
-        width={960}
-        height={880}
-        className="w-full h-full block pointer-events-none"
-      />
+      {/* 1. Master Responsive SVG Scene (Single Authoritative Coordinate System) */}
+      <svg
+        viewBox="0 0 540 460"
+        className="w-full h-full overflow-visible pointer-events-none"
+        style={{
+          transform: `translate3d(${mouseParallax.x * 4}px, ${mouseParallax.y * 4}px, 0)`,
+          transition: "transform 0.15s ease-out",
+        }}
+      >
+        <defs>
+          {/* Subtle central celestial nebula glow filter */}
+          <radialGradient id="nebula-glow" cx="50%" cy="46%" r="50%">
+            <stop offset="0%" stopColor={activeMode === "spectral" ? "rgba(168, 85, 247, 0.18)" : "rgba(244, 162, 114, 0.15)"} />
+            <stop offset="40%" stopColor="rgba(129, 140, 248, 0.08)" />
+            <stop offset="70%" stopColor="rgba(168, 85, 247, 0.02)" />
+            <stop offset="100%" stopColor="rgba(0, 0, 0, 0)" />
+          </radialGradient>
 
-      {/* 2. Canonical Target Beacons with Aerospace Reticles & Leader Lines */}
-      {CANONICAL_TARGETS.map((target) => {
-        const isSelected = selectedTarget?.id === target.id;
-        const isHovered = hoveredTargetId === target.id;
-        const isActive = isSelected || isHovered;
+          {/* Refined Neon Luminous Filter */}
+          <filter id="neon-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
 
-        // Band brightness flux scaling in spectral mode
-        const bandMultiplier = activeMode === "spectral" ? (target.bandBrightness[activeBand.id] || 1.0) : 1.0;
+          {/* Active Highlight Neon Filter */}
+          <filter id="neon-glow-active" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur1" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur2" />
+            <feMerge>
+              <feMergeNode in="blur1" />
+              <feMergeNode in="blur2" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
 
-        const offsetX = mouseParallax.x * 6;
-        const offsetY = mouseParallax.y * 6;
+          {/* Connection Linear Gradients (derived from endpoints) */}
+          {pathsGeometry.map((p) => (
+            <linearGradient
+              key={`grad-${p.id}`}
+              id={`grad-${p.id}`}
+              x1={p.nodeA.x}
+              y1={p.nodeA.y}
+              x2={p.nodeB.x}
+              y2={p.nodeB.y}
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0%" stopColor={p.nodeA.color} stopOpacity="0.85" />
+              <stop offset="100%" stopColor={p.nodeB.color} stopOpacity="0.85" />
+            </linearGradient>
+          ))}
+        </defs>
 
-        // Smart leader line and label placement configurations
-        const isTop = target.labelPlacement.startsWith("top");
-        const isLeft = target.labelPlacement.endsWith("left");
+        {/* 2. Soft Underlying Celestial Core (Seamlessly blends into galaxy backdrop) */}
+        <ellipse cx="270" cy="225" rx="230" ry="175" fill="url(#nebula-glow)" />
 
-        return (
-          <div
-            key={target.id}
-            data-beacon-id={target.id}
-            data-beacon-name={target.name}
-            style={{
-              position: "absolute",
-              left: `calc(${target.xPct}% + ${offsetX}px)`,
-              top: `calc(${target.yPct}% + ${offsetY}px)`,
-              transform: "translate(-50%, -50%)",
-              transition: "transform 0.15s ease",
-            }}
-            className="celestial-target-star group cursor-pointer z-20 pointer-events-auto"
-            onMouseEnter={() => setHoveredTargetId(target.id)}
-            onMouseLeave={() => setHoveredTargetId(null)}
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedTarget((prev) => (prev?.id === target.id ? null : target));
-            }}
-          >
-            <div className="relative flex items-center justify-center">
-              {/* Outer Survey Radar Reticle Ring (Slowly rotating) */}
-              <div
-                className={`absolute rounded-full border border-dashed transition-all duration-500 pointer-events-none ${
-                  isActive
-                    ? "w-11 h-11 border-[#F4A272]/80 animate-[spin_8s_linear_infinite]"
-                    : "w-8 h-8 border-white/20 group-hover:border-white/50"
-                }`}
-              />
+        {/* 3. Subtle Astronomical Survey Grid / Celestial Coordinates (In Sky Mode) */}
+        {activeMode === "sky" && (
+          <g opacity="0.45" stroke="#93C5FD" strokeWidth="0.8" strokeDasharray="3,6" fill="none">
+            <ellipse cx="270" cy="225" rx="210" ry="110" />
+            <ellipse cx="270" cy="225" rx="140" ry="70" />
+            <line x1="60" y1="225" x2="480" y2="225" />
+            <line x1="270" y1="75" x2="270" y2="375" />
+          </g>
+        )}
 
-              {/* Pulsing Target Aura */}
-              <div
-                className={`absolute rounded-full transition-all duration-300 pointer-events-none ${
-                  isActive
-                    ? "w-9 h-9 border border-[#F4A272] animate-ping opacity-75"
-                    : "w-6 h-6 border border-white/10 opacity-30 group-hover:opacity-60"
-                }`}
-              />
+        {/* 4. Ambient Cluster Motes */}
+        <g opacity="0.7">
+          {ambientMotes.map((m, i) => (
+            <circle
+              key={i}
+              cx={m.x}
+              cy={m.y}
+              r={m.radius}
+              fill="#E2E8F0"
+              opacity={m.alpha}
+            />
+          ))}
+        </g>
 
-              {/* Radiant Star Core */}
-              <div
-                style={{
-                  backgroundColor: target.color,
-                  transform: `scale(${bandMultiplier})`,
-                  boxShadow: isActive
-                    ? `0 0 16px ${target.color}, 0 0 32px ${target.glowColor}, 0 0 48px ${target.glowColor}`
-                    : `0 0 10px ${target.glowColor}`,
-                }}
-                className={`rounded-full flex items-center justify-center transition-all duration-300 ${
-                  isActive ? "w-4 h-4 ring-2 ring-white scale-125" : "w-3 h-3 group-hover:scale-115"
-                }`}
-              >
-                <span className="w-1 h-1 rounded-full bg-white shadow-sm" />
-              </div>
+        {/* 5. Refined Neon Connecting Paths (Mathematically Joined to Star Centers) */}
+        <g className="neon-connectors">
+          {pathsGeometry.map((p) => {
+            const isConnectedToActive =
+              activeTargetId && (p.nodeA.id === activeTargetId || p.nodeB.id === activeTargetId);
 
-              {/* Elegant Hairline Leader Line Connecting Star to Label */}
-              <svg
-                className={`absolute pointer-events-none transition-all duration-300 overflow-visible ${
-                  isTop ? "bottom-full" : "top-full"
-                } ${isLeft ? "right-full" : "left-full"}`}
-                style={{
-                  width: "28px",
-                  height: "22px",
-                }}
-              >
-                <polyline
-                  points={
-                    isTop
-                      ? isLeft
-                        ? "28,22 14,8 0,8"
-                        : "0,22 14,8 28,8"
-                      : isLeft
-                      ? "28,0 14,14 0,14"
-                      : "0,0 14,14 28,14"
+            // Pass A: Outer Ambient Luminous Glow Stroke
+            return (
+              <g key={p.id} className="transition-all duration-300">
+                <path
+                  d={p.d}
+                  fill="none"
+                  stroke={
+                    isConnectedToActive
+                      ? "rgba(244, 162, 114, 0.40)"
+                      : p.isHub
+                      ? "rgba(168, 85, 247, 0.22)"
+                      : "rgba(129, 140, 248, 0.14)"
                   }
+                  strokeWidth={isConnectedToActive ? 6.5 : p.isHub ? 3.5 : 2.5}
+                  strokeLinecap="round"
+                  filter={isConnectedToActive ? "url(#neon-glow-active)" : "url(#neon-glow)"}
+                />
+
+                {/* Pass B: Crisp Core Luminous Beam */}
+                <path
+                  d={p.d}
+                  fill="none"
+                  stroke={
+                    isConnectedToActive
+                      ? "#F4A272"
+                      : activeMode === "spectral"
+                      ? `url(#grad-${p.id})`
+                      : p.isHub
+                      ? "#C4B5FD"
+                      : "#818CF8"
+                  }
+                  strokeWidth={isConnectedToActive ? 2.4 : p.isHub ? 1.4 : 1.0}
+                  strokeOpacity={isConnectedToActive ? 0.95 : p.isHub ? 0.65 : 0.40}
+                  strokeDasharray={isConnectedToActive || p.isHub ? "none" : "4,5"}
+                  strokeLinecap="round"
+                />
+
+                {/* Pass C: Travelling Light Pulses along the True Path Geometry */}
+                {(() => {
+                  const pulseSpeed = isConnectedToActive ? 0.65 : 0.32;
+                  const phase1 = ((pulseTime * pulseSpeed + (p.isHub ? 0.1 : 0.5)) % 1.0);
+                  const t = (!isConnectedToActive || p.nodeB.id === activeTargetId) ? phase1 : 1.0 - phase1;
+
+                  // Evaluate point on Quadratic Bézier curve B(t) = (1-t)^2 P0 + 2(1-t)t P1 + t^2 P2
+                  const mt = 1 - t;
+                  const px = mt * mt * p.nodeA.x + 2 * mt * t * p.ctrlX + t * t * p.nodeB.x;
+                  const py = mt * mt * p.nodeA.y + 2 * mt * t * p.ctrlY + t * t * p.nodeB.y;
+
+                  return (
+                    <g key={`pulse-${p.id}`} opacity={isConnectedToActive ? 1 : 0.85}>
+                      {/* Pulse Halo */}
+                      <circle
+                        cx={px}
+                        cy={py}
+                        r={isConnectedToActive ? 6 : 4}
+                        fill={isConnectedToActive ? "rgba(244, 162, 114, 0.8)" : "rgba(199, 210, 254, 0.65)"}
+                        filter="url(#neon-glow)"
+                      />
+                      {/* Intense Photon Core */}
+                      <circle
+                        cx={px}
+                        cy={py}
+                        r={isConnectedToActive ? 2.2 : 1.5}
+                        fill="#FFFFFF"
+                      />
+                    </g>
+                  );
+                })()}
+              </g>
+            );
+          })}
+        </g>
+
+        {/* 6. Barnard's Star Proper Motion Vector */}
+        {(() => {
+          const barnard = CELESTIAL_TARGETS[1];
+          const isBarnardActive = activeTargetId === "barnards-star" || activeMode === "object";
+          if (!barnard.pmVector) return null;
+
+          return (
+            <g opacity={isBarnardActive ? 1 : 0.45} className="transition-opacity duration-300">
+              <line
+                x1={barnard.x}
+                y1={barnard.y}
+                x2={barnard.pmVector.targetX}
+                y2={barnard.pmVector.targetY}
+                stroke="#F4A272"
+                strokeWidth="1.6"
+                strokeDasharray="3,3"
+              />
+              <circle
+                cx={barnard.pmVector.targetX}
+                cy={barnard.pmVector.targetY}
+                r="3"
+                fill="#F4A272"
+              />
+              <text
+                x={barnard.pmVector.targetX + 6}
+                y={barnard.pmVector.targetY - 2}
+                fill="#F4A272"
+                fontSize="9"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="600"
+              >
+                {barnard.pmVector.label}
+              </text>
+            </g>
+          );
+        })()}
+
+        {/* 7. Delicate Hairline Leader Lines to Typography Badges */}
+        <g className="leader-lines">
+          {CELESTIAL_TARGETS.map((t) => {
+            const isActive = activeTargetId === t.id;
+            const lp = t.labelPlacement;
+            // Leader line points: Star Center -> Elbow Point -> Badge Edge
+            const badgeAnchorX = lp.badgeX < t.x ? lp.badgeX + lp.badgeW : lp.badgeX;
+            const badgeAnchorY = lp.badgeY + lp.badgeH / 2;
+
+            return (
+              <g key={`leader-${t.id}`} opacity={isActive ? 1 : 0.55} className="transition-opacity duration-200">
+                <polyline
+                  points={`${t.x},${t.y} ${lp.elbowX},${lp.elbowY} ${badgeAnchorX},${badgeAnchorY}`}
+                  fill="none"
+                  stroke={isActive ? "#F4A272" : "rgba(255, 255, 255, 0.3)"}
+                  strokeWidth={isActive ? 1.4 : 0.9}
+                  strokeDasharray={isActive ? "none" : "2,3"}
+                />
+                <circle cx={t.x} cy={t.y} r="1.5" fill={isActive ? "#F4A272" : "#FFFFFF"} />
+                <circle cx={badgeAnchorX} cy={badgeAnchorY} r="1.5" fill={isActive ? "#F4A272" : "rgba(255, 255, 255, 0.5)"} />
+              </g>
+            );
+          })}
+        </g>
+
+        {/* 8. Frosted Glass Aerospace Typography Badges (Rendered directly in SVG space) */}
+        <g className="badges">
+          {CELESTIAL_TARGETS.map((t) => {
+            const isActive = activeTargetId === t.id;
+            const lp = t.labelPlacement;
+
+            return (
+              <g
+                key={`badge-${t.id}`}
+                className="cursor-pointer pointer-events-auto transition-transform duration-200"
+                onClick={() => setSelectedTarget((prev) => (prev?.id === t.id ? null : t))}
+                onMouseEnter={() => setHoveredTargetId(t.id)}
+                onMouseLeave={() => setHoveredTargetId(null)}
+              >
+                {/* Badge Backplate */}
+                <rect
+                  x={lp.badgeX}
+                  y={lp.badgeY}
+                  width={lp.badgeW}
+                  height={lp.badgeH}
+                  rx="6"
+                  fill={isActive ? "#111119" : "rgba(8, 8, 14, 0.85)"}
+                  stroke={isActive ? "#F4A272" : "rgba(255, 255, 255, 0.12)"}
+                  strokeWidth={isActive ? "1.2" : "0.8"}
+                  filter={isActive ? "url(#neon-glow)" : undefined}
+                />
+                {/* Upper Designation Label */}
+                <text
+                  x={lp.badgeX + 8}
+                  y={lp.badgeY + 13}
+                  fill={isActive ? "#F4A272" : "rgba(255, 255, 255, 0.55)"}
+                  fontSize="8.5"
+                  fontFamily="ui-monospace, monospace"
+                  fontWeight="600"
+                  letterSpacing="0.05em"
+                >
+                  {t.designation}
+                </text>
+                {/* Star Name */}
+                <text
+                  x={lp.badgeX + 8}
+                  y={lp.badgeY + 28}
+                  fill="#F3EFE8"
+                  fontSize="11"
+                  fontFamily="'Inter', sans-serif"
+                  fontWeight="600"
+                >
+                  {t.name}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+
+        {/* 9. Canonical Star Markers (Planted on Exact Coordinates) */}
+        <g className="star-markers">
+          {CELESTIAL_TARGETS.map((t) => {
+            const isActive = activeTargetId === t.id;
+            const bandMultiplier = activeMode === "spectral" ? (t.bandFlux[activeBand.id] || 1.0) : 1.0;
+            const scaledRadius = t.size * bandMultiplier;
+
+            return (
+              <g
+                key={`star-${t.id}`}
+                className="cursor-pointer pointer-events-auto group"
+                onClick={() => setSelectedTarget((prev) => (prev?.id === t.id ? null : t))}
+                onMouseEnter={() => setHoveredTargetId(t.id)}
+                onMouseLeave={() => setHoveredTargetId(null)}
+                data-beacon-id={t.id}
+                data-beacon-name={t.name}
+              >
+                {/* Outer Reticle Ring */}
+                <circle
+                  cx={t.x}
+                  cy={t.y}
+                  r={isActive ? 18 : 13}
                   fill="none"
                   stroke={isActive ? "#F4A272" : "rgba(255, 255, 255, 0.25)"}
-                  strokeWidth="1.2"
-                  strokeDasharray={isActive ? "none" : "2,2"}
+                  strokeWidth={isActive ? 1.2 : 0.8}
+                  strokeDasharray={isActive ? "3,3" : "2,4"}
                 />
-              </svg>
 
-              {/* Aerospace-Grade Typography Label Pill */}
-              <div
-                style={{
-                  position: "absolute",
-                  ...(isTop ? { bottom: "calc(100% + 14px)" } : { top: "calc(100% + 14px)" }),
-                  ...(isLeft ? { right: "calc(100% + 14px)" } : { left: "calc(100% + 14px)" }),
-                }}
-                className={`whitespace-nowrap px-2.5 py-1 rounded-lg backdrop-blur-md transition-all duration-300 ${
-                  isActive
-                    ? "bg-[#11111a]/95 border border-[#F4A272]/70 shadow-[0_4px_20px_rgba(244,162,114,0.35)] scale-105 z-30"
-                    : "bg-black/65 border border-white/10 opacity-75 group-hover:opacity-100 group-hover:border-white/30"
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: target.color }}
-                  />
-                  <div className="flex flex-col text-left">
-                    <span
-                      className={`text-[9px] font-mono uppercase tracking-wider font-semibold leading-tight ${
-                        isActive ? "text-[#F4A272]" : "text-white/60"
-                      }`}
-                    >
-                      {target.designation}
-                    </span>
-                    <span className="text-[11px] font-semibold text-white leading-tight">
-                      {target.name}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
+                {/* Radiant Halo */}
+                <circle
+                  cx={t.x}
+                  cy={t.y}
+                  r={scaledRadius * (isActive ? 3.2 : 2.0)}
+                  fill={t.glowColor}
+                  filter="url(#neon-glow)"
+                  opacity={isActive ? 0.9 : 0.5}
+                />
 
-      {/* 3. Refined Floating Target HUD Card (When Clicked or in Object Mode) */}
+                {/* Star Stellar Core */}
+                <circle
+                  cx={t.x}
+                  cy={t.y}
+                  r={scaledRadius}
+                  fill={t.color}
+                />
+
+                {/* Pure White Central Core Dot */}
+                <circle
+                  cx={t.x}
+                  cy={t.y}
+                  r={scaledRadius * 0.4}
+                  fill="#FFFFFF"
+                />
+              </g>
+            );
+          })}
+        </g>
+      </svg>
+
+      {/* 2. Interactive Telemetry HUD Card (When Clicked or in Object Mode) */}
       {selectedTarget && (
-        <div className="absolute right-2 sm:right-4 bottom-2 sm:bottom-3 max-w-[280px] sm:max-w-[320px] p-3.5 rounded-2xl bg-[#09090f]/95 backdrop-blur-2xl border border-[#2d2d42] shadow-[0_16px_40px_rgba(0,0,0,0.85)] z-40 transition-all animate-in fade-in slide-in-from-bottom-2">
+        <div className="absolute right-2 sm:right-3 bottom-2 max-w-[280px] sm:max-w-[310px] p-3.5 rounded-2xl bg-[#09090f]/95 backdrop-blur-2xl border border-[#2d2d42] shadow-[0_16px_40px_rgba(0,0,0,0.85)] z-40 transition-all animate-in fade-in slide-in-from-bottom-2 select-text">
           <div className="flex items-start justify-between gap-2 mb-1.5">
             <div>
               <div className="text-[10px] font-mono uppercase tracking-wider text-[#F4A272] font-semibold flex items-center gap-1.5">
@@ -692,9 +703,9 @@ export const ExplorerShowcaseVisual: React.FC<ExplorerShowcaseVisualProps> = ({
         </div>
       )}
 
-      {/* 4. Multi-Band Spectral Wavelength Bar (Only in Spectral Mode) */}
+      {/* 3. Multi-Band Spectral Wavelength Bar (Only in Spectral Mode) */}
       {activeMode === "spectral" && (
-        <div className="absolute bottom-2 inset-x-3 sm:inset-x-auto sm:left-4 sm:right-4 flex flex-col sm:flex-row items-center justify-between gap-2 p-2.5 rounded-xl bg-black/90 backdrop-blur-2xl border border-indigo-500/30 shadow-[0_8px_30px_rgba(0,0,0,0.8)] z-30 transition-all animate-in fade-in">
+        <div className="absolute bottom-2 inset-x-2 sm:inset-x-auto sm:left-3 sm:right-3 flex flex-col sm:flex-row items-center justify-between gap-2 p-2.5 rounded-xl bg-black/90 backdrop-blur-2xl border border-indigo-500/30 shadow-[0_8px_30px_rgba(0,0,0,0.8)] z-30 transition-all animate-in fade-in">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-indigo-400" />
             <div className="text-left">
@@ -725,7 +736,7 @@ export const ExplorerShowcaseVisual: React.FC<ExplorerShowcaseVisualProps> = ({
         </div>
       )}
 
-      {/* 5. Minimal Discreet Survey Track Caption (Only in Sky Mode When No Target Selected) */}
+      {/* 4. Minimal Discreet Status Caption (In Sky Mode when no target selected) */}
       {activeMode === "sky" && !selectedTarget && (
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[10px] font-mono text-white/60 bg-black/60 backdrop-blur-lg px-3 py-1 rounded-full border border-white/15 pointer-events-none whitespace-nowrap shadow-lg">
           <Activity className="w-3.5 h-3.5 text-[#F4A272] animate-pulse" />

@@ -221,7 +221,8 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
       );
       io.observe(container);
 
-      const clock = new THREE.Clock();
+      const startTime = performance.now();
+      let lastTime = performance.now();
       let curYaw = 0;
       let idleYaw = 0;
       let rafId = 0;
@@ -232,8 +233,10 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
 
         if (!isVisible) return;
 
-        const delta = clock.getDelta();
-        const elapsed = clock.getElapsedTime();
+        const now = performance.now();
+        const delta = Math.min((now - lastTime) / 1000, 0.1);
+        lastTime = now;
+        const elapsed = (now - startTime) / 1000;
 
         if (!isUserInteracting) {
           idleYaw += delta * 0.15;
