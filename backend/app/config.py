@@ -67,6 +67,8 @@ class Settings:
     COSMIC_AI_IP_RPD: int = int(os.getenv("COSMIC_AI_IP_RPD", "60"))
     COSMIC_AI_MAX_CONCURRENT: int = int(os.getenv("COSMIC_AI_MAX_CONCURRENT", "2"))
     COSMIC_AI_DAILY_TOKEN_BUDGET: int = int(os.getenv("COSMIC_AI_DAILY_TOKEN_BUDGET", "150000"))
+    COSMIC_AI_MONTHLY_TOKEN_BUDGET: int = int(os.getenv("COSMIC_AI_MONTHLY_TOKEN_BUDGET", "3000000"))
+    COSMIC_AI_MONTHLY_RPD: int = int(os.getenv("COSMIC_AI_MONTHLY_RPD", "6000"))
 
 settings = Settings()
 

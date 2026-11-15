@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "model": "openai/gpt-oss-20b",
+  "turn_1": {
+    "prompt": "Why does Wien's displacement law make infrared telescopes useful for studying cold brown dwarfs? Explain using a simple analogy.",
+    "response": "**Why infrared matters for cold brown dwarfs**\n\nWien\u2019s displacement law tells us that the wavelength at which a black\u2011body emits most strongly is inversely proportional to its temperature:\n\n\\[\n\\lambda_{\\text{max}} \\;=\\; \\frac{b}{T}\\; ,\n\\]\n\nwith \\(b \\approx 2.9\\times10^{-3}\\,\\text{m K}\\).  \nA 250\u202fK brown dwarf therefore peaks at\n\n\\[\n\\lambda_{\\text{max}} \\approx \\frac{2.9\\times10^{-3}}{250}\\;\\text{m}\\;\\approx 11.6\\,\\mu\\text{m},\n\\]\n\ndeep in the thermal infrared. In the visible band (0.4\u20130.7\u202f\u00b5m) its flux is essentially zero\u2014just like a candle that has burned down to a faint ember: the ember is invisible to the eye but still glowing in the infrared. An optical telescope, which only \u201csees\u201d the visible range, will miss such an object entirely.\n\n**Analogy**\n\nThink of a cold brown dwarf as a *refrigerator* and a hot star as a *candle*.  \n- The candle\u2019s heat is emitted mainly in the visible (red glow), so a normal flashlight (optical telescope) can easily spot it.  \n- The refrigerator, however, radiates almost all of its heat in the far\u2011infrared; to see it you need a *thermal camera* that is sensitive to long wavelengths.  \n\nSimilarly, an infrared telescope like SPHEREx, which observes from 0.75\u202f\u00b5m to 5\u202f\u00b5m, captures the tail of the brown dwarf\u2019s emission where it is still bright enough to be detected, even though the peak lies beyond 5\u202f\u00b5m. This makes IR observations indispensable for finding and studying the coldest substellar objects.",
+    "source": "groq_ai",
+    "usage": {
+      "input_tokens": 961,
+      "output_tokens": 619
+    },
+    "elapsed_seconds": 2.25
+  },
+  "turn_2": {
+    "prompt": "How would that apply to WISE 0855?",
+    "response": "**Why WISE\u202f0855\u20130714 shines only in the infrared**\n\nWien\u2019s displacement law tells us that a cooler object emits most of its light at longer wavelengths.  \nFor a 250\u202fK brown dwarf the peak is around **11\u202f\u00b5m**\u2014well beyond the visible range.  \nAn optical telescope (which only \u201csees\u201d 0.4\u20130.7\u202f\u00b5m) would see nothing at all, just as a dim candle would be invisible to the naked eye in a dark room.\n\n**Simple analogy**\n\n| Hot object (e.g., a burning candle) | Cold object (e.g., a refrigerator) |\n|-------------------------------------|------------------------------------|\n| Emits mainly visible light (red glow) | Emits mainly infrared light (heat) |\n| Easily seen by a normal flashlight (optical telescope) | Invisible to a flashlight; only detectable with a thermal camera (infrared telescope) |\n\n**Applying this to WISE\u202f0855**\n\n- **Temperature**: ~250\u202fK \u2192 peak at ~11\u202f\u00b5m (thermal IR).  \n- **Near\u2011IR detectability**: SPHEREx (0.75\u20135\u202f\u00b5m) still captures the long\u2011wavelength tail of the emission, making WISE\u202f0855 bright enough to study its atmospheric features (e.g., water\u2011ice clouds).  \n- **Optical invisibility**: In DSS2 or any optical survey, WISE\u202f0855 is essentially a \u201cblank spot\u201d because its black\u2011body curve has dropped to negligible flux in the visible.\n\nThus, infrared telescopes are indispensable for finding and characterizing cold brown dwarfs like WISE\u202f0855\u20130714\u2014they are the \u201cthermal cameras\u201d that reveal the hidden heat of these icy sub\u2011stellar objects.",
+    "source": "groq_ai",
+    "usage": {
+      "input_tokens": 1570,
+      "output_tokens": 525
+    },
+    "elapsed_seconds": 1.07
+  },
+  "accounting": {
+    "daily_requests": 43,
+    "daily_tokens": 55981,
+    "monthly_tokens": 17140
+  }
+}

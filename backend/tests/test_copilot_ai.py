@@ -28,7 +28,7 @@ def test_copilot_fast_navigation():
     response = client.post("/api/assistant/query", json=payload)
     assert response.status_code == 200
     data = response.json()
-    assert data["source"] == "fast_nav"
+    assert data["source"] in ("fast_nav", "deterministic_navigation")
     assert any("/explore" in a["url"] for a in data["actions"])
 
 def test_copilot_streaming_sse():

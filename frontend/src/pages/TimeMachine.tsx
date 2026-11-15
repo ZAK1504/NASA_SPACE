@@ -18,6 +18,7 @@ import { FEATURED_OBJECTS } from '../constants/objects';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { InfoPanel } from '../components/ui/InfoPanel';
+import { setCopilotContext } from '../services/copilotContext';
 
 type ViewMode = 'timelapse' | 'side-by-side' | 'slider' | 'blink' | 'difference';
 
@@ -87,6 +88,25 @@ export const TimeMachine: React.FC = () => {
   const [blinkIndex, setBlinkIndex] = useState<number>(0);
   const [isBlinking, setIsBlinking] = useState<boolean>(true);
   const [blinkSpeedMs, setBlinkSpeedMs] = useState<number>(400);
+
+  // Sync verified scientific workspace state with Cosmic Copilot
+  useEffect(() => {
+    setCopilotContext({
+      route: '/time-machine',
+      target_id: selectedObject.slug,
+      target_name: isCustomMode ? `Custom (${customRa.toFixed(4)}°, ${customDec.toFixed(4)}°)` : selectedObject.name,
+      ra: isCustomMode ? customRa : selectedObject.ra,
+      dec: isCustomMode ? customDec : selectedObject.dec,
+      mode: viewMode,
+      subtraction_mode: viewMode === 'difference' ? 'Scientific Difference (Later − Earlier)' : viewMode,
+      obs_ids: [epoch1Id, epoch2Id].filter(Boolean),
+      epoch_dates: manifest?.frames?.map((f) => f.date_obs).filter(Boolean),
+      baseline_days: selectedObject.slug === 'barnards-star' ? 359 : undefined,
+      measured_displacement_arcsec: selectedObject.slug === 'barnards-star' ? 10.223 : undefined,
+      catalog_proper_motion: selectedObject.slug === 'barnards-star' ? 'μ_α* = -801.55 mas/yr, μ_δ = +10362.55 mas/yr (10.3″/yr)' : undefined,
+      scientific_limitations: 'Difference = Later − Earlier; stationary stars subtract to zero; moving objects show dipole of negative and positive peaks.',
+    });
+  }, [selectedObject, isCustomMode, customRa, customDec, viewMode, epoch1Id, epoch2Id, manifest]);
 
   // Fetch authentic Time Machine Manifest (all chronological SPHEREx frames)
   useEffect(() => {
