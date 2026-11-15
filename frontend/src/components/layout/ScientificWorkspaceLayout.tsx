@@ -44,6 +44,15 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
   const location = useLocation();
   const { startTour, shouldAutoStart } = useGuidedTour();
 
+  // Set clean, professional document title for the workspace
+  React.useEffect(() => {
+    if (title) {
+      document.title = `sphereXplorer — ${title}`;
+    } else {
+      document.title = "sphereXplorer — Explore the Changing Universe";
+    }
+  }, [title]);
+
   // CRITICAL: Ensure every newly opened dedicated workspace always starts at the top
   React.useEffect(() => {
     // If Lenis smooth scroll is present, reset immediately
@@ -110,9 +119,8 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
 
           <div className="h-4 w-[1px] bg-white/10 hidden sm:block" />
 
-          {/* sphereXPLORER Continuous Wordmark */}
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[var(--accent)]" />
+          {/* sphereXPLORER Continuous Wordmark with Original Symbol */}
+          <div className="flex items-center">
             <BrandWordmark size="sm" />
           </div>
 

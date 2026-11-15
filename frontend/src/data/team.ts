@@ -36,7 +36,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
   {
     id: "roshith-robert",
     name: "Roshith Robert",
-    image: "/team/roshith.png",
+    image: "/team/roshith.jpg",
     currentRole: "Physics Simulation & Data Pipeline Engineer",
     previousProjectRole: "Physics Simulation & API Retrieval",
     shortBio:
@@ -54,7 +54,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
   {
     id: "sanjay-varghese",
     name: "Sanjay Varghese",
-    image: "/team/sanjay.png",
+    image: "/team/sanjay.jpg",
     currentRole: "Full-Stack Architect & UI/UX Specialist",
     previousProjectRole: "Backend Developer & UI/UX Specialist",
     shortBio:
@@ -72,7 +72,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
   {
     id: "riyan-raz",
     name: "Riyan Raz",
-    image: "/team/riyan.png",
+    image: "/team/riyan.jpg",
     currentRole: "Core Systems & Cosmic AI Architect",
     previousProjectRole: "Overall Developer · Backend & Chatbot Systems",
     shortBio:

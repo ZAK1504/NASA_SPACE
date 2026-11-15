@@ -20,6 +20,10 @@ export const StorybookWorkspace: React.FC = () => {
     return () => window.removeEventListener("message", handleMessage);
   }, [navigate]);
 
+  useEffect(() => {
+    document.title = "sphereXplorer — The Cosmic Chronicle";
+  }, []);
+
   const handleBackToJourney = () => {
     travelBackToJourney(navigate, originChapter);
   };
@@ -44,20 +48,8 @@ export const StorybookWorkspace: React.FC = () => {
 
           <div className="h-4 w-[1px] bg-white/10 hidden sm:block" />
 
-          {/* sphereXPLORER Wordmark */}
-          <div className="flex items-center gap-2">
-            <svg viewBox="-12 -12 24 24" width="20" height="20" aria-hidden="true">
-              <circle r="9" fill="none" stroke="currentColor" strokeWidth="1.2" />
-              <ellipse
-                rx="11"
-                ry="3.6"
-                fill="none"
-                stroke="var(--accent)"
-                strokeWidth="1.2"
-                transform="rotate(-24)"
-              />
-              <circle r="2.2" fill="currentColor" />
-            </svg>
+          {/* sphereXPLORER Wordmark with Original Symbol */}
+          <div className="flex items-center">
             <BrandWordmark size="sm" />
           </div>
 

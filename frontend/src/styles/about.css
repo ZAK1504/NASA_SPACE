@@ -545,13 +545,20 @@
   font-weight: 300;
 }
 
+.story-highlight-quote {
+  margin-top: 48px;
+  text-align: center;
+  position: relative;
+  padding: 0 16px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .story-highlight-pro {
   font-size: 22px;
   font-weight: 600;
-  background: linear-gradient(135deg, #F4A272 0%, #FF7B3D 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #F4A272;
   margin-top: 40px;
   letter-spacing: 0.02em;
 }

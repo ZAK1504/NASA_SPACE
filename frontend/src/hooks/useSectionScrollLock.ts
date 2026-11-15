@@ -7,14 +7,25 @@ export interface UseSectionScrollLockOptions {
   enabled?: boolean;
 }
 
+type ScrollStateMachineState =
+  | "IDLE"                         // Awaiting a deliberate physical gesture
+  | "TRANSITIONING"                // Actively animating toward fixed target chapter
+  | "WAITING_FOR_MOMENTUM_TO_END"; // Reached target; consuming residual inertia wheel events
+
 /**
- * Controlled Chapter-by-Chapter Journey Scroll Lock.
+ * Authoritative State-Machine Controlled Chapter Scroll Engine.
  *
- * Requirements:
- * 1. Single deliberate scroll moves strictly to adjacent chapter (no multi-chapter skipping).
- * 2. Momentum / inertia rejection: after initiating transition, ignore residual wheel/trackpad events until quiet.
- * 3. Taller sections (e.g., About) scroll naturally until reaching the boundary before triggering chapter change.
- * 4. No intermediate halfway auto-scroll timers causing uncontrolled skips.
+ * Guarantees:
+ * 1. Single Deliberate Gesture = Exactly One Adjacent Chapter (Home -> Explorer -> STOP).
+ * 2. Fixed Destination: Destination chapter cannot be recalculated or re-triggered during animation.
+ * 3. Capture-Phase Shielding: Captures wheel events before Lenis's internal listeners so momentum
+ *    cannot prematurely cancel programmatic chapter scrollTo animations.
+ * 4. Residual Momentum Rejection: Upon reaching target chapter, controller transitions to
+ *    WAITING_FOR_MOMENTUM_TO_END and suppresses ALL trailing wheel events until an inactivity
+ *    window (320ms of silence on the wheel bus) has elapsed.
+ * 5. Taller Section Freedom: Sections taller than viewport (e.g. Chapter 06 About) scroll
+ *    naturally inside their bounds and only transition when reaching the top/bottom boundary.
+ * 6. Direct Nav Override: Clicking navbar links / dots safely cancels any pending state.
  */
 export function useSectionScrollLock({
   chapters,
@@ -22,7 +33,9 @@ export function useSectionScrollLock({
   onChapterChange,
   enabled = true,
 }: UseSectionScrollLockOptions) {
-  const isTransitioningRef = useRef(false);
+  const stateRef = useRef<ScrollStateMachineState>("IDLE");
+  const fixedDestinationIndexRef = useRef<number | null>(null);
+
   const activeChapterRef = useRef(activeChapter);
   activeChapterRef.current = activeChapter;
 
@@ -31,11 +44,14 @@ export function useSectionScrollLock({
 
   const accumulatedDeltaRef = useRef(0);
   const clearDeltaTimerRef = useRef<number | null>(null);
-  const transitionCooldownTimerRef = useRef<number | null>(null);
+  const quietTimerRef = useRef<number | null>(null);
+  const safetyTimerRef = useRef<number | null>(null);
   const lastWheelTimeRef = useRef(0);
 
   useEffect(() => {
     if (!enabled) return;
+
+    (window as any).__isJourneyScrollLocked = true;
 
     // Helper: calculate absolute document offset for each chapter
     const getChapterScrollTarget = (chapterId: string): number => {
@@ -71,77 +87,116 @@ export function useSectionScrollLock({
       return closestIdx;
     };
 
-    // Helper: navigate strictly to adjacent chapter
-    const transitionToChapter = (targetIdx: number) => {
+    // Helper: arm/refresh the momentum quiet timer
+    const armMomentumQuietTimer = () => {
+      if (quietTimerRef.current) {
+        window.clearTimeout(quietTimerRef.current);
+      }
+      // Require 320ms of silence on the wheel bus before returning to IDLE
+      quietTimerRef.current = window.setTimeout(() => {
+        stateRef.current = "IDLE";
+        fixedDestinationIndexRef.current = null;
+        accumulatedDeltaRef.current = 0;
+      }, 320);
+    };
+
+    // Helper: initiate controlled single-chapter transition
+    const initiateTransition = (originIdx: number, targetIdx: number) => {
       const chs = chaptersRef.current;
       const safeIdx = Math.max(0, Math.min(chs.length - 1, targetIdx));
       const targetId = chs[safeIdx];
       if (!targetId) return;
 
-      isTransitioningRef.current = true;
+      stateRef.current = "TRANSITIONING";
+      fixedDestinationIndexRef.current = safeIdx;
       activeChapterRef.current = targetId;
       onChapterChange?.(targetId);
 
       const targetY = getChapterScrollTarget(targetId);
+
+      // Clear any pending timers
+      if (quietTimerRef.current) window.clearTimeout(quietTimerRef.current);
+      if (safetyTimerRef.current) window.clearTimeout(safetyTimerRef.current);
+
+      const onArrival = () => {
+        // Transition to WAITING_FOR_MOMENTUM_TO_END
+        stateRef.current = "WAITING_FOR_MOMENTUM_TO_END";
+        armMomentumQuietTimer();
+      };
 
       if (window.__lenis) {
         window.__lenis.scrollTo(targetY, {
           duration: 0.85,
           lock: true,
           easing: (t: number) => 1 - Math.pow(1 - t, 3),
-          onComplete: () => {
-            // Keep locked for short post-transition quiet period to consume residual inertia
-            if (transitionCooldownTimerRef.current) {
-              window.clearTimeout(transitionCooldownTimerRef.current);
-            }
-            transitionCooldownTimerRef.current = window.setTimeout(() => {
-              isTransitioningRef.current = false;
-              accumulatedDeltaRef.current = 0;
-            }, 250);
-          },
+          onComplete: onArrival,
         });
       } else {
         window.scrollTo({
           top: targetY,
           behavior: "smooth",
         });
-        if (transitionCooldownTimerRef.current) {
-          window.clearTimeout(transitionCooldownTimerRef.current);
-        }
-        transitionCooldownTimerRef.current = window.setTimeout(() => {
-          isTransitioningRef.current = false;
-          accumulatedDeltaRef.current = 0;
-        }, 900);
+        safetyTimerRef.current = window.setTimeout(onArrival, 850);
       }
+
+      // Fallback safety timeout in case onComplete isn't called (e.g. background tab)
+      safetyTimerRef.current = window.setTimeout(onArrival, 1200);
+    };
+
+    // Expose programmatic navigation hook on window for explicit nav / workspace returns
+    (window as any).__journeyNavigateToChapter = (chapterId: string) => {
+      const idx = chaptersRef.current.indexOf(chapterId);
+      if (idx !== -1) {
+        initiateTransition(getCurrentChapterIndex(), idx);
+      }
+    };
+
+    // Reset helper for workspace return
+    (window as any).__resetJourneyScrollState = () => {
+      stateRef.current = "IDLE";
+      fixedDestinationIndexRef.current = null;
+      accumulatedDeltaRef.current = 0;
+      if (quietTimerRef.current) window.clearTimeout(quietTimerRef.current);
+      if (safetyTimerRef.current) window.clearTimeout(safetyTimerRef.current);
     };
 
     // Wheel Event Listener (Precision Trackpads & Mouse Wheels)
     const handleWheel = (e: WheelEvent) => {
       // Allow internal scrolling in interactive canvas, modal popovers, copilot chat, storybook, etc.
-      const target = e.target as HTMLElement | null;
+      const element = e.target instanceof Element ? e.target : null;
       if (
-        target &&
-        (target.closest("[data-lenis-prevent]") ||
-          target.closest(".satellite-canvas") ||
-          target.closest(".driver-popover") ||
-          target.closest(".cosmic-copilot") ||
-          target.closest(".story-workspace") ||
-          target.closest("iframe") ||
-          target.closest('input:not([type="range"]), select, textarea'))
+        element &&
+        (element.closest("[data-lenis-prevent]") ||
+          element.closest(".satellite-canvas") ||
+          element.closest(".driver-popover") ||
+          element.closest(".cosmic-copilot") ||
+          element.closest(".story-workspace") ||
+          element.closest("iframe") ||
+          element.closest('input:not([type="range"]), select, textarea'))
       ) {
         return;
       }
 
+      // Check for Ctrl/Cmd modifier (browser zoom)
+      if (e.ctrlKey || e.metaKey) return;
+
       const now = performance.now();
       lastWheelTimeRef.current = now;
 
-      // If already transitioning, consume wheel event to avoid browser native jumping
-      if (isTransitioningRef.current) {
+      // 1. If actively TRANSITIONING or WAITING FOR MOMENTUM TO END:
+      // Suppress native scroll, stop Lenis, and consume all trailing inertial wheel events!
+      if (stateRef.current === "TRANSITIONING" || stateRef.current === "WAITING_FOR_MOMENTUM_TO_END") {
+        (e as any).lenisStopPropagation = true;
         e.preventDefault();
+        e.stopImmediatePropagation();
+        if (stateRef.current === "WAITING_FOR_MOMENTUM_TO_END") {
+          // Trackpad is still sending residual momentum after arrival; refresh quiet timer!
+          armMomentumQuietTimer();
+        }
         return;
       }
 
-      // Normalize delta across modes (pixels vs lines vs pages)
+      // 2. Normalizing delta across modes (pixels vs lines vs pages)
       const delta =
         e.deltaMode === 1
           ? e.deltaY * 18
@@ -149,7 +204,43 @@ export function useSectionScrollLock({
           ? e.deltaY * window.innerHeight
           : e.deltaY;
 
-      // Accumulate delta
+      // Ignore zero or micro-drift
+      if (Math.abs(delta) < 0.5) return;
+
+      // 3. Section Boundary Check for Taller Chapters (e.g. Chapter 06 About)
+      const currentIdx = getCurrentChapterIndex();
+      const currentChapterId = chaptersRef.current[currentIdx];
+      const { top, height } = getChapterBounds(currentChapterId);
+      const viewportHeight = window.innerHeight;
+      const scrollY = window.scrollY;
+      const isTallChapter = height > viewportHeight + 40;
+
+      if (isTallChapter) {
+        const maxScrollInChapter = top + height - viewportHeight;
+        if (delta > 0 && scrollY < maxScrollInChapter - 25) {
+          // Allow natural downward scroll within the chapter
+          accumulatedDeltaRef.current = 0;
+          return;
+        }
+        if (delta < 0 && scrollY > top + 25) {
+          // Allow natural upward scroll within the chapter
+          accumulatedDeltaRef.current = 0;
+          return;
+        }
+      }
+
+      // 4. Direction Reversal Check: reset accumulation if direction flips
+      if (
+        (accumulatedDeltaRef.current > 0 && delta < 0) ||
+        (accumulatedDeltaRef.current < 0 && delta > 0)
+      ) {
+        accumulatedDeltaRef.current = 0;
+      }
+
+      // Stop Lenis from free-scrolling between chapters while section lock accumulates
+      (e as any).lenisStopPropagation = true;
+      e.preventDefault();
+
       accumulatedDeltaRef.current += delta;
 
       if (clearDeltaTimerRef.current) {
@@ -157,44 +248,20 @@ export function useSectionScrollLock({
       }
       clearDeltaTimerRef.current = window.setTimeout(() => {
         accumulatedDeltaRef.current = 0;
-      }, 180);
+      }, 200);
 
-      // Threshold to detect deliberate swipe/scroll gesture (reject micro-jitters)
-      const WHEEL_THRESHOLD = 50;
+      // Deliberate gesture threshold (prevents micro-flicks from triggering)
+      const THRESHOLD = 55;
 
-      if (Math.abs(accumulatedDeltaRef.current) >= WHEEL_THRESHOLD) {
+      if (Math.abs(accumulatedDeltaRef.current) >= THRESHOLD) {
         const direction = accumulatedDeltaRef.current > 0 ? 1 : -1;
-        const currentIdx = getCurrentChapterIndex();
-        const currentChapterId = chaptersRef.current[currentIdx];
-        const { top, height } = getChapterBounds(currentChapterId);
-        const viewportHeight = window.innerHeight;
-        const scrollY = window.scrollY;
-
-        // Check if current chapter is taller than viewport (e.g. About or expanded sections)
-        const isTallChapter = height > viewportHeight + 40;
-
-        if (isTallChapter) {
-          const maxScrollInChapter = top + height - viewportHeight;
-          if (direction > 0) {
-            // Scrolling down: only advance if user has scrolled to the bottom of the tall chapter
-            if (scrollY < maxScrollInChapter - 30) {
-              // Allow natural scrolling down inside the chapter
-              return;
-            }
-          } else {
-            // Scrolling up: only retreat if user has scrolled back to the top of the tall chapter
-            if (scrollY > top + 30) {
-              // Allow natural scrolling up inside the chapter
-              return;
-            }
-          }
-        }
-
         const nextIdx = currentIdx + direction;
+
         if (nextIdx >= 0 && nextIdx < chaptersRef.current.length) {
           e.preventDefault();
+          e.stopImmediatePropagation();
           accumulatedDeltaRef.current = 0;
-          transitionToChapter(nextIdx);
+          initiateTransition(currentIdx, nextIdx);
         }
       }
     };
@@ -208,14 +275,14 @@ export function useSectionScrollLock({
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (isTransitioningRef.current) return;
-      const target = e.target as HTMLElement | null;
+      if (stateRef.current !== "IDLE") return;
+      const element = e.target instanceof Element ? e.target : null;
       if (
-        target &&
-        (target.closest("[data-lenis-prevent]") ||
-          target.closest(".satellite-canvas") ||
-          target.closest(".cosmic-copilot") ||
-          target.closest("iframe"))
+        element &&
+        (element.closest("[data-lenis-prevent]") ||
+          element.closest(".satellite-canvas") ||
+          element.closest(".cosmic-copilot") ||
+          element.closest("iframe"))
       ) {
         return;
       }
@@ -235,48 +302,53 @@ export function useSectionScrollLock({
         const isTallChapter = height > viewportHeight + 40;
         if (isTallChapter) {
           const maxScrollInChapter = top + height - viewportHeight;
-          if (direction > 0 && scrollY < maxScrollInChapter - 30) return;
-          if (direction < 0 && scrollY > top + 30) return;
+          if (direction > 0 && scrollY < maxScrollInChapter - 25) return;
+          if (direction < 0 && scrollY > top + 25) return;
         }
 
         const nextIdx = currentIdx + direction;
         if (nextIdx >= 0 && nextIdx < chaptersRef.current.length) {
-          transitionToChapter(nextIdx);
+          initiateTransition(currentIdx, nextIdx);
         }
       }
     };
 
     // Keyboard Arrow & Page Navigation
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isTransitioningRef.current) return;
-      const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
+      if (stateRef.current !== "IDLE") return;
+      const element = e.target instanceof Element ? e.target : null;
+      if (element && (element.tagName === "INPUT" || element.tagName === "TEXTAREA")) return;
 
       if (e.key === "ArrowDown" || e.key === "PageDown") {
         e.preventDefault();
         const currentIdx = getCurrentChapterIndex();
         const nextIdx = Math.min(chaptersRef.current.length - 1, currentIdx + 1);
-        if (nextIdx !== currentIdx) transitionToChapter(nextIdx);
+        if (nextIdx !== currentIdx) initiateTransition(currentIdx, nextIdx);
       } else if (e.key === "ArrowUp" || e.key === "PageUp") {
         e.preventDefault();
         const currentIdx = getCurrentChapterIndex();
         const nextIdx = Math.max(0, currentIdx - 1);
-        if (nextIdx !== currentIdx) transitionToChapter(nextIdx);
+        if (nextIdx !== currentIdx) initiateTransition(currentIdx, nextIdx);
       }
     };
 
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    window.addEventListener("touchstart", handleTouchStart, { passive: true });
-    window.addEventListener("touchend", handleTouchEnd, { passive: true });
+    // Register with capture: true so handleWheel intercepts BEFORE Lenis
+    window.addEventListener("wheel", handleWheel, { passive: false, capture: true });
+    window.addEventListener("touchstart", handleTouchStart, { passive: true, capture: true });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true, capture: true });
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener("wheel", handleWheel);
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("wheel", handleWheel, { capture: true } as any);
+      window.removeEventListener("touchstart", handleTouchStart, { capture: true } as any);
+      window.removeEventListener("touchend", handleTouchEnd, { capture: true } as any);
       window.removeEventListener("keydown", handleKeyDown);
       if (clearDeltaTimerRef.current) window.clearTimeout(clearDeltaTimerRef.current);
-      if (transitionCooldownTimerRef.current) window.clearTimeout(transitionCooldownTimerRef.current);
+      if (quietTimerRef.current) window.clearTimeout(quietTimerRef.current);
+      if (safetyTimerRef.current) window.clearTimeout(safetyTimerRef.current);
+      (window as any).__isJourneyScrollLocked = false;
+      delete (window as any).__journeyNavigateToChapter;
+      delete (window as any).__resetJourneyScrollState;
     };
   }, [enabled, onChapterChange]);
 }

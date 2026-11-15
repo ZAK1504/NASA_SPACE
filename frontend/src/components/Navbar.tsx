@@ -76,18 +76,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           onClick={handleNavClick("home")}
           aria-label="sphereXplorer home"
         >
-          <svg viewBox="-12 -12 24 24" width="22" height="22" aria-hidden="true">
-            <circle r="9" fill="none" stroke="currentColor" strokeWidth="1.2" />
-            <ellipse
-              rx="11"
-              ry="3.6"
-              fill="none"
-              stroke="var(--accent)"
-              strokeWidth="1.2"
-              transform="rotate(-24)"
-            />
-            <circle r="2.2" fill="currentColor" />
-          </svg>
           <BrandWordmark size="md" />
         </a>
 

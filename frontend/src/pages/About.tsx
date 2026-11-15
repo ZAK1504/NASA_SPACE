@@ -355,18 +355,53 @@ export const About: React.FC<AboutProps> = ({ defaultReturnChapter = "mission" }
                 delay={0.4}
               />
 
-              <motion.p
-                className="story-highlight-pro"
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: 0.6 }}
+              {/* Seamless Editorial Quote Reveal (Eliminates character-by-character glitch & text-clip flashes) */}
+              <motion.div
+                className="story-highlight-quote"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-40px" }}
+                variants={{
+                  hidden: { opacity: 0, y: 22 },
+                  visible: {
+                    opacity: 1,
+                    y: 0,
+                    transition: {
+                      duration: 0.85,
+                      ease: [0.16, 1, 0.3, 1],
+                      staggerChildren: 0.22,
+                      delayChildren: 0.15,
+                    },
+                  },
+                }}
               >
-                <AnimatedCharacters
-                  text="The universe is not a static picture. It is a story still being written."
-                  delay={0.7}
-                />
-              </motion.p>
+                <motion.span
+                  className="block text-xl sm:text-2xl lg:text-3xl font-light text-white tracking-tight mb-2"
+                  variants={{
+                    hidden: { opacity: 0, y: 14 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
+                    },
+                  }}
+                >
+                  The universe is not a static picture.
+                </motion.span>
+                <motion.span
+                  className="block text-xl sm:text-2xl lg:text-3xl font-medium text-[#F4A272] tracking-tight"
+                  variants={{
+                    hidden: { opacity: 0, y: 14 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
+                    },
+                  }}
+                >
+                  It is a story still being written.
+                </motion.span>
+              </motion.div>
             </div>
           </motion.div>
         </div>

@@ -38,6 +38,11 @@ export const JourneyPage: React.FC = () => {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { startTour } = useGuidedTour();
 
+  // Authoritative document title
+  useEffect(() => {
+    document.title = "sphereXplorer — Explore the Changing Universe";
+  }, []);
+
   // Scroll smoothly to a specific chapter
   const scrollToChapter = (chapterId: string) => {
     const el = document.getElementById(chapterId);
@@ -49,6 +54,11 @@ export const JourneyPage: React.FC = () => {
     const newHash = `#${chapterId}`;
     if (window.location.hash !== newHash) {
       window.history.replaceState(null, "", newHash);
+    }
+
+    if (typeof (window as any).__journeyNavigateToChapter === "function") {
+      (window as any).__journeyNavigateToChapter(chapterId);
+      return;
     }
 
     const targetY = chapterId === "home" ? 0 : Math.max(0, el.offsetTop - 70);
@@ -89,6 +99,9 @@ export const JourneyPage: React.FC = () => {
     const targetScrollY = location.state?.targetScrollY ?? savedState?.scrollY;
 
     if (restoreTarget) {
+      if (typeof (window as any).__resetJourneyScrollState === "function") {
+        (window as any).__resetJourneyScrollState();
+      }
       setActiveChapter(restoreTarget);
 
       let finalScroll = 0;
