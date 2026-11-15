@@ -9,20 +9,13 @@ import ChapterExplorer from "../components/showcase/ChapterExplorer";
 import ChapterTimeMachine from "../components/showcase/ChapterTimeMachine";
 import ChapterLabs from "../components/showcase/ChapterLabs";
 import ChapterMission from "../components/showcase/ChapterMission";
-import {
-  HomeToExplorerRibbon,
-  ExplorerToTimeMachineRibbon,
-  TimeMachineToLabsRibbon,
-  LabsToMissionRibbon,
-} from "../components/ui/SnakeRibbon";
-import {
-  HomeToExplorerTransition,
-  TimeMachineToLabsTransition,
-} from "../components/sections/ChapterTransition";
+import HomeToExplorerParallaxTransition from "../components/transitions/HomeToExplorerParallaxTransition";
+import ChapterAtmosphericSeparator from "../components/transitions/ChapterAtmosphericSeparator";
 import { CommandPalette } from "../components/navigation/CommandPalette";
 import { CosmicCopilot } from "../components/assistant/CosmicCopilot";
 import { useGuidedTour } from "../hooks/useGuidedTour";
 import { useSmoothScroll, useReveal, useScrollVars } from "../lib/hooks";
+import { useSectionScrollLock } from "../hooks/useSectionScrollLock";
 import { getJourneyReturnState, clearJourneyReturnState } from "../lib/journeyState";
 
 declare global {
@@ -65,6 +58,20 @@ export const JourneyPage: React.FC = () => {
       el.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  // High-Precision Section Scroll Lock Engine ("scroll a bit to other page, full page comes")
+  useSectionScrollLock({
+    chapters: CHAPTER_IDS,
+    activeChapter,
+    onChapterChange: (chapterId) => {
+      setActiveChapter(chapterId);
+      const newHash = `#${chapterId}`;
+      if (window.location.hash !== newHash) {
+        window.history.replaceState(null, "", newHash);
+      }
+    },
+    enabled: true,
+  });
 
   // Authoritative synchronous scroll restoration: runs BEFORE browser paint to prevent any visible scroll jumps
   useLayoutEffect(() => {
@@ -223,32 +230,47 @@ export const JourneyPage: React.FC = () => {
         {/* Chapter 01 — Home: Meet SPHEREx */}
         <ChapterHome onScrollToExplorer={() => scrollToChapter("explorer")} />
 
-        {/* Ribbon 01 — Home to Explorer: Animated Snake Text Ribbon */}
-        <HomeToExplorerRibbon />
-
-        {/* Transition 01 — Home to Explorer: Departure into the Infrared */}
-        <HomeToExplorerTransition />
+        {/* Transition 01 — Home to Explorer: Cinematic Parallax Cosmic Transition (Zero Curly Waves) */}
+        <HomeToExplorerParallaxTransition />
 
         {/* Chapter 02 — Explorer: See Beyond the Visible */}
         <ChapterExplorer onScrollToNext={() => scrollToChapter("time-machine")} />
 
-        {/* Ribbon 02 — Explorer to Time Machine: Animated Snake Text Ribbon */}
-        <ExplorerToTimeMachineRibbon />
+        {/* Transition 02 — Explorer to Time Machine: Atmospheric Transit Separator */}
+        <ChapterAtmosphericSeparator
+          fromChapter="explorer"
+          toChapter="time-machine"
+          fromNumber="02"
+          toNumber="03"
+          label="TRANSIT TO TIME DOMAIN · 2-YEAR BASELINE"
+          accentColor="#38bdf8"
+        />
 
         {/* Chapter 03 — Time Machine: Travel Through the Changing Sky */}
         <ChapterTimeMachine onScrollToNext={() => scrollToChapter("labs")} />
 
-        {/* Ribbon 03 — Time Machine to Labs: Animated Snake Text Ribbon */}
-        <TimeMachineToLabsRibbon />
-
-        {/* Transition 03 — Time Machine to Labs: Deceleration into Scientific Investigation */}
-        <TimeMachineToLabsTransition />
+        {/* Transition 03 — Time Machine to Labs: Atmospheric Transit Separator */}
+        <ChapterAtmosphericSeparator
+          fromChapter="time-machine"
+          toChapter="labs"
+          fromNumber="03"
+          toNumber="04"
+          label="DECELERATION INTO DISCOVERY LAB · DIFFERENCE IMAGING"
+          accentColor="#a855f7"
+        />
 
         {/* Chapter 04 — Labs: The Science of Discovery */}
         <ChapterLabs onScrollToNext={() => scrollToChapter("mission")} />
 
-        {/* Ribbon 04 — Labs to Mission: Animated Snake Text Ribbon */}
-        <LabsToMissionRibbon />
+        {/* Transition 04 — Labs to Mission: Atmospheric Transit Separator */}
+        <ChapterAtmosphericSeparator
+          fromChapter="labs"
+          toChapter="mission"
+          fromNumber="04"
+          toNumber="05"
+          label="ALL-SKY CITIZEN SCIENCE · HORIZON MISSION"
+          accentColor="#f4a272"
+        />
 
         {/* Chapter 05 — Mission: Your Discovery Begins */}
         <ChapterMission onScrollToTop={() => scrollToChapter("home")} />

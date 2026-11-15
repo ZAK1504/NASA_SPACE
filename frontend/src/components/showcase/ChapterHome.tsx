@@ -15,7 +15,7 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
     <section
       id="home"
       data-tour="home-hero"
-      className="chapter-home w-full min-h-[92vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 flex flex-col justify-between relative z-10"
+      className="chapter-home w-full min-h-[calc(100vh-76px)] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-12 flex flex-col justify-center relative z-10"
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center w-full my-auto">
         {/* Left Column: Numbered Label, Massive Typography, Mission Narrative, CTAs */}
@@ -23,8 +23,8 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
           data-tour="journey-hero"
           className="lg:col-span-6 flex flex-col justify-center"
           style={{
-            transform: `translateY(calc(var(--hero-scroll, 0) * -30px))`,
-            opacity: `calc(1 - var(--hero-scroll, 0) * 1.3)`,
+            transform: `translateY(calc(var(--hero-scroll, 0) * -45px))`,
+            opacity: `calc(1 - var(--hero-scroll, 0) * 1.25)`,
             willChange: 'transform, opacity',
             transition: 'none',
           }}
@@ -102,8 +102,8 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
           data-tour="journey-spacecraft"
           className="lg:col-span-6 flex items-center justify-center relative w-full h-[460px] sm:h-[520px] lg:h-[600px] pointer-events-auto select-none lg:-translate-x-10 lg:translate-y-8"
           style={{
-            transform: `translateX(calc(var(--hero-scroll, 0) * 40px - 2.5rem)) translateY(calc(var(--hero-scroll, 0) * 20px + 2rem))`,
-            opacity: `calc(1 - var(--hero-scroll, 0) * 0.65)`,
+            transform: `translateX(calc(var(--hero-scroll, 0) * 50px - 2.5rem)) translateY(calc(var(--hero-scroll, 0) * 35px + 1.5rem)) scale(calc(1 - var(--hero-scroll, 0) * 0.12))`,
+            opacity: `calc(1 - var(--hero-scroll, 0) * 0.7)`,
             willChange: 'transform, opacity',
             transition: 'none',
           }}

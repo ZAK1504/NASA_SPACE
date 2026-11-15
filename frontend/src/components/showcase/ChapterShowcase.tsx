@@ -37,7 +37,7 @@ export const ChapterShowcase: React.FC<ChapterShowcaseProps> = ({
     <section
       id={id}
       data-tour={dataTour}
-      className={`chapter-showcase w-full min-h-[85vh] py-16 lg:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center relative z-10 ${className}`}
+      className={`chapter-showcase w-full min-h-[calc(100vh-76px)] py-8 sm:py-12 lg:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center relative z-10 ${className}`}
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center w-full my-auto">
         {/* Left Side: Numbered Label, Massive Typography, Subtitle, Narrative, CTAs */}
