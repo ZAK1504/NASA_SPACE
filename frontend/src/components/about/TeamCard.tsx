@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { TeamMember } from "../../data/team";
 import { Sparkles, ChevronRight, CheckCircle2 } from "lucide-react";
+import DecryptedText from "../ui/DecryptedText";
 
 interface TeamCardProps {
   member: TeamMember;
@@ -55,7 +56,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ member, onOpenDetail }) => {
 
           {/* Member Name */}
           <h3 className="text-xl font-semibold text-white tracking-tight mb-2">
-            {member.name}
+            <DecryptedText text={member.name} interval={35} />
           </h3>
 
           {/* Short Bio */}

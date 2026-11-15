@@ -5,10 +5,10 @@ interface BackdropProps {
   activeSection?: string;
 }
 
-const CHAPTERS = ["home", "explorer", "time-machine", "labs", "mission"];
+const CHAPTERS = ["home", "explorer", "time-machine", "labs", "mission", "about"];
 
 // Optimal nebula opacity target for each chapter
-const NEBULA_OPACITIES = [0.35, 0.44, 0.22, 0.15, 0.38];
+const NEBULA_OPACITIES = [0.35, 0.44, 0.22, 0.15, 0.38, 0.36];
 
 /**
  * Coordinated Cosmic Backdrop with Continuous Scroll-Driven Environment Blending.
@@ -160,6 +160,13 @@ export const Backdrop: React.FC<BackdropProps> = ({ activeSection = "home" }) =>
           layerRefs.current[4] = el;
         }}
         className="bd-layer bd-layer-mission absolute inset-0"
+        style={{ opacity: 0 }}
+      />
+      <div
+        ref={(el) => {
+          layerRefs.current[5] = el;
+        }}
+        className="bd-layer bd-layer-about absolute inset-0"
         style={{ opacity: 0 }}
       />
 

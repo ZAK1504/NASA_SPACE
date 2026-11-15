@@ -22,37 +22,33 @@ export const TechnologyMarquee: React.FC = () => {
       </div>
 
       {/* Seamless Infinite Marquee */}
-      <div className="marquee-container w-full" aria-label="Technologies used in SPHEREx HORIZON">
-        <div className="marquee-track flex gap-4">
-          {/* Primary Track */}
-          {TECHNOLOGIES.map((tech, i) => (
-            <div key={`tech-1-${tech.name}-${i}`} className="tech-pill flex flex-col justify-center min-w-[220px]">
-              <div className="flex items-center justify-between gap-3 mb-1">
-                <span className="font-semibold text-sm text-white">{tech.name}</span>
-                <span className="text-[10px] font-mono text-[var(--accent)] bg-[var(--accent)]/10 px-2 py-0.5 rounded border border-[var(--accent)]/20">
-                  {tech.category}
-                </span>
+      <div className="logo-loop-container w-full" aria-label="Technologies used in SPHEREx HORIZON">
+        <div className="logo-loop-track-wrapper">
+          <div className="logo-loop-track">
+            {/* Primary Track */}
+            {TECHNOLOGIES.map((tech, i) => (
+              <div key={`tech-1-${tech.name}-${i}`} className="logo-loop-item">
+                <div className="logo-loop-card">
+                  <div className="logo-loop-name">{tech.name}</div>
+                  <div className="logo-loop-category">{tech.category}</div>
+                </div>
               </div>
-              <span className="text-xs text-white/50 font-normal">{tech.description}</span>
-            </div>
-          ))}
+            ))}
 
-          {/* Seamless Duplicate Track for Infinite Loop (Hidden from screen readers to prevent repetition) */}
-          {TECHNOLOGIES.map((tech, i) => (
-            <div
-              key={`tech-2-${tech.name}-${i}`}
-              aria-hidden="true"
-              className="tech-pill flex flex-col justify-center min-w-[220px]"
-            >
-              <div className="flex items-center justify-between gap-3 mb-1">
-                <span className="font-semibold text-sm text-white">{tech.name}</span>
-                <span className="text-[10px] font-mono text-[var(--accent)] bg-[var(--accent)]/10 px-2 py-0.5 rounded border border-[var(--accent)]/20">
-                  {tech.category}
-                </span>
+            {/* Seamless Duplicate Track for Infinite 50% Loop */}
+            {TECHNOLOGIES.map((tech, i) => (
+              <div
+                key={`tech-2-${tech.name}-${i}`}
+                aria-hidden="true"
+                className="logo-loop-item"
+              >
+                <div className="logo-loop-card">
+                  <div className="logo-loop-name">{tech.name}</div>
+                  <div className="logo-loop-category">{tech.category}</div>
+                </div>
               </div>
-              <span className="text-xs text-white/50 font-normal">{tech.description}</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </section>

@@ -1,15 +1,16 @@
 import React from "react";
 import ChapterShowcase from "./ChapterShowcase";
 import MissionShowcaseVisual from "./MissionShowcaseVisual";
-import { Compass, Users, ArrowRight, ArrowUp } from "lucide-react";
+import { Compass, Gamepad2, ArrowRight, ArrowDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { travelToWorkspace } from "../../lib/journeyState";
 
 interface ChapterMissionProps {
-  onScrollToTop: () => void;
+  onScrollToTop?: () => void;
+  onScrollToNext?: () => void;
 }
 
-export const ChapterMission: React.FC<ChapterMissionProps> = ({ onScrollToTop }) => {
+export const ChapterMission: React.FC<ChapterMissionProps> = ({ onScrollToTop, onScrollToNext }) => {
   const navigate = useNavigate();
 
   const actions = (
@@ -25,27 +26,29 @@ export const ChapterMission: React.FC<ChapterMissionProps> = ({ onScrollToTop })
           <ArrowRight className="w-4 h-4 text-black group-hover:translate-x-1 transition-transform" />
         </button>
 
-        {/* Action 2: Meet the Team */}
+        {/* Action 2: Play Game (Training Simulation) */}
         <button
-          onClick={() => travelToWorkspace(navigate, "/about", "mission")}
+          onClick={() => travelToWorkspace(navigate, "/mission/training", "mission")}
           className="group h-12 px-5 rounded-2xl border border-white/20 bg-white/[0.08] hover:bg-white/[0.15] hover:border-[var(--accent)] text-white font-semibold text-sm transition-all inline-flex items-center justify-center gap-2 cursor-pointer flex-1 hover:-translate-y-0.5 shadow-sm"
         >
-          <Users className="w-4 h-4 text-[var(--accent)] group-hover:scale-110 transition-transform" />
-          <span>Meet the Team</span>
+          <Gamepad2 className="w-4 h-4 text-[var(--accent)] group-hover:scale-110 transition-transform" />
+          <span>Play Game</span>
           <ArrowRight className="w-4 h-4 text-white/50 group-hover:text-[var(--accent)] group-hover:translate-x-1 transition-all" />
         </button>
       </div>
 
-      {/* Return Action */}
+      {/* Downward Transition to Chapter 06: About */}
       <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs font-mono text-white/50">
-        <span>Reached the Cosmic Horizon</span>
-        <button
-          onClick={onScrollToTop}
-          className="text-[var(--accent)] hover:text-white flex items-center gap-1.5 cursor-pointer transition-colors group"
-        >
-          <span>Back to Beginning</span>
-          <ArrowUp className="w-3.5 h-3.5 group-hover:-translate-y-0.5 transition-transform" />
-        </button>
+        <span>Chapter 05 of 06 · Discovery Begins</span>
+        {onScrollToNext && (
+          <button
+            onClick={onScrollToNext}
+            className="text-[var(--accent)] hover:text-white flex items-center gap-1.5 cursor-pointer transition-colors group"
+          >
+            <span>Meet the Team Below</span>
+            <ArrowDown className="w-3.5 h-3.5 group-hover:translate-y-0.5 transition-transform" />
+          </button>
+        )}
       </div>
     </div>
   );

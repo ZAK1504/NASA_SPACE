@@ -1,14 +1,13 @@
 import React from "react";
 import { BookOpen, Sparkles, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { travelBackToJourney } from "../../lib/journeyState";
+import { travelToWorkspace } from "../../lib/journeyState";
 
 export const StorybookConnection: React.FC = () => {
   const navigate = useNavigate();
 
   const handleExploreStory = () => {
-    // Return to Journey home where the storytelling narrative unfolds
-    travelBackToJourney(navigate, "home");
+    travelToWorkspace(navigate, "/story", "about");
   };
 
   return (

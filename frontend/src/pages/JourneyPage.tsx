@@ -9,6 +9,7 @@ import ChapterExplorer from "../components/showcase/ChapterExplorer";
 import ChapterTimeMachine from "../components/showcase/ChapterTimeMachine";
 import ChapterLabs from "../components/showcase/ChapterLabs";
 import ChapterMission from "../components/showcase/ChapterMission";
+import ChapterAbout from "../components/showcase/ChapterAbout";
 import { CommandPalette } from "../components/navigation/CommandPalette";
 import { CosmicCopilot } from "../components/assistant/CosmicCopilot";
 import { useGuidedTour } from "../hooks/useGuidedTour";
@@ -22,7 +23,7 @@ declare global {
   }
 }
 
-const CHAPTER_IDS = ["home", "explorer", "time-machine", "labs", "mission"];
+const CHAPTER_IDS = ["home", "explorer", "time-machine", "labs", "mission", "about"];
 
 export const JourneyPage: React.FC = () => {
   const location = useLocation();
@@ -39,11 +40,6 @@ export const JourneyPage: React.FC = () => {
 
   // Scroll smoothly to a specific chapter
   const scrollToChapter = (chapterId: string) => {
-    if (chapterId === "about") {
-      travelToWorkspace(navigate, "/about", activeChapter);
-      return;
-    }
-
     const el = document.getElementById(chapterId);
     if (!el) return;
 
@@ -214,7 +210,23 @@ export const JourneyPage: React.FC = () => {
       if (el) observer.observe(el);
     });
 
-    return () => observer.disconnect();
+    const handleBottomScroll = () => {
+      const scrollY = window.scrollY;
+      const vh = window.innerHeight;
+      const totalH = document.documentElement.scrollHeight;
+      if (scrollY + vh >= totalH - 120) {
+        setActiveChapter("about");
+        if (window.location.hash !== "#about") {
+          window.history.replaceState(null, "", "#about");
+        }
+      }
+    };
+    window.addEventListener("scroll", handleBottomScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", handleBottomScroll);
+    };
   }, []);
 
   return (
@@ -251,7 +263,13 @@ export const JourneyPage: React.FC = () => {
         <ChapterLabs onScrollToNext={() => scrollToChapter("mission")} />
 
         {/* Chapter 05 — Mission: Your Discovery Begins */}
-        <ChapterMission onScrollToTop={() => scrollToChapter("home")} />
+        <ChapterMission
+          onScrollToTop={() => scrollToChapter("home")}
+          onScrollToNext={() => scrollToChapter("about")}
+        />
+
+        {/* Chapter 06 — About: Behind the Horizon */}
+        <ChapterAbout onScrollToTop={() => scrollToChapter("home")} />
       </main>
 
       {/* 5. Global Quick Command Palette (Ctrl+K / ⌘K) */}

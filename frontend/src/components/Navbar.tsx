@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { HelpCircle, Compass, Menu, X, Users } from "lucide-react";
+import { HelpCircle, Compass, Menu, X, Users, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { travelToWorkspace } from "../lib/journeyState";
 
@@ -16,6 +16,7 @@ export const NAV_DESTINATIONS: NavDestination[] = [
   { id: "time-machine", label: "Time Machine", targetId: "time-machine", dataTour: "nav-timemachine" },
   { id: "labs", label: "Labs", targetId: "labs", dataTour: "nav-discovery" },
   { id: "mission", label: "Mission", targetId: "mission", dataTour: "nav-mission" },
+  { id: "about", label: "About", targetId: "about", dataTour: "nav-about" },
 ];
 
 interface NavbarProps {
@@ -44,15 +45,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     e.preventDefault();
     setOpen(false);
 
-    if (targetId === "about") {
-      if (onNavigate) {
-        onNavigate("about");
-      } else {
-        travelToWorkspace(navigate, "/about", activeSection);
-      }
-      return;
-    }
-
     if (onNavigate) {
       onNavigate(targetId);
     } else {
@@ -67,6 +59,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         } else {
           window.scrollTo({ top: targetY, behavior: "smooth" });
         }
+      } else {
+        window.location.href = `/#${targetId}`;
       }
     }
   };
@@ -135,13 +129,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          <a
-            className="cta cursor-pointer"
-            href="/about"
-            onClick={handleNavClick("about")}
+          {/* Info Book (Far Right) */}
+          <button
+            onClick={() => travelToWorkspace(navigate, "/story", activeSection)}
+            className="cta cursor-pointer flex items-center gap-1.5"
+            data-tour="nav-infobook"
+            title="Read The Cosmic Chronicle Illustrated Storybook"
           >
-            About
-          </a>
+            <BookOpen className="w-3.5 h-3.5 text-black" />
+            <span>Info Book</span>
+          </button>
 
           {/* Mobile hamburger button */}
           <button
@@ -200,17 +197,19 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
 
           <div className="pt-2 border-t border-white/10 flex flex-col gap-2 mt-2">
-            <a
-              href="/about"
-              onClick={handleNavClick("about")}
-              className="flex items-center justify-between p-3 rounded-lg border border-[var(--accent)]/40 bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20 text-base font-semibold transition-all"
+            <button
+              onClick={() => {
+                setOpen(false);
+                travelToWorkspace(navigate, "/story", activeSection);
+              }}
+              className="flex items-center justify-between p-3 rounded-lg border border-[var(--accent)]/40 bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20 text-base font-semibold transition-all cursor-pointer text-left"
             >
               <div className="flex items-center gap-3">
-                <Users className="w-4 h-4 text-[var(--accent)]" />
-                <span>Behind the Horizon · Team</span>
+                <BookOpen className="w-4 h-4 text-[var(--accent)]" />
+                <span>Info Book · The Cosmic Chronicle</span>
               </div>
               <span>↗</span>
-            </a>
+            </button>
           </div>
         </div>
       </div>

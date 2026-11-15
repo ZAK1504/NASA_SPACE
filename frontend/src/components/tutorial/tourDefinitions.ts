@@ -38,8 +38,8 @@ export const TOURS: Record<string, TourDefinition> = {
       {
         element: '[data-tour="journey-navigation"]',
         popover: {
-          title: '🧭 Continuous Five-Chapter Journey',
-          description: 'These are the five chapters of our continuous storytelling Journey: Home, Explorer, Time Machine, Labs, and Mission. The entire experience flows smoothly as you scroll.',
+          title: '🧭 Continuous Six-Chapter Journey',
+          description: 'These are the six chapters of our continuous storytelling Journey: Home, Explorer, Time Machine, Labs, Mission, and About. The entire experience flows smoothly as you scroll.',
           side: 'bottom',
           align: 'center',
         },
@@ -48,7 +48,7 @@ export const TOURS: Record<string, TourDefinition> = {
         element: '[data-tour="journey-chapter-navigator"]',
         popover: {
           title: '📍 Chapter Progress Navigator',
-          description: 'Track your continuous cosmic elevation across the five chapters or click any chapter number (01 to 05) to smoothly glide to that section of the sky.',
+          description: 'Track your continuous cosmic elevation across the six chapters or click any chapter number (01 to 06) to smoothly glide to that section of the sky.',
           side: 'left',
           align: 'center',
         },
@@ -87,6 +87,24 @@ export const TOURS: Record<string, TourDefinition> = {
           description: 'Embark on genuine scientific challenge missions tracking Barnard\'s Star and cold brown dwarfs, or test your transient identification skills in the interactive Mini Game simulation.',
           side: 'top',
           align: 'center',
+        },
+      },
+      {
+        element: '[data-tour="journey-about-section"]',
+        popover: {
+          title: '👥 Chapter 06: Behind the Horizon',
+          description: 'Meet the team behind SPHEREx HORIZON—Meteor Rizzlers from Kerala, India. Explore verified creator profiles, our 2025 NASA Space Apps Global Finalist journey, why we built the platform, and the open-science tech stack.',
+          side: 'top',
+          align: 'center',
+        },
+      },
+      {
+        element: '[data-tour="nav-infobook"]',
+        popover: {
+          title: '📖 The Cosmic Chronicle (Info Book)',
+          description: 'Open our dedicated illustrated storybook, The Cosmic Chronicle: The Universe in 102 Colours, featuring facing-page illustrated narratives and authentic SPHEREx data.',
+          side: 'bottom',
+          align: 'end',
         },
       },
       {

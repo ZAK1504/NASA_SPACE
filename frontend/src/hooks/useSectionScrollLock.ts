@@ -108,6 +108,11 @@ export function useSectionScrollLock({
       const chs = chaptersRef.current;
       const targets = chs.map((id) => getChapterScrollTarget(id));
 
+      // If user is already deep inside the final tall section (About), allow natural browsing without settle interruption
+      if (targets.length > 0 && scrollY >= targets[targets.length - 1] - 20) {
+        return;
+      }
+
       // Find the pair of chapters [i, i+1] current scroll is between
       for (let i = 0; i < targets.length - 1; i++) {
         const yTop = targets[i];
@@ -180,6 +185,15 @@ export function useSectionScrollLock({
       if (Math.abs(accumulatedDeltaRef.current) >= THRESHOLD) {
         const dir = accumulatedDeltaRef.current > 0 ? 1 : -1;
         const currentIdx = getCurrentChapterIndex();
+
+        // If scrolling up while deep inside a tall section like About, allow free native scroll up until reaching the top of that section
+        if (dir < 0) {
+          const currentTargetY = getChapterScrollTarget(chaptersRef.current[currentIdx]);
+          if (window.scrollY > currentTargetY + 120) {
+            return;
+          }
+        }
+
         const nextIdx = Math.max(0, Math.min(chaptersRef.current.length - 1, currentIdx + dir));
 
         if (nextIdx !== currentIdx) {

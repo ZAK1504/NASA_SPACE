@@ -8,12 +8,13 @@ import ExplorerSection, { ExplorerSubTab } from "../components/sections/Explorer
 import TimeMachineSection from "../components/sections/TimeMachineSection";
 import LabsSection, { LabsSubTab } from "../components/sections/LabsSection";
 import MissionSection from "../components/sections/MissionSection";
+import ChapterAbout from "../components/showcase/ChapterAbout";
 import { CommandPalette } from "../components/navigation/CommandPalette";
 import { CosmicCopilot } from "../components/assistant/CosmicCopilot";
 import { useGuidedTour } from "../hooks/useGuidedTour";
 import { useSmoothScroll, useReveal } from "../lib/hooks";
 
-const SECTION_IDS = ["home", "explorer", "time-machine", "labs", "mission"];
+const SECTION_IDS = ["home", "explorer", "time-machine", "labs", "mission", "about"];
 
 export const ContinuousHorizonApp: React.FC = () => {
   const location = useLocation();
@@ -103,11 +104,6 @@ export const ContinuousHorizonApp: React.FC = () => {
 
   // Smooth scroll handler for navigation clicks
   const scrollToSection = (sectionId: string) => {
-    if (sectionId === "about") {
-      navigate("/about");
-      return;
-    }
-
     const el = document.getElementById(sectionId);
     if (!el) return;
 
@@ -211,6 +207,9 @@ export const ContinuousHorizonApp: React.FC = () => {
           onBackToTimeMachine={() => scrollToSection("time-machine")}
           isSectionActive={activeSection === "mission"}
         />
+
+        {/* Section 6: About */}
+        <ChapterAbout onScrollToTop={() => scrollToSection("home")} />
       </main>
 
       {/* 4. Global Quick Command Palette (Ctrl+K / ⌘K) */}
