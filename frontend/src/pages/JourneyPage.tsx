@@ -134,7 +134,7 @@ export const JourneyPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="journey-app min-h-screen bg-black text-[#f3efe8] relative flex flex-col selection:bg-[#f4a272] selection:text-black">
+    <div className="journey-app min-h-screen bg-black text-[#f3efe8] relative flex flex-col selection:bg-[#f4a272] selection:text-black overflow-x-hidden">
       {/* 1. Persistent Cosmic Background (Backdrop & Parallax Starfield with Warp) */}
       <Backdrop activeSection={activeChapter} />
       <Starfield />
@@ -158,16 +158,16 @@ export const JourneyPage: React.FC = () => {
         <ChapterHome onScrollToExplorer={() => scrollToChapter("explorer")} />
 
         {/* Chapter 02 — Explorer: See Beyond the Visible */}
-        <ChapterExplorer />
+        <ChapterExplorer onScrollToNext={() => scrollToChapter("time-machine")} />
 
         {/* Signature Spacetime Continuum Transition Bridge */}
         <TimeWarpTransition />
 
         {/* Chapter 03 — Time Machine: Travel Through the Changing Sky */}
-        <ChapterTimeMachine />
+        <ChapterTimeMachine onScrollToNext={() => scrollToChapter("labs")} />
 
         {/* Chapter 04 — Labs: The Science of Discovery */}
-        <ChapterLabs />
+        <ChapterLabs onScrollToNext={() => scrollToChapter("mission")} />
 
         {/* Chapter 05 — Mission: Your Discovery Begins */}
         <ChapterMission onScrollToTop={() => scrollToChapter("home")} />

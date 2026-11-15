@@ -237,4 +237,124 @@ export const TOURS: Record<string, TourDefinition> = {
       },
     ],
   },
+
+  'sky-explorer': {
+    id: 'sky-explorer',
+    title: 'Sky Explorer Guide',
+    description: 'Explore the full celestial sphere with Aladin Lite v3 WebGL and official multi-wavelength survey layers.',
+    targetRoute: '/explore',
+    steps: [
+      {
+        element: 'body',
+        popover: {
+          title: '🌌 Aladin Lite v3 Celestial Sphere',
+          description: 'Pan, zoom, and explore the entire night sky using WebGL-accelerated CDS hierarchical HiPS tiles streamed from NASA/IPAC IRSA.',
+          side: 'bottom',
+          align: 'center',
+        },
+      },
+      {
+        element: '[data-tour="aladin-container"]',
+        popover: {
+          title: '🔭 Interactive Sky Canvas',
+          description: 'Click and drag to pan across the celestial sphere. Use scroll wheel or zoom controls to inspect stars, galaxies, and diffuse interstellar emission.',
+          side: 'top',
+        },
+      },
+      {
+        element: '[data-tour="survey-selector"]',
+        popover: {
+          title: '🛰️ Multi-Wavelength Survey Layers',
+          description: 'Switch between SPHEREx DR1 all-sky infrared, 2MASS near-infrared, AllWISE mid-infrared, and DSS2 optical surveys to compare celestial views.',
+          side: 'bottom',
+        },
+      },
+      {
+        element: '[data-tour="target-quickjump"]',
+        popover: {
+          title: '🎯 Challenge Targets & Quick Jump',
+          description: 'Instantly center the telescope on any of the 5 canonical challenge targets or search SIMBAD / NED for any astronomical coordinate.',
+          side: 'bottom',
+        },
+      },
+    ],
+  },
+
+  'light-curves': {
+    id: 'light-curves',
+    title: 'Photometric Light Curves Guide',
+    description: 'Analyze time-series photometric variability across multiple SPHEREx observation dates.',
+    targetRoute: '/light-curves',
+    steps: [
+      {
+        element: 'body',
+        popover: {
+          title: '📈 Multi-Epoch Photometry',
+          description: 'Explore calibrated surface brightness and flux variations over time for variable stars, pulsating giants, and moving brown dwarfs.',
+          side: 'bottom',
+          align: 'center',
+        },
+      },
+      {
+        element: '[data-tour="light-curve-target"]',
+        popover: {
+          title: '🎯 Target Selection',
+          description: 'Choose targets with confirmed multi-epoch coverage: Mira variable R Draconis (period 314d), young stellar object RW Aurigae, or brown dwarf WISE 0855.',
+          side: 'bottom',
+        },
+      },
+      {
+        element: '[data-tour="light-curve-chart"]',
+        popover: {
+          title: '📊 Photometric Flux Chart',
+          description: 'Interactive time-series chart showing calibrated flux (MJy/sr) against observation date (MJD / UTC) with uncertainty error bars.',
+          side: 'top',
+        },
+      },
+    ],
+  },
+
+  'missions': {
+    id: 'missions',
+    title: 'Guided Astronomy Missions Guide',
+    description: 'Participate in structured citizen-science investigations using genuine SPHEREx data.',
+    targetRoute: '/missions',
+    steps: [
+      {
+        element: 'body',
+        popover: {
+          title: '🚀 Citizen Science Missions',
+          description: 'Choose a scientific mission to investigate: Planet Nine Search, Cold Brown Dwarf Hunter, Young Stellar Object Flare, or Supernova Anomaly.',
+          side: 'bottom',
+          align: 'center',
+        },
+      },
+      {
+        element: '[data-tour="mission-cards"]',
+        popover: {
+          title: '📋 Mission Briefing & Objectives',
+          description: 'Each mission provides real coordinates, target metadata, and step-by-step scientific validation criteria.',
+          side: 'bottom',
+        },
+      },
+    ],
+  },
+
+  'training-game': {
+    id: 'training-game',
+    title: 'Anomaly Training Simulation Guide',
+    description: 'Train your visual perception to distinguish genuine astrophysical transients from detector artifacts.',
+    targetRoute: '/mission/training',
+    steps: [
+      {
+        element: 'body',
+        popover: {
+          title: '🎮 Infrared Anomaly Training',
+          description: 'Interactive educational simulation designed to train human eyes to recognize subtle infrared wavelength variations, proper motion dipoles, and cosmic ray hits.',
+          side: 'bottom',
+          align: 'center',
+        },
+      },
+    ],
+  },
 };

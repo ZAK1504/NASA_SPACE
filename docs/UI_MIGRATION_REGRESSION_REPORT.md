@@ -145,12 +145,51 @@ Following executive review and direct alignment with **ZENVYX Solutions**' web e
 - **Lossless Round-Trip Scroll Restoration:** Navigating into a workspace saves originating chapter and exact scroll position. Clicking `← Back to Journey` restores the originating chapter and exact vertical scroll offset.
 
 ### Comprehensive Automated Verification Results
-- **Pytest:** 43 passed in 27.72s (100% pass rate).
-- **Vite Build:** 1658 modules transformed, 0 errors, built in 7.05s.
+- **Pytest:** 43 passed in 39.66s (100% pass rate).
+- **Vite Build:** 1657 modules transformed, 0 errors, built in 9.69s.
 - **Puppeteer Headless Verification (`scripts/verify_journey.cjs`):**
-  - All 5 chapters verified at offsets: `home` (0px), `explorer` (828px), `time-machine` (1843px), `labs` (2622px), `mission` (3387px).
-  - Round-trip navigation: Explorer -> `/spectra` -> Back to Journey restores `scrollY: 828` at `/#explorer`.
-  - Round-trip navigation: Time Machine -> `/time-machine` -> Back to Journey restores `scrollY: 1843` at `/#time-machine`.
+  - All 5 chapters verified at offsets: `home` (0px), `explorer` (828px), `time-machine` (1915px), `labs` (2720px), `mission` (3520px).
+  - Round-trip navigation: Journey -> Time Machine (`scrollY: 0` at entry) -> Back to Journey restores `scrollY: 1915` at `/#time-machine`.
   - Mobile responsiveness (390 x 844): `scrollWidth: 390`, `clientWidth: 390`, `hasOverflow: false` (Zero horizontal overflow).
   - Comprehensive architectural guide documented in `docs/JOURNEY_WORKSPACE_ARCHITECTURE.md`.
+
+---
+
+## 7. Final Premium Visual Polish, Free-Floating Spacecraft & Layout Corrections
+
+Following comprehensive user critique and visual regression testing, the following refinements were implemented and fully verified:
+
+1. **Free-Floating Spacecraft Presentation:**
+   - Completely eliminated the rectangular glass box/card (`rounded-3xl border bg-black/40 shadow-2xl`) and footer container around the 3D SPHEREx satellite model.
+   - Set Three.js WebGL canvas background to 100% alpha transparency (`setClearColor(0x000000, 0)`).
+   - Re-centered camera framing with normalized scaling (`2.65 / maxDim`), FOV 36, and camera position `(0, 0.1, 5.8)` to eliminate edge cropping during 360° rotation.
+   - Enhanced motion physics: gentle sinusoidal floating motion (`Math.sin(elapsed * 0.85) * 0.07`), which automatically pauses during user drag interaction and smoothly resumes upon release.
+
+2. **Removal of Duplicate Workspace Navigation:**
+   - Removed duplicate bottom navigation pill switches (`[Sky | Object | Spectral]`) from the Sky Explorer and dedicated workspaces.
+   - Established the top workspace header tool switcher as the single authoritative contextual navigation element.
+
+3. **Workspace Scroll Reset Isolation & Lossless Journey Return:**
+   - Added instant scroll reset (`window.scrollTo({ top: 0, left: 0, behavior: 'instant' })` and `window.__lenis?.scrollTo(0, { immediate: true })`) in `ScientificWorkspaceLayout` on route change, guaranteeing that every scientific workspace opens at `scrollY = 0`.
+   - Maintained full bidirectional state preservation: clicking `← Back to Journey` restores the originating chapter and exact vertical scroll offset.
+
+4. **Page-Specific Guided Tours (Driver.js):**
+   - Implemented route-specific tour resolution via `getResolvedTourId()`, supporting dedicated interactive tours for `sky-explorer`, `object-explorer`, `spectral-explorer`, `time-machine`, `discovery-lab`, `light-curves`, `missions`, and `training-game`.
+
+5. **Compact Time Machine Instrument Layout:**
+   - Refactored the desktop Time Machine workspace into a balanced 2-column layout:
+     - Left Column (`lg:col-span-8`): Compact astronomical viewer (`h-[420px] sm:h-[460px]`) with video playback controls bar directly underneath.
+     - Right Column (`lg:col-span-4`): Observation telemetry card, Gaia DR3 10.223″ proper motion breakdown, companion identification, and candidate detection summary.
+   - Keeps image, controls, and telemetry visible together within the primary viewport without requiring excessive downward scrolling.
+
+6. **Redesigned Journey Showcase Visual Centerpieces:**
+   - Removed miniature dashboard panels, black card outlines, and duplicate tabs from Chapters 02–05 showcases.
+   - **Chapter 02 (Explorer):** Luminous celestial sphere with coordinate rings, challenge target beacons, and dynamic visual modes reacting to CTA hover (`sky`, `object`, `spectral`).
+   - **Chapter 03 (Time Machine):** Temporal comparison disk with interactive draggable split slider between Epoch 1 (2025-08-27) and Epoch 2 (2026-08-21), 359-day baseline badge, and 10.223″ motion callout.
+   - **Chapter 04 (Labs):** 3-panel difference array ($E_1$, $E_2$, $E_2 - E_1$), dipole residual reticle, and color-coded residual legend.
+   - **Chapter 05 (Mission):** Luminous orbital constellation network displaying the 5 canonical challenge targets with verified coordinates and mission telemetry.
+
+7. **CTA Button Polish & Next-Chapter Scroll Cues:**
+   - High-contrast warm orange button hierarchy (`#ff7b3d` / `#f4a272`), animated hover arrows, and subtle next-chapter scroll cues (`NEXT — 02 / EXPLORE`, `NEXT — 03 / TIME MACHINE`, etc.).
+
 

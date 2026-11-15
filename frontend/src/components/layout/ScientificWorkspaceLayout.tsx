@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Compass, Eye, Layers, FlaskConical, TrendingUp, Sparkles, BookOpen } from "lucide-react";
 import { returnToJourney } from "../../lib/journeyState";
 import { CosmicCopilot } from "../assistant/CosmicCopilot";
-import PillSwitch from "../ui/PillSwitch";
 import { useGuidedTour } from "../../hooks/useGuidedTour";
 
 export interface ScientificWorkspaceLayoutProps {
@@ -13,6 +12,7 @@ export interface ScientificWorkspaceLayoutProps {
   workspaceType?: "explorer" | "time-machine" | "labs" | "mission";
   activeTool?: string;
   onSwitchTool?: (toolId: string) => void;
+  tourId?: string;
   children: React.ReactNode;
 }
 
@@ -34,29 +34,58 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
   workspaceType,
   activeTool,
   onSwitchTool,
+  tourId,
   children,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { startTour } = useGuidedTour();
 
+  // CRITICAL: Ensure every newly opened dedicated workspace always starts at the top
+  React.useEffect(() => {
+    // If Lenis smooth scroll is present, reset immediately
+    if (window.__lenis) {
+      window.__lenis.scrollTo(0, { immediate: true });
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [location.pathname]);
+
   const handleBackToJourney = () => {
     returnToJourney(navigate, defaultChapter);
+  };
+
+  // Determine route-specific tour ID
+  const getResolvedTourId = (): string => {
+    if (tourId) return tourId;
+    const path = location.pathname;
+    if (path.includes("/explore") || activeTool === "sky") return "sky-explorer";
+    if (path.includes("/objects") || activeTool === "object") return "object-explorer";
+    if (path.includes("/spectra") || activeTool === "spectral") return "spectral-explorer";
+    if (path.includes("/time") || workspaceType === "time-machine") return "time-machine";
+    if (path.includes("/discovery") || activeTool === "discovery") return "discovery-lab";
+    if (path.includes("/light-curves") || activeTool === "light-curves") return "light-curves";
+    if (path.includes("/discoveries")) return "discovery-lab";
+    if (path.includes("/missions") || path === "/mission") return "missions";
+    if (path.includes("/training") || path === "/game") return "training-game";
+    return "getting-started";
   };
 
   return (
     <div className="scientific-workspace-layout min-h-screen bg-[#020308] text-[#f3efe8] flex flex-col relative selection:bg-[#f4a272] selection:text-black">
       {/* 1. Dedicated Scientific Top Bar */}
-      <header className="sticky top-0 z-50 w-full h-16 border-b border-white/10 bg-black/80 backdrop-blur-xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <header className="sticky top-0 z-50 w-full h-16 border-b border-white/10 bg-black/85 backdrop-blur-xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Left: Back to Journey & Brand */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <button
             onClick={handleBackToJourney}
-            className="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 hover:border-[var(--accent)] text-xs font-mono text-white/80 hover:text-white transition-all cursor-pointer shadow-sm"
+            className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 hover:border-[var(--accent)] text-xs font-mono text-white/80 hover:text-white transition-all cursor-pointer shadow-sm"
             title="Return to the Journey at your previous scroll position"
           >
             <ArrowLeft className="w-3.5 h-3.5 text-[var(--accent)] group-hover:-translate-x-1 transition-transform" />
-            <span>Back to Journey</span>
+            <span className="hidden sm:inline">Back to Journey</span>
+            <span className="sm:hidden">Journey</span>
           </button>
 
           <div className="h-4 w-[1px] bg-white/10 hidden sm:block" />
@@ -64,7 +93,7 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
           {/* HORIZON Branding */}
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[var(--accent)]" />
-            <span className="font-medium text-sm tracking-tight text-white">SPHEREx HORIZON</span>
+            <span className="font-medium text-xs sm:text-sm tracking-tight text-white">SPHEREx HORIZON</span>
           </div>
 
           {/* Workspace Title Badge */}
@@ -73,9 +102,9 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
           </div>
         </div>
 
-        {/* Center: Contextual Tool Switching for Explorer / Labs */}
+        {/* Center: Contextual Tool Switching for Explorer / Labs (Single Authoritative Navigation) */}
         {workspaceType === "explorer" && (
-          <div className="hidden lg:flex items-center gap-1 bg-white/5 p-1 rounded-full border border-white/10">
+          <div className="flex items-center gap-1 bg-white/5 p-1 rounded-full border border-white/10 text-xs">
             <button
               onClick={() => navigate("/explore")}
               className={`px-3 py-1 rounded-full text-xs font-mono transition-all cursor-pointer ${
@@ -110,7 +139,7 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
         )}
 
         {workspaceType === "labs" && (
-          <div className="hidden lg:flex items-center gap-1 bg-white/5 p-1 rounded-full border border-white/10">
+          <div className="flex items-center gap-1 bg-white/5 p-1 rounded-full border border-white/10 text-xs">
             <button
               onClick={() => navigate("/discovery-lab")}
               className={`px-3 py-1 rounded-full text-xs font-mono transition-all cursor-pointer ${
@@ -144,55 +173,23 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
           </div>
         )}
 
-        {/* Right: Tour button & Guide */}
+        {/* Right: Page-Specific Tour Button */}
         <div className="flex items-center gap-3">
           <button
-            onClick={() => startTour("getting-started")}
-            className="text-xs font-mono text-white/70 hover:text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full border border-white/10 transition-all flex items-center gap-1.5 cursor-pointer"
+            onClick={() => startTour(getResolvedTourId())}
+            className="text-xs font-mono text-white/80 hover:text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full border border-white/10 hover:border-[var(--accent)] transition-all flex items-center gap-1.5 cursor-pointer"
+            title={`Start ${title} guided tour`}
           >
+            <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
             <span>Tour</span>
           </button>
         </div>
       </header>
 
-      {/* 2. Main Workspace Body Container (Maximum Screen Real Estate) */}
+      {/* 2. Main Workspace Body Container (Maximum Screen Real Estate, ZERO Bottom Navigation Overlays) */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10 flex flex-col">
         {children}
       </main>
-
-      {/* 3. Contextual Bottom Navigation (Constrained ONLY to Explorer and Labs) */}
-      {workspaceType === "explorer" && (
-        <div className="sticky bottom-6 z-40 flex flex-col items-center justify-center mt-auto pointer-events-none pb-2">
-          <div className="pointer-events-auto shadow-2xl backdrop-blur-xl bg-black/75 rounded-full border border-white/10 p-1">
-            <PillSwitch
-              className="stage-pill"
-              items={EXPLORER_TOOLS}
-              value={activeTool || "sky"}
-              onChange={(id) => {
-                if (id === "sky") navigate("/explore");
-                else if (id === "object") navigate("/objects");
-                else if (id === "spectral") navigate("/spectra");
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      {workspaceType === "labs" && (
-        <div className="sticky bottom-6 z-40 flex flex-col items-center justify-center mt-auto pointer-events-none pb-2">
-          <div className="pointer-events-auto shadow-2xl backdrop-blur-xl bg-black/75 rounded-full border border-white/10 p-1">
-            <PillSwitch
-              className="stage-pill"
-              items={LABS_TOOLS}
-              value={activeTool === "light-curves" ? "light-curves" : "discovery"}
-              onChange={(id) => {
-                if (id === "discovery") navigate("/discovery-lab");
-                else if (id === "light-curves") navigate("/light-curves");
-              }}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Global Interactive Cosmic Copilot */}
       <CosmicCopilot />

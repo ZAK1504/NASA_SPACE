@@ -1,145 +1,137 @@
 import React, { useState } from "react";
-import { FlaskConical, Activity, Sparkles, TrendingUp } from "lucide-react";
+import { FlaskConical, TrendingUp, Sparkles, Activity, CheckCircle2 } from "lucide-react";
 
 export const LabsShowcaseVisual: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"difference" | "curve">("difference");
+  const [inspectedPanel, setInspectedPanel] = useState<"e1" | "e2" | "diff">("diff");
 
   return (
-    <div className="labs-showcase-visual w-full rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl p-6 relative overflow-hidden shadow-2xl">
-      {/* Ambient observatory glow */}
-      <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-purple-600/15 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-emerald-600/10 blur-3xl pointer-events-none" />
+    <div className="labs-showcase-visual w-full relative flex items-center justify-center min-h-[440px] sm:min-h-[480px] select-none overflow-hidden rounded-3xl">
+      {/* 1. Ambient Observatory Atmosphere (Deep violet & amber cosmic dust) */}
+      <div className="absolute inset-0 bg-radial from-purple-600/15 via-indigo-950/10 to-transparent pointer-events-none filter blur-3xl -z-10" />
 
-      {/* Top HUD Bar */}
-      <div className="flex items-center justify-between pb-4 border-b border-white/10 text-xs font-mono">
-        <div className="flex items-center gap-2 text-white/60">
-          <FlaskConical className="w-3.5 h-3.5 text-purple-400" />
-          <span>SCIENTIFIC OBSERVATORY INSPECTION PREVIEW</span>
-        </div>
-        <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10">
-          <button
-            onClick={() => setActiveTab("difference")}
-            className={`px-3 py-1 rounded-md text-[10.5px] transition-all cursor-pointer ${
-              activeTab === "difference"
-                ? "bg-[var(--accent)] text-black font-semibold"
-                : "text-white/60 hover:text-white"
+      {/* 2. Floating Scientific Investigation Centerpiece */}
+      <div className="relative w-full max-w-[540px] flex flex-col items-center">
+        {/* Layered 3-Panel Difference Subtraction Array */}
+        <div className="grid grid-cols-3 gap-3 w-full mb-4">
+          {/* Panel 1: Epoch 1 Observation */}
+          <div
+            onMouseEnter={() => setInspectedPanel("e1")}
+            className={`group rounded-2xl border transition-all p-3 flex flex-col justify-between h-48 relative overflow-hidden backdrop-blur-md cursor-pointer ${
+              inspectedPanel === "e1"
+                ? "border-cyan-400/50 bg-cyan-950/20 shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+                : "border-white/10 bg-black/60 hover:border-white/25"
             }`}
           >
-            Difference Map
-          </button>
-          <button
-            onClick={() => setActiveTab("curve")}
-            className={`px-3 py-1 rounded-md text-[10.5px] transition-all cursor-pointer ${
-              activeTab === "curve"
-                ? "bg-[var(--accent)] text-black font-semibold"
-                : "text-white/60 hover:text-white"
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-cyan-300 font-semibold">EPOCH 1</span>
+              <span className="text-white/40">2025</span>
+            </div>
+
+            {/* Star at Epoch 1 Position */}
+            <div className="my-auto flex items-center justify-center relative">
+              <div className="w-16 h-16 rounded-full border border-cyan-400/15 flex items-center justify-center">
+                <div className="w-5 h-5 rounded-full bg-cyan-200 shadow-[0_0_15px_#38bdf8]" />
+              </div>
+            </div>
+
+            <div className="text-[9.5px] font-mono text-white/50 truncate">
+              Pass 1: Baseline Visit
+            </div>
+          </div>
+
+          {/* Panel 2: Epoch 2 Observation */}
+          <div
+            onMouseEnter={() => setInspectedPanel("e2")}
+            className={`group rounded-2xl border transition-all p-3 flex flex-col justify-between h-48 relative overflow-hidden backdrop-blur-md cursor-pointer ${
+              inspectedPanel === "e2"
+                ? "border-amber-400/50 bg-amber-950/20 shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+                : "border-white/10 bg-black/60 hover:border-white/25"
             }`}
           >
-            Light Curves
-          </button>
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-amber-300 font-semibold">EPOCH 2</span>
+              <span className="text-white/40">2026</span>
+            </div>
+
+            {/* Star at Epoch 2 Position (Displaced) */}
+            <div className="my-auto flex items-center justify-center relative">
+              <div className="w-16 h-16 rounded-full border border-amber-400/15 flex items-center justify-center">
+                <div className="w-5 h-5 rounded-full bg-amber-200 shadow-[0_0_15px_#f59e0b] translate-y-[-10px]" />
+              </div>
+            </div>
+
+            <div className="text-[9.5px] font-mono text-white/50 truncate">
+              Pass 2: +359d Cadence
+            </div>
+          </div>
+
+          {/* Panel 3: Signed Residual Map (E2 - E1) */}
+          <div
+            onMouseEnter={() => setInspectedPanel("diff")}
+            className={`group rounded-2xl border transition-all p-3 flex flex-col justify-between h-48 relative overflow-hidden backdrop-blur-md cursor-pointer ${
+              inspectedPanel === "diff"
+                ? "border-purple-400/60 bg-purple-950/30 shadow-[0_0_25px_rgba(168,85,247,0.3)]"
+                : "border-white/10 bg-black/60 hover:border-white/25"
+            }`}
+          >
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-purple-300 font-semibold">RESIDUAL (E2−E1)</span>
+              <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
+            </div>
+
+            {/* Dipole Signature: Negative deficit (blue) and positive excess (red) */}
+            <div className="my-auto flex flex-col items-center justify-center relative">
+              <div className="relative w-16 h-16 rounded-full border border-dashed border-purple-400/30 flex items-center justify-center">
+                {/* Excess (Later) */}
+                <div className="w-4 h-4 rounded-full bg-red-500 shadow-[0_0_12px_#ef4444] translate-y-[-6px]" />
+                {/* Deficit (Earlier) */}
+                <div className="w-4 h-4 rounded-full bg-blue-500 shadow-[0_0_12px_#3b82f6] translate-y-[6px]" />
+                {/* DAOStarFinder Inspection Reticle */}
+                <div className="absolute inset-0 rounded-full border border-[var(--accent)]/50 animate-pulse" />
+              </div>
+            </div>
+
+            <div className="text-[9.5px] font-mono text-purple-200 truncate flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-purple-300" />
+              <span>Dipole Signature</span>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Visual Canvas Display */}
-      <div className="relative aspect-[16/10] w-full my-4 rounded-2xl overflow-hidden border border-white/10 bg-[#06040c]">
-        {activeTab === "difference" ? (
-          <div className="absolute inset-0 p-4 flex flex-col justify-between animate-fadeIn">
-            {/* 3-Panel Mini Inspection Display */}
-            <div className="grid grid-cols-3 gap-3 flex-1 items-center">
-              {/* Panel 1: Epoch 1 */}
-              <div className="h-full rounded-xl border border-white/10 bg-black/60 p-2 flex flex-col justify-between relative overflow-hidden">
-                <span className="text-[9px] font-mono text-white/50">EPOCH 1 (2025)</span>
-                <div className="my-auto flex items-center justify-center">
-                  <div className="w-4 h-4 rounded-full bg-cyan-400/80 shadow-[0_0_10px_cyan]" />
-                </div>
-                <span className="text-[8.5px] font-mono text-white/40">2025W35_1A_0444_3</span>
-              </div>
-
-              {/* Panel 2: Epoch 2 */}
-              <div className="h-full rounded-xl border border-white/10 bg-black/60 p-2 flex flex-col justify-between relative overflow-hidden">
-                <span className="text-[9px] font-mono text-white/50">EPOCH 2 (2026)</span>
-                <div className="my-auto flex items-center justify-center">
-                  <div className="w-4 h-4 rounded-full bg-orange-400/80 shadow-[0_0_10px_orange] translate-y-[-6px]" />
-                </div>
-                <span className="text-[8.5px] font-mono text-white/40">2026W34_2A_0249_1</span>
-              </div>
-
-              {/* Panel 3: Signed Residual Map */}
-              <div className="h-full rounded-xl border border-purple-500/30 bg-purple-950/20 p-2 flex flex-col justify-between relative overflow-hidden">
-                <div className="flex items-center justify-between text-[9px] font-mono">
-                  <span className="text-purple-300 font-semibold">RESIDUAL (E2 - E1)</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping" />
-                </div>
-                <div className="my-auto flex flex-col items-center justify-center relative">
-                  {/* Positive Residual (Red/Orange) & Negative Residual (Cyan/Blue) */}
-                  <div className="w-3.5 h-3.5 rounded-full bg-orange-500 shadow-[0_0_8px_orange] translate-y-[-4px]" />
-                  <div className="w-3.5 h-3.5 rounded-full bg-blue-500 shadow-[0_0_8px_blue] translate-y-[4px]" />
-                  {/* DAOStarFinder Target Reticle */}
-                  <div className="absolute w-8 h-8 rounded-full border border-dashed border-white/40 pointer-events-none" />
-                </div>
-                <span className="text-[8.5px] font-mono text-purple-200">DAOStarFinder Detection</span>
-              </div>
-            </div>
-
-            {/* Residual Legend */}
-            <div className="flex items-center justify-between pt-2 border-t border-white/10 text-[10px] font-mono">
-              <span className="text-white/60">Color Mapping:</span>
-              <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1.5 text-orange-400">
-                  <span className="w-2 h-2 rounded-full bg-orange-500" />
-                  Positive Residual (+Flux)
-                </span>
-                <span className="flex items-center gap-1.5 text-blue-400">
-                  <span className="w-2 h-2 rounded-full bg-blue-500" />
-                  Negative Residual (-Flux)
-                </span>
-              </div>
-            </div>
+        {/* 3. Color-Coded Residual Science Key */}
+        <div className="w-full bg-black/70 backdrop-blur-md border border-white/10 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-[10.5px] font-mono shadow-lg">
+          <span className="text-white/60">Astrophysical Residuals:</span>
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5 text-red-400">
+              <span className="w-2 h-2 rounded-full bg-red-500" />
+              Red = Later Brighter (+Signal)
+            </span>
+            <span className="flex items-center gap-1.5 text-blue-400">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              Blue = Earlier Brighter (-Signal)
+            </span>
+            <span className="flex items-center gap-1.5 text-white/40">
+              <span className="w-2 h-2 rounded-full bg-gray-600" />
+              Gray = Net Zero (Stationary)
+            </span>
           </div>
-        ) : (
-          /* Light Curves Preview */
-          <div className="absolute inset-0 p-5 flex flex-col justify-between animate-fadeIn">
-            <div className="flex items-center justify-between text-[11px] font-mono">
-              <span className="text-white font-medium">R Draconis (Mira Pulsator)</span>
-              <span className="text-[var(--accent)]">Period: 245.6 Days</span>
-            </div>
+        </div>
 
-            {/* Photometric Wave SVG */}
-            <div className="my-auto h-24 w-full relative flex items-center">
-              <svg className="w-full h-full overflow-visible" viewBox="0 0 400 100" preserveAspectRatio="none">
-                <path
-                  d="M 0,50 Q 50,10 100,50 T 200,50 T 300,50 T 400,50"
-                  fill="none"
-                  stroke="rgba(244, 162, 114, 0.4)"
-                  strokeWidth="2"
-                  strokeDasharray="4 4"
-                />
-                <path
-                  d="M 0,50 Q 50,10 100,50 T 200,50 T 300,50 T 400,50"
-                  fill="none"
-                  stroke="var(--accent)"
-                  strokeWidth="3"
-                />
-                {/* Observation Data Points */}
-                <circle cx="50" cy="10" r="4" fill="#ff7b3d" />
-                <circle cx="150" cy="90" r="4" fill="#38bdf8" />
-                <circle cx="250" cy="10" r="4" fill="#ff7b3d" />
-                <circle cx="350" cy="90" r="4" fill="#38bdf8" />
-              </svg>
-            </div>
-
-            <div className="flex justify-between text-[10px] font-mono text-white/40 pt-2 border-t border-white/5">
-              <span>Source: AAVSO / IRAS / WISE Multi-Epoch Photometry</span>
-              <span>Amplitude: Δm ~ 3.4 mag</span>
-            </div>
+        {/* 4. Photometric Light Curve Wave Pulse Bar */}
+        <div className="w-full mt-3 bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 flex items-center justify-between text-[10.5px] font-mono text-white/70">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-3.5 h-3.5 text-[var(--accent)]" />
+            <span>Time-Series Photometry</span>
           </div>
-        )}
-      </div>
-
-      {/* Bottom Technical Status Line */}
-      <div className="flex items-center justify-between text-[11px] font-mono text-white/50 pt-2">
-        <span className="text-purple-300">Co-Addition Stacking: ×1.73 Idealized S/N Gain</span>
-        <span className="text-[var(--accent)]">Persistent Discovery Journal (.md Export)</span>
+          <div className="flex items-center gap-3 text-white/50 text-[10px]">
+            <span>Mira Period: 314d</span>
+            <span>·</span>
+            <span className="text-emerald-400 flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3" />
+              DAOStarFinder SNR &gt; 5.0
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );

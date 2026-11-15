@@ -1,125 +1,84 @@
 import React, { useState } from "react";
-import { Compass, Target, ShieldCheck, Zap } from "lucide-react";
-
-interface ChallengeTarget {
-  name: string;
-  type: string;
-  ra: string;
-  dec: string;
-  metric: string;
-}
-
-const TARGETS: ChallengeTarget[] = [
-  {
-    name: "Barnard's Star",
-    type: "High Proper Motion M-Dwarf",
-    ra: "269.4463°",
-    dec: "+4.7682°",
-    metric: "10.223\"/359d astrometric displacement",
-  },
-  {
-    name: "WISE 0855-0714",
-    type: "Sub-Zero Brown Dwarf (250 K)",
-    ra: "133.7862°",
-    dec: "-7.2444°",
-    metric: "Water ice cloud absorption candidate",
-  },
-  {
-    name: "Epsilon Indi B",
-    type: "Binary T-Dwarf System",
-    ra: "331.0604°",
-    dec: "-56.7865°",
-    metric: "~400\" separation from primary",
-  },
-  {
-    name: "RW Aurigae",
-    type: "Young Stellar Object (T Tauri)",
-    ra: "77.4642°",
-    dec: "+30.4014°",
-    metric: "Circumstellar dust disk occultation",
-  },
-  {
-    name: "R Draconis",
-    type: "Mira Variable Pulsator",
-    ra: "248.3304°",
-    dec: "+66.7042°",
-    metric: "245.6-day radial pulsation cycle",
-  },
-];
+import { Compass, Target, ShieldCheck, Zap, Sparkles } from "lucide-react";
+import { FEATURED_OBJECTS } from "../../constants/objects";
 
 export const MissionShowcaseVisual: React.FC = () => {
-  const [selectedIndex, setSelectedIndex] = useState<number>(0);
-  const selected = TARGETS[selectedIndex];
+  const [selectedSlug, setSelectedSlug] = useState<string>("barnards-star");
+  const selected = FEATURED_OBJECTS.find((o) => o.slug === selectedSlug) || FEATURED_OBJECTS[0];
 
   return (
-    <div className="mission-showcase-visual w-full rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl p-6 relative overflow-hidden shadow-2xl">
-      {/* Ambient mission glow */}
-      <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-amber-600/15 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-indigo-600/15 blur-3xl pointer-events-none" />
+    <div className="mission-showcase-visual w-full relative flex items-center justify-center min-h-[440px] sm:min-h-[480px] select-none overflow-hidden rounded-3xl">
+      {/* 1. Ambient Cosmic Mission Glow (Amber & deep indigo) */}
+      <div className="absolute inset-0 bg-radial from-amber-500/15 via-indigo-950/10 to-transparent pointer-events-none filter blur-3xl -z-10" />
 
-      {/* Top HUD Bar */}
-      <div className="flex items-center justify-between pb-4 border-b border-white/10 text-xs font-mono">
-        <div className="flex items-center gap-2 text-white/60">
-          <Compass className="w-3.5 h-3.5 text-[var(--accent)]" />
-          <span>NASA SPACE APPS CHALLENGE TARGET NODES</span>
-        </div>
-        <span className="text-[var(--accent)] font-mono text-[10.5px]">5 Canonical Benchmarks</span>
-      </div>
-
-      {/* Interactive Orbital Target Selector */}
-      <div className="relative aspect-[16/10] w-full my-4 rounded-2xl overflow-hidden border border-white/10 bg-[#05060d] p-5 flex flex-col justify-between">
-        {/* Target Buttons Stripe */}
-        <div className="flex flex-wrap gap-1.5 z-10">
-          {TARGETS.map((t, idx) => (
-            <button
-              key={t.name}
-              onClick={() => setSelectedIndex(idx)}
-              className={`px-3 py-1 rounded-lg font-mono text-[10.5px] transition-all cursor-pointer ${
-                selectedIndex === idx
-                  ? "bg-gradient-to-r from-[#ff7b3d] to-[#f4a272] text-black font-semibold shadow-md"
-                  : "bg-white/5 text-white/70 hover:text-white hover:bg-white/10 border border-white/5"
-              }`}
-            >
-              {t.name}
-            </button>
-          ))}
-        </div>
-
-        {/* Selected Target Deep Telemetry Display */}
-        <div className="my-auto py-2 z-10">
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-mono text-[var(--accent)] mb-2">
-            <Target className="w-3 h-3" />
-            <span>{selected.type}</span>
+      {/* 2. Floating Orbital Network Centerpiece */}
+      <div className="relative w-full max-w-[540px] flex flex-col items-center">
+        {/* Orbital Target Beacons Map */}
+        <div className="relative w-full aspect-[16/10] rounded-3xl border border-white/15 bg-gradient-to-br from-[#070914] via-black to-[#100b06] p-6 shadow-[0_0_60px_rgba(244,162,114,0.15)] flex flex-col justify-between overflow-hidden backdrop-blur-md">
+          {/* Orbital Elliptical Coordinate Grid */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+            <div className="w-[85%] h-[85%] rounded-full border border-dashed border-white/20 animate-spin" style={{ animationDuration: "140s" }} />
+            <div className="absolute w-[60%] h-[60%] rounded-full border border-orange-400/20" />
+            <div className="absolute w-[110%] h-[50%] rounded-full border border-cyan-400/20 -rotate-15" />
           </div>
 
-          <h3 className="text-2xl font-light text-white tracking-tight">{selected.name}</h3>
+          {/* Top Target Selector Pills */}
+          <div className="flex flex-wrap gap-1.5 z-10 relative">
+            {FEATURED_OBJECTS.map((t) => (
+              <button
+                key={t.slug}
+                onClick={() => setSelectedSlug(t.slug)}
+                className={`px-3 py-1.5 rounded-full font-mono text-[10.5px] transition-all cursor-pointer ${
+                  selectedSlug === t.slug
+                    ? "bg-gradient-to-r from-[#ff7b3d] to-[#f4a272] text-black font-semibold shadow-[0_0_15px_rgba(244,162,114,0.5)] scale-105"
+                    : "bg-white/5 text-white/70 hover:text-white hover:bg-white/10 border border-white/10"
+                }`}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
 
-          <p className="text-xs font-mono text-emerald-400 mt-1">
-            {selected.metric}
-          </p>
+          {/* Selected Target Orbital Telemetry Display */}
+          <div className="my-auto py-2 z-10 relative">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-mono text-[var(--accent)] mb-2 shadow-sm">
+              <Target className="w-3.5 h-3.5" />
+              <span>{selected.type}</span>
+            </div>
 
-          <div className="flex gap-4 mt-3 text-[11px] font-mono text-white/60">
-            <span>RA: <b className="text-white font-normal">{selected.ra}</b></span>
-            <span>Dec: <b className="text-white font-normal">{selected.dec}</b></span>
+            <h3 className="text-2xl sm:text-3xl font-light text-white tracking-tight mb-1">
+              {selected.name}
+            </h3>
+
+            <p className="text-xs text-white/70 leading-relaxed max-w-md mb-3 line-clamp-2">
+              {selected.description}
+            </p>
+
+            {/* Coordinates & Provenance Badge Strip */}
+            <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono">
+              <span className="bg-black/60 px-2.5 py-1 rounded-md border border-white/10 text-cyan-300">
+                RA {selected.ra.toFixed(4)}° · Dec {selected.dec.toFixed(4)}°
+              </span>
+              <span className="bg-black/60 px-2.5 py-1 rounded-md border border-white/10 text-emerald-400">
+                Level 2 FITS Verified
+              </span>
+              {selected.properMotionDec && (
+                <span className="bg-black/60 px-2.5 py-1 rounded-md border border-white/10 text-amber-300">
+                  μ_δ = {selected.properMotionDec} mas/yr
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Bottom Telemetry Bar */}
+          <div className="flex items-center justify-between pt-3 border-t border-white/10 text-[10px] font-mono text-white/40 z-10">
+            <span>NASA Space Apps Challenge 2026 · Planet X & SPHEREx</span>
+            <span className="text-[var(--accent)] flex items-center gap-1">
+              <Sparkles className="w-3 h-3" />
+              <span>5 Challenge Targets Ready</span>
+            </span>
           </div>
         </div>
-
-        {/* Mission Specifications Footer */}
-        <div className="grid grid-cols-4 gap-2 pt-3 border-t border-white/10 text-[10px] font-mono text-white/50 text-center">
-          <div><b className="text-white block font-medium">102</b> CHANNELS</div>
-          <div><b className="text-white block font-medium">0.75–5.0</b> µm RANGE</div>
-          <div><b className="text-white block font-medium">4</b> SURVEYS</div>
-          <div><b className="text-white block font-medium">2 YRS</b> PRIME</div>
-        </div>
-      </div>
-
-      {/* Bottom Technical Status Line */}
-      <div className="flex items-center justify-between text-[11px] font-mono text-white/50 pt-2">
-        <span className="flex items-center gap-1.5 text-amber-300">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>Interactive Training Simulation & Science Missions Active</span>
-        </span>
-        <span className="text-[var(--accent)]">Citizen Science Ready</span>
       </div>
     </div>
   );

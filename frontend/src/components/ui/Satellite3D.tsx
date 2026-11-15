@@ -29,10 +29,10 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
     const scene = new THREE.Scene();
     const width = container.clientWidth || 600;
     const height = container.clientHeight || 500;
-    const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
-    camera.position.set(0, 0.7, 6.4);
+    const camera = new THREE.PerspectiveCamera(36, width / height, 0.1, 100);
+    camera.position.set(0, 0.1, 5.8);
 
-    // 2. Renderer
+    // 2. Renderer with transparent clear color
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: true,
@@ -40,18 +40,28 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
     });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setClearColor(0x000000, 0);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
+    renderer.toneMappingExposure = 1.25;
     container.appendChild(renderer.domElement);
 
-    // 3. Controls
+    // 3. OrbitControls (Smooth drag-to-rotate, wheel zoom disabled to protect normal page scroll)
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableZoom = false;
     controls.enablePan = false;
-    controls.minPolarAngle = 0.9;
-    controls.maxPolarAngle = 2.2;
+    controls.minPolarAngle = 0.8;
+    controls.maxPolarAngle = 2.4;
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+    controls.target.set(0, 0, 0);
+
+    let isUserInteracting = false;
+    controls.addEventListener("start", () => {
+      isUserInteracting = true;
+    });
+    controls.addEventListener("end", () => {
+      isUserInteracting = false;
+    });
 
     // 4. Lighting matching visual prototype
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
@@ -140,12 +150,12 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
         if (destroyed) return;
         const sceneObj = gltf.scene;
 
-        // Auto-center and normalize scale to match viewport
+        // Auto-center and normalize scale with generous safety padding (no edge clipping)
         const box = new THREE.Box3().setFromObject(sceneObj);
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
-        const scaleFactor = 3.4 / (maxDim || 1);
+        const scaleFactor = 2.65 / (maxDim || 1);
 
         sceneObj.position.set(-center.x, -center.y, -center.z);
 
@@ -173,19 +183,29 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
 
     const clock = new THREE.Clock();
     let curYaw = 0;
+    let idleYaw = 0;
 
     const animate = () => {
       if (destroyed) return;
       rafId = requestAnimationFrame(animate);
 
-      if (!isVisible) return; // Pause expensive rendering when scrolled out of view
+      if (!isVisible) return; // Pause rendering when off-screen
+
+      const delta = clock.getDelta();
+      const elapsed = clock.getElapsedTime();
+
+      // Only advance idle spin when user is not actively dragging
+      if (!isUserInteracting) {
+        idleYaw += delta * 0.15;
+      }
 
       const targetYaw = yawRef.current;
       curYaw += (targetYaw - curYaw) * 0.05;
 
-      const elapsed = clock.getElapsedTime();
-      const scrollY = window.scrollY || 0;
-      modelGroup.rotation.y = scrollY * 0.003 + elapsed * 0.14 + curYaw;
+      // Gentle, realistic cosmic floating motion (zero jerky jumps)
+      modelGroup.position.y = Math.sin(elapsed * 0.85) * 0.07;
+      modelGroup.position.x = Math.cos(elapsed * 0.5) * 0.035;
+      modelGroup.rotation.y = idleYaw + curYaw;
 
       controls.update();
       renderer.render(scene, camera);

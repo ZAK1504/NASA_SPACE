@@ -169,14 +169,17 @@ Traditional single-page apps lose the user's scroll position when navigating to 
 
 | Verification Target | Test Method | Expected Outcome | Actual Measured Result | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **5 Journey Chapters** | Puppeteer DOM Audit | All 5 IDs exist (`home`, `explorer`, `time-machine`, `labs`, `mission`) | Found all 5: `home` (0px), `explorer` (828px), `time-machine` (1843px), `labs` (2622px), `mission` (3387px) | **PASS** |
+| **5 Journey Chapters** | Puppeteer DOM Audit | All 5 IDs exist (`home`, `explorer`, `time-machine`, `labs`, `mission`) | Found all 5: `home` (0px), `explorer` (828px), `time-machine` (1915px), `labs` (2720px), `mission` (3520px) | **PASS** |
 | **Chapter Navigator** | Puppeteer Selector Audit | 5 buttons with active indicator | Found: `HOME 01`, `EXPLORE 02`, `TIME 03`, `LABS 04`, `MISSION 05` | **PASS** |
-| **Explorer -> Spectra Round-Trip** | Click CTA & Back | URL -> `/spectra` -> return to `/#explorer` with scroll offset restored | `scrollY: 828` restored at `/#explorer` | **PASS** |
-| **Time Machine Round-Trip** | Click CTA & Back | URL -> `/time-machine` -> return to `/#time-machine` with scroll offset restored | `scrollY: 1843` restored at `/#time-machine` | **PASS** |
-| **Bottom Tab Visibility Rules** | Workspace Shell Audit | Tabs only on Explorer/Labs; NONE on Journey or Time Machine | Journey: 0 tabs<br>Time Machine: 0 tabs<br>Spectra: 3 tabs (`Sky`, `Object`, `Spectral`) | **PASS** |
+| **Spacecraft Presentation** | Puppeteer DOM & Canvas Audit | Free-floating model, 0% container background, transparent canvas | `hasVisibleCard: false`, `hasSatCanvas: true` | **PASS** |
+| **Workspace Navigation Source of Truth** | Header & Workspace Shell Audit | Single contextual top header switcher, ZERO duplicate bottom pill | `hasTopNav: true`, `hasBottomPill: false`, `hasBottomNav: false` | **PASS** |
+| **Workspace Scroll Isolation** | Entry Scroll Audit | Newly opened workspace opens strictly at `scrollY = 0` | `scrollY: 0` on entry to `/time-machine` | **PASS** |
+| **Lossless Journey Return** | Return Navigation Audit | Back to Journey restores originating chapter and scroll offset | `scrollY: 1915` restored at `/#time-machine` | **PASS** |
+| **Compact Time Machine Layout** | Viewport & Layout Audit | 2-column grid with compact viewer (`h <= 460px`) and telemetry side-by-side | `hasTwoColGrid: true`, `boxClientHeight: 458px` | **PASS** |
+| **Page-Specific Tours** | Driver.js Dynamic Tour Audit | Specific tour loaded per route rather than generic tour | Verified `/time-machine` and `/spectra` tours | **PASS** |
 | **Mobile Responsiveness** | Viewport 390x844 Audit | `scrollWidth <= clientWidth` | `scrollWidth: 390, clientWidth: 390, hasOverflow: false` | **PASS** |
-| **Backend Scientific Pytest** | `python -m pytest tests/` | 43/43 tests passing | 43 passed in 27.72s (100% pass rate) | **PASS** |
-| **Frontend Production Build** | `tsc -b && vite build` | 0 errors | Built in 7.05s | **PASS** |
+| **Backend Scientific Pytest** | `python -m pytest tests/` | 43/43 tests passing | 43 passed in 39.66s (100% pass rate) | **PASS** |
+| **Frontend Production Build** | `tsc -b && vite build` | 0 errors | Built in 9.69s | **PASS** |
 
 ---
 

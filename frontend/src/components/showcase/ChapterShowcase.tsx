@@ -1,4 +1,5 @@
 import React from "react";
+import { ArrowDown } from "lucide-react";
 
 export interface ChapterShowcaseProps {
   id: string;
@@ -10,12 +11,14 @@ export interface ChapterShowcaseProps {
   visual: React.ReactNode;
   className?: string;
   dataTour?: string;
+  nextChapterCue?: { id: string; label: string; number: string };
+  onScrollToNext?: (id: string) => void;
 }
 
 /**
  * Reusable two-column product showcase section inspired by ZENVYX service showcase pattern.
  * Features massive display typography, small numbered label, concise narrative, prominent CTAs,
- * and an interactive visual centerpiece on the opposite side.
+ * an interactive visual centerpiece on the opposite side, and subtle next-chapter scroll cues.
  */
 export const ChapterShowcase: React.FC<ChapterShowcaseProps> = ({
   id,
@@ -27,6 +30,8 @@ export const ChapterShowcase: React.FC<ChapterShowcaseProps> = ({
   visual,
   className = "",
   dataTour,
+  nextChapterCue,
+  onScrollToNext,
 }) => {
   return (
     <section
@@ -34,7 +39,7 @@ export const ChapterShowcase: React.FC<ChapterShowcaseProps> = ({
       data-tour={dataTour}
       className={`chapter-showcase w-full min-h-[85vh] py-16 lg:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center relative z-10 ${className}`}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center w-full my-auto">
         {/* Left Side: Numbered Label, Massive Typography, Subtitle, Narrative, CTAs */}
         <div className="lg:col-span-5 flex flex-col justify-center">
           {/* Chapter Number & Label */}
@@ -71,6 +76,22 @@ export const ChapterShowcase: React.FC<ChapterShowcaseProps> = ({
           {visual}
         </div>
       </div>
+
+      {/* Subtle, elegant Next-Chapter Cue to make the next chapter feel inevitable */}
+      {nextChapterCue && (
+        <div className="w-full flex justify-center pt-8 mt-4">
+          <button
+            onClick={() => onScrollToNext?.(nextChapterCue.id)}
+            className="group flex flex-col items-center gap-1.5 text-white/40 hover:text-[var(--accent)] transition-all cursor-pointer select-none"
+            title={`Scroll to Chapter ${nextChapterCue.number}: ${nextChapterCue.label}`}
+          >
+            <span className="font-mono text-[10px] tracking-widest uppercase">
+              NEXT — {nextChapterCue.number} / {nextChapterCue.label}
+            </span>
+            <ArrowDown className="w-3.5 h-3.5 group-hover:translate-y-1 transition-transform" />
+          </button>
+        </div>
+      )}
     </section>
   );
 };
