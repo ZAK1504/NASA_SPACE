@@ -1,0 +1,70 @@
+# SPHEREx HORIZON — Production Caddyfile
+# Reverse Proxy & Static File Server Configuration for Google Compute Engine VM
+# Architecture: Single Origin (https://{$DOMAIN}/ and https://{$DOMAIN}/api/)
+
+{$DOMAIN:localhost} {
+    # Automatic HTTPS configuration handled by Caddy
+    # To specify custom TLS certs or email, configure in /etc/caddy/Caddyfile or environment
+
+    # Root directory for static production frontend assets
+    root * /opt/horizon/current/frontend/dist
+
+    # High-performance compression
+    encode zstd gzip
+
+    # Production Security Headers
+    header {
+        # Enforce HTTPS across subdomains for 1 year
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        # Prevent MIME-type sniffing
+        X-Content-Type-Options "nosniff"
+        # Prevent Clickjacking
+        X-Frame-Options "DENY"
+        # Strict referrer leakage protection
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # Disallow sensitive device hardware access
+        Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+        # Content Security Policy (tuned for React, Vite, Three.js, and Aladin Lite CDS HiPS tiles)
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://aladin.cds.unistra.fr https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://aladin.cds.unistra.fr https://irsa.ipac.caltech.edu http://alasky.cds.unistra.fr https://alasky.cds.unistra.fr; connect-src 'self' https://aladin.cds.unistra.fr http://alasky.cds.unistra.fr https://alasky.cds.unistra.fr https://irsa.ipac.caltech.edu; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none';"
+        # Remove server identification
+        -Server
+    }
+
+    # Route /api requests to FastAPI Uvicorn backend bound to 127.0.0.1:8000
+    handle /api/* {
+        reverse_proxy 127.0.0.1:8000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+
+            # Response buffer and timeout settings for scientific cutouts
+            transport http {
+                response_header_timeout 60s
+                read_timeout 60s
+            }
+        }
+    }
+
+    # Serve static assets efficiently with long-term caching for hashed assets
+    @staticAssets {
+        path /assets/* *.js *.css *.png *.jpg *.jpeg *.gif *.ico *.svg *.woff *.woff2 *.webp
+    }
+    header @staticAssets Cache-Control "public, max-age=31536000, immutable"
+
+    # Serve files with React Router SPA deep link fallback
+    handle {
+        file_server
+        try_files {path} /index.html
+    }
+
+    # Production Structured Logging
+    log {
+        output file /var/log/caddy/horizon_access.log {
+            roll_size 20mb
+            roll_keep 5
+            roll_keep_for 720h
+        }
+        format json
+    }
+}
