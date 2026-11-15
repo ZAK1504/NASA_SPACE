@@ -121,15 +121,15 @@ export const LightCurves: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#263247] pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#262635] pb-6">
         <div>
           <div className="flex items-center gap-3">
-            <span className="p-2 rounded-lg bg-[#6EA8FE]/10 text-[#6EA8FE]">
+            <span className="p-2 rounded-lg bg-[#F4A272]/10 text-[#F4A272]">
               <Activity className="h-6 w-6" />
             </span>
             <div>
-              <h1 className="text-2xl font-bold text-[#E8EDF5]">Photometric Light Curve Explorer</h1>
-              <p className="text-sm text-[#94A3B8]">
+              <h1 className="text-2xl font-bold text-[#F3EFE8]">Photometric Light Curve Explorer</h1>
+              <p className="text-sm text-[#9E9AA7]">
                 Multi-epoch brightness variation, stellar pulsations, and occultations across SPHEREx infrared bands
               </p>
             </div>
@@ -144,8 +144,8 @@ export const LightCurves: React.FC = () => {
               onClick={() => selectTarget(t.id)}
               className={`px-3 py-2 rounded-lg text-xs font-medium border transition-all text-left ${
                 activeTargetId === t.id
-                  ? 'bg-[#6EA8FE]/20 border-[#6EA8FE] text-[#6EA8FE] shadow-glow-blue'
-                  : 'bg-[#151E30] border-[#263247] text-[#94A3B8] hover:text-[#E8EDF5] hover:border-[#6EA8FE]/40'
+                  ? 'bg-[#F4A272]/20 border-[#F4A272] text-[#F4A272] shadow-glow-blue'
+                  : 'bg-[#111117] border-[#262635] text-[#9E9AA7] hover:text-[#F3EFE8] hover:border-[#F4A272]/40'
               }`}
             >
               <div className="font-semibold">{t.name}</div>
@@ -156,8 +156,8 @@ export const LightCurves: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="h-96 flex flex-col items-center justify-center bg-[#151E30] rounded-xl border border-[#263247] text-[#94A3B8]">
-          <RefreshCw className="h-8 w-8 animate-spin text-[#6EA8FE] mb-3" />
+        <div className="h-96 flex flex-col items-center justify-center bg-[#111117] rounded-xl border border-[#262635] text-[#9E9AA7]">
+          <RefreshCw className="h-8 w-8 animate-spin text-[#F4A272] mb-3" />
           <p className="font-mono text-sm">Calibrating multi-epoch photometry from archive...</p>
         </div>
       ) : error || !data ? (
@@ -167,28 +167,28 @@ export const LightCurves: React.FC = () => {
       ) : (
         <>
           {/* Main Chart Card */}
-          <div className="bg-[#151E30] rounded-xl border border-[#263247] p-6 shadow-xl space-y-4">
+          <div className="bg-[#111117] rounded-xl border border-[#262635] p-6 shadow-xl space-y-4">
             {/* Top Toolbar */}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#263247]/60 pb-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#262635]/60 pb-4">
               <div>
-                <h2 className="text-lg font-bold text-[#E8EDF5] flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-bold text-[#F3EFE8] flex flex-wrap items-center gap-2">
                   <span>{data.object_name}</span>
                   <Badge variant="blue">{data.variability_type}</Badge>
                   {data.citation && (
                     <Badge variant="purple">Source: {data.citation}</Badge>
                   )}
                 </h2>
-                <p className="text-xs text-[#94A3B8] mt-1">{data.scientific_summary}</p>
+                <p className="text-xs text-[#9E9AA7] mt-1">{data.scientific_summary}</p>
               </div>
 
               {/* View options */}
               <div className="flex flex-wrap items-center gap-2">
                 {/* Metric toggle */}
-                <div className="flex items-center bg-[#0B1020] rounded-lg p-1 border border-[#263247]">
+                <div className="flex items-center bg-[#08080C] rounded-lg p-1 border border-[#262635]">
                   <button
                     onClick={() => setMetric('mag')}
                     className={`px-2.5 py-1 text-xs font-mono rounded ${
-                      metric === 'mag' ? 'bg-[#6EA8FE] text-[#0B1020] font-bold' : 'text-[#94A3B8] hover:text-[#E8EDF5]'
+                      metric === 'mag' ? 'bg-[#F4A272] text-[#08080C] font-bold' : 'text-[#9E9AA7] hover:text-[#F3EFE8]'
                     }`}
                   >
                     Magnitude (m)
@@ -196,7 +196,7 @@ export const LightCurves: React.FC = () => {
                   <button
                     onClick={() => setMetric('flux')}
                     className={`px-2.5 py-1 text-xs font-mono rounded ${
-                      metric === 'flux' ? 'bg-[#6EA8FE] text-[#0B1020] font-bold' : 'text-[#94A3B8] hover:text-[#E8EDF5]'
+                      metric === 'flux' ? 'bg-[#F4A272] text-[#08080C] font-bold' : 'text-[#9E9AA7] hover:text-[#F3EFE8]'
                     }`}
                   >
                     Flux (μJy)
@@ -210,7 +210,7 @@ export const LightCurves: React.FC = () => {
                     className={`px-3 py-1 text-xs font-medium rounded-lg border transition-all ${
                       phaseFolded
                         ? 'bg-[#F3B85B]/20 border-[#F3B85B] text-[#F3B85B]'
-                        : 'bg-[#0B1020] border-[#263247] text-[#94A3B8] hover:text-[#E8EDF5]'
+                        : 'bg-[#08080C] border-[#262635] text-[#9E9AA7] hover:text-[#F3EFE8]'
                     }`}
                   >
                     {phaseFolded ? 'Phase Folded (0.0 – 1.0)' : 'Time-Domain (MJD)'}
@@ -220,7 +220,7 @@ export const LightCurves: React.FC = () => {
             </div>
 
             {/* SVG Light Curve Graph */}
-            <div className="relative w-full overflow-x-auto bg-[#0B1020]/80 rounded-lg border border-[#263247]/50 p-2">
+            <div className="relative w-full overflow-x-auto bg-[#08080C]/80 rounded-lg border border-[#262635]/50 p-2">
               <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-auto min-w-[700px]">
                 {/* Grid Lines */}
                 {[0.25, 0.5, 0.75].map((factor) => {
@@ -232,7 +232,7 @@ export const LightCurves: React.FC = () => {
                       y1={y}
                       x2={svgWidth - paddingRight}
                       y2={y}
-                      stroke="#263247"
+                      stroke="#262635"
                       strokeDasharray="4 4"
                       strokeWidth="1"
                     />
@@ -240,10 +240,10 @@ export const LightCurves: React.FC = () => {
                 })}
 
                 {/* Y-Axis Labels */}
-                <text x={paddingLeft - 10} y={paddingTop + 10} textAnchor="end" fill="#94A3B8" fontSize="11" fontFamily="monospace">
+                <text x={paddingLeft - 10} y={paddingTop + 10} textAnchor="end" fill="#9E9AA7" fontSize="11" fontFamily="monospace">
                   {yDomainMin.toFixed(2)} {metric === 'mag' ? 'mag' : 'μJy'}
                 </text>
-                <text x={paddingLeft - 10} y={svgHeight - paddingBottom} textAnchor="end" fill="#94A3B8" fontSize="11" fontFamily="monospace">
+                <text x={paddingLeft - 10} y={svgHeight - paddingBottom} textAnchor="end" fill="#9E9AA7" fontSize="11" fontFamily="monospace">
                   {yDomainMax.toFixed(2)} {metric === 'mag' ? 'mag' : 'μJy'}
                 </text>
                 <text
@@ -251,7 +251,7 @@ export const LightCurves: React.FC = () => {
                   y={20}
                   transform="rotate(-90)"
                   textAnchor="middle"
-                  fill="#6EA8FE"
+                  fill="#F4A272"
                   fontSize="12"
                   fontFamily="sans-serif"
                   fontWeight="bold"
@@ -260,17 +260,17 @@ export const LightCurves: React.FC = () => {
                 </text>
 
                 {/* X-Axis Labels */}
-                <text x={paddingLeft} y={svgHeight - 15} textAnchor="start" fill="#94A3B8" fontSize="11" fontFamily="monospace">
+                <text x={paddingLeft} y={svgHeight - 15} textAnchor="start" fill="#9E9AA7" fontSize="11" fontFamily="monospace">
                   {phaseFolded ? 'Phase 0.0' : `MJD ${xDomainMin.toFixed(0)}`}
                 </text>
-                <text x={svgWidth - paddingRight} y={svgHeight - 15} textAnchor="end" fill="#94A3B8" fontSize="11" fontFamily="monospace">
+                <text x={svgWidth - paddingRight} y={svgHeight - 15} textAnchor="end" fill="#9E9AA7" fontSize="11" fontFamily="monospace">
                   {phaseFolded ? 'Phase 1.0' : `MJD ${xDomainMax.toFixed(0)}`}
                 </text>
                 <text
                   x={svgWidth / 2}
                   y={svgHeight - 15}
                   textAnchor="middle"
-                  fill="#94A3B8"
+                  fill="#9E9AA7"
                   fontSize="12"
                   fontFamily="sans-serif"
                 >
@@ -290,7 +290,7 @@ export const LightCurves: React.FC = () => {
                       })
                       .join(' ')}
                     fill="none"
-                    stroke="#6EA8FE"
+                    stroke="#F4A272"
                     strokeWidth="2"
                     strokeOpacity="0.4"
                     strokeDasharray={phaseFolded ? 'none' : '2 2'}
@@ -335,8 +335,8 @@ export const LightCurves: React.FC = () => {
                         cx={cx}
                         cy={cy}
                         r={isHovered ? 7 : 5}
-                        fill={isHovered ? '#6EA8FE' : pt.band.includes('D5') ? '#F3B85B' : '#6EA8FE'}
-                        stroke="#0B1020"
+                        fill={isHovered ? '#F4A272' : pt.band.includes('D5') ? '#F3B85B' : '#F4A272'}
+                        stroke="#08080C"
                         strokeWidth="2"
                         className="transition-all"
                       />
@@ -347,18 +347,18 @@ export const LightCurves: React.FC = () => {
 
               {/* Hover Tooltip Box */}
               {hoveredPoint && (
-                <div className="absolute top-4 right-4 bg-[#151E30]/95 backdrop-blur-md border border-[#6EA8FE] rounded-lg p-3 text-xs shadow-glow-blue max-w-xs">
-                  <div className="font-bold text-[#E8EDF5] border-b border-[#263247] pb-1 mb-2">
+                <div className="absolute top-4 right-4 bg-[#111117]/95 backdrop-blur-md border border-[#F4A272] rounded-lg p-3 text-xs shadow-glow-blue max-w-xs">
+                  <div className="font-bold text-[#F3EFE8] border-b border-[#262635] pb-1 mb-2">
                     Observation Epoch: {hoveredPoint.date_utc}
                   </div>
-                  <div className="space-y-1 font-mono text-[#94A3B8]">
+                  <div className="space-y-1 font-mono text-[#9E9AA7]">
                     <div>Band: <span className="text-[#F3B85B] font-semibold">{hoveredPoint.band}</span></div>
-                    <div>MJD: <span className="text-[#E8EDF5]">{hoveredPoint.mjd.toFixed(2)}</span></div>
+                    <div>MJD: <span className="text-[#F3EFE8]">{hoveredPoint.mjd.toFixed(2)}</span></div>
                     <div>
-                      Mag: <span className="text-[#6EA8FE] font-bold">{hoveredPoint.mag.toFixed(3)}</span> ± {hoveredPoint.mag_err.toFixed(3)}
+                      Mag: <span className="text-[#F4A272] font-bold">{hoveredPoint.mag.toFixed(3)}</span> ± {hoveredPoint.mag_err.toFixed(3)}
                     </div>
                     <div>
-                      Flux: <span className="text-[#E8EDF5]">{hoveredPoint.flux_ujy.toLocaleString()}</span> ± {hoveredPoint.flux_err_ujy} μJy
+                      Flux: <span className="text-[#F3EFE8]">{hoveredPoint.flux_ujy.toLocaleString()}</span> ± {hoveredPoint.flux_err_ujy} μJy
                     </div>
                     {hoveredPoint.phase != null && (
                       <div>Pulsation Phase: <span className="text-[#F3B85B]">Φ = {hoveredPoint.phase.toFixed(3)}</span></div>
@@ -370,35 +370,35 @@ export const LightCurves: React.FC = () => {
 
             {/* Scientific Diagnostics & Key Metrics */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-              <div className="bg-[#0B1020] p-3 rounded-lg border border-[#263247]">
-                <div className="text-[10px] uppercase font-mono text-[#94A3B8]">Variability Amplitude (Δm)</div>
+              <div className="bg-[#08080C] p-3 rounded-lg border border-[#262635]">
+                <div className="text-[10px] uppercase font-mono text-[#9E9AA7]">Variability Amplitude (Δm)</div>
                 <div className="text-xl font-bold font-mono text-[#F3B85B] mt-1">{data.amplitude_mag.toFixed(2)} mag</div>
-                <div className="text-[10px] text-[#94A3B8]">Peak-to-trough range</div>
+                <div className="text-[10px] text-[#9E9AA7]">Peak-to-trough range</div>
               </div>
 
-              <div className="bg-[#0B1020] p-3 rounded-lg border border-[#263247]">
-                <div className="text-[10px] uppercase font-mono text-[#94A3B8]">Pulsation / Rotation Period</div>
-                <div className="text-xl font-bold font-mono text-[#6EA8FE] mt-1">
+              <div className="bg-[#08080C] p-3 rounded-lg border border-[#262635]">
+                <div className="text-[10px] uppercase font-mono text-[#9E9AA7]">Pulsation / Rotation Period</div>
+                <div className="text-xl font-bold font-mono text-[#F4A272] mt-1">
                   {data.period_days ? `${data.period_days.toFixed(1)} days` : 'Aperiodic / Irregular'}
                 </div>
-                <div className="text-[10px] text-[#94A3B8]">SPHEREx multi-visit cadence</div>
+                <div className="text-[10px] text-[#9E9AA7]">SPHEREx multi-visit cadence</div>
               </div>
 
-              <div className="bg-[#0B1020] p-3 rounded-lg border border-[#263247]">
-                <div className="text-[10px] uppercase font-mono text-[#94A3B8]">Total Measured Epochs</div>
-                <div className="text-xl font-bold font-mono text-[#E8EDF5] mt-1">{data.data_points.length} visits</div>
-                <div className="text-[10px] text-[#94A3B8]">Multi-wavelength visits</div>
+              <div className="bg-[#08080C] p-3 rounded-lg border border-[#262635]">
+                <div className="text-[10px] uppercase font-mono text-[#9E9AA7]">Total Measured Epochs</div>
+                <div className="text-xl font-bold font-mono text-[#F3EFE8] mt-1">{data.data_points.length} visits</div>
+                <div className="text-[10px] text-[#9E9AA7]">Multi-wavelength visits</div>
               </div>
 
-              <div className="bg-[#0B1020] p-3 rounded-lg border border-[#263247]">
-                <div className="text-[10px] uppercase font-mono text-[#94A3B8]">Primary Filter Array</div>
-                <div className="text-sm font-bold font-mono text-[#6EA8FE] mt-1 truncate">{data.primary_band}</div>
-                <div className="text-[10px] text-[#94A3B8]">Infrared linear variable filter</div>
+              <div className="bg-[#08080C] p-3 rounded-lg border border-[#262635]">
+                <div className="text-[10px] uppercase font-mono text-[#9E9AA7]">Primary Filter Array</div>
+                <div className="text-sm font-bold font-mono text-[#F4A272] mt-1 truncate">{data.primary_band}</div>
+                <div className="text-[10px] text-[#9E9AA7]">Infrared linear variable filter</div>
               </div>
             </div>
 
             {/* Quick Actions Footer */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[#263247]/60">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[#262635]/60">
               <div className="flex items-center gap-2">
                 <Button
                   variant="secondary"

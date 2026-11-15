@@ -3,7 +3,7 @@ import ChapterShowcase from "./ChapterShowcase";
 import ExplorerShowcaseVisual from "./ExplorerShowcaseVisual";
 import { Compass, Eye, Layers, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { navigateToWorkspace } from "../../lib/journeyState";
+import { travelToWorkspace } from "../../lib/journeyState";
 
 interface ChapterExplorerProps {
   onScrollToNext?: () => void;
@@ -14,9 +14,9 @@ export const ChapterExplorer: React.FC<ChapterExplorerProps> = ({ onScrollToNext
   const [hoveredMode, setHoveredMode] = useState<"sky" | "object" | "spectral" | null>(null);
 
   const handleOpenWorkspace = (key: "sky" | "object" | "spectral") => {
-    if (key === "sky") navigateToWorkspace(navigate, "/explore", "explorer");
-    else if (key === "object") navigateToWorkspace(navigate, "/objects", "explorer");
-    else if (key === "spectral") navigateToWorkspace(navigate, "/spectra", "explorer");
+    if (key === "sky") travelToWorkspace(navigate, "/explore", "explorer");
+    else if (key === "object") travelToWorkspace(navigate, "/objects", "explorer");
+    else if (key === "spectral") travelToWorkspace(navigate, "/spectra", "explorer");
   };
 
   const actions = (

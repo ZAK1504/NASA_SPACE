@@ -233,6 +233,60 @@ In this final creative and engineering milestone, the complete visual experience
    - **CSS `clip-path` Split-Slider:** Upgraded Time Machine split view to use `clip-path: inset(...)` for pixel-perfect celestial registration between Epoch 1 and Epoch 2.
    - **Visual Verification Suite:** All 12 Puppeteer desktop and mobile tests pass with 0 errors. Backend test suite: 43/43 tests pass (100%).
 
+---
+
+## 9. Critical Seamless Environment Blending, Cinematic Workspace Transitions & Complete Theme Consistency
+
+In this milestone, all visual artifacts, abrupt background color changes, and theme inconsistencies were systematically eliminated:
+
+### 1. Continuous Scroll-Driven Environment Blending (`Backdrop.tsx` & `cinematic.css`)
+- **Root Cause of Abrupt Transitions:** Previously, `Backdrop.tsx` changed CSS radial-gradient definitions dynamically based on discrete `[data-section]` attribute toggles from an `IntersectionObserver`. Because browsers cannot interpolate CSS gradient strings, color backgrounds jumped instantly at section boundaries. Additionally, `TimeMachineToLabsTransition` and `LabsToMissionTransition` contained hard-coded opaque gradients (`rgba(20,18,22,1)` and `rgba(5,5,5,1)`) that produced visible horizontal rectangular slabs.
+- **Persistent Multi-Layer Solution:** Rendered 5 persistent GPU-composited atmospheric layers (`.bd-layer-home`, `.bd-layer-explorer`, `.bd-layer-time-machine`, `.bd-layer-labs`, `.bd-layer-mission`) simultaneously, with each layer assigned its unique chapter gradient.
+- **Smoothstep Geometry Interpolation:** Instead of discrete state swaps, layer opacities are calculated continuously on scroll using smoothstep interpolation based on the exact viewport distance to each section. Forward and reverse scrolling transitions seamlessly with zero flickering or sudden jumps.
+- **Transparent Transition Boundaries:** Purged all opaque background slabs from `ChapterTransition.tsx` and `cinematic.css`, allowing the starry cosmos to persist uninterrupted.
+
+### 2. Removal of Standalone "Traveling through space-time..." Section
+- Completely removed the 40vh standalone intermediate section file `TimeWarpTransition.tsx`, eliminating the "SPACETIME CONTINUUM" badge, velocity/epoch drift telemetry counters, and radar rings.
+- Embedded the relativistic star acceleration naturally into the continuous scroll flow (`window.__horizonWarpFactor` calculated via a smooth sine bell curve between Explorer and Time Machine).
+- Time Machine (`03 / REWIND`) now emerges directly, cleanly, and naturally from the starfield as the user scrolls down from Explorer.
+
+### 3. Aerospace Satin PBR Calibration on 3D Spacecraft (`Satellite3D.tsx`)
+- Addressed the over-saturated mirror-gold appearance of the 3D SPHEREx satellite model.
+- Traversed GLTF mesh materials on load: clamped metalness (`Math.min(0.55)`), increased surface roughness (`Math.max(0.44)`), and desaturated the primary yellow/gold hue into authentic satin aluminized polyimide MLI thermal insulation foil.
+- Balanced Three.js scene lighting: lowered pointLightOrange intensity from 55 to 12 (`0xfbbf24`), directional sun from 3.4 to 2.2 (`0xfff8f0`), and ambient light to 0.85, producing a photorealistic aerospace instrument aesthetic without blowing out highlights.
+
+### 4. Relativistic Workspace Travel & Return Transitions (`WorkspaceTransitionOverlay.tsx` & `journeyState.ts`)
+- **Procedural Starfield Warp:** Built a GPU-accelerated Canvas 2D warp overlay.
+- **Entry Transition (~500ms):** When clicking any scientific CTA ("Explore the Sky", "Launch Time Machine", "Enter Discovery Lab", etc.), stars accelerate outward from the screen center with warm orange speed streaks, transitioning smoothly into the workspace with `scrollY = 0`.
+- **Return Transition (~500ms):** When clicking `← Back to Journey`, stars contract inward toward the center, seamlessly scrolling the user back to the exact originating chapter and vertical scroll position under cover without flashing the top of the page.
+- **Accessibility & Safety:** Automatically respects `prefers-reduced-motion` with an immediate crossfade fallback, and includes an 850ms safety watchdog timer to prevent UI lockup.
+
+### 5. Complete HORIZON Design-System Migration Across ALL Scientific Workspaces
+- Comprehensive audit conducted across all 15 scientific pages and components to eliminate legacy navy/blue dashboard tokens (`#151E30`, `#263247`, `#6EA8FE`, `#2563EB`, `#0B1020`).
+- Standardized on canonical HORIZON tokens:
+  - Backgrounds & Surfaces: `#08080C`, `#111117`, `#181822`
+  - Borders & Dividing Lines: `#262635`, `#35354A`
+  - Primary Accents: `#F4A272`, `#FF7B3D`
+  - Typography: `#F3EFE8`, `#C7C3BD`, `#8E8A85`
+- Replaced all blue view-mode toggle buttons in Time Machine and Spectral Explorer with warm HORIZON gradient pills.
+- Refreshed `CosmicCopilot.tsx`, `TutorialMenu.tsx`, `AstronomicalImageViewer.tsx`, `CoordDisplay.tsx`, `ObjectDetail.tsx`, `LightCurves.tsx`, `Missions.tsx`, and `CommandPalette.tsx`.
+- **Scientific Data Preservation:** Strictly preserved authentic astronomical data representations (red/blue signed difference colormaps, FITS cutouts, and molecular spectral feature markers).
+
+### 6. Verification & Automated Audit Results
+- **Backend Pytest Suite:** 43 passed in 35.36s (100% pass rate).
+- **Frontend Production Build:** Built in 12.12s with 0 errors (TypeScript strict check passed).
+- **Automated Headless Audit (`frontend/scripts/verify_seamless.cjs`):**
+  - All 5 persistent backdrop layers detected and dynamically calculated: PASS
+  - Standalone "Traveling through space-time" completely absent: PASS
+  - Free-floating satin spacecraft canvas verified: PASS
+  - Seamless Home -> Explorer boundary blend: PASS
+  - Direct emergence of REWIND Time Machine: PASS
+  - Relativistic workspace travel to `scrollY = 0`: PASS
+  - Design-system audit: 0 legacy blue buttons remaining: PASS
+  - Round-trip scroll restoration (`diff: 0px`): PASS
+  - Mobile viewport (390x844) zero overflow: PASS
+
+
 
 
 

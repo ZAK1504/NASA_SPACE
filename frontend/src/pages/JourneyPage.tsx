@@ -9,7 +9,6 @@ import ChapterExplorer from "../components/showcase/ChapterExplorer";
 import ChapterTimeMachine from "../components/showcase/ChapterTimeMachine";
 import ChapterLabs from "../components/showcase/ChapterLabs";
 import ChapterMission from "../components/showcase/ChapterMission";
-import TimeWarpTransition from "../components/sections/TimeWarpTransition";
 import {
   HomeToExplorerTransition,
   TimeMachineToLabsTransition,
@@ -112,45 +111,35 @@ export const JourneyPage: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Warp coordination: drive window.__horizonWarpFactor from time-machine section scroll progress
-  // 0..1 when time-machine is 20-80% in view (explorer→time-machine transition zone), 0 in labs/mission
+  // Warp coordination: smoothly accelerate stars during the transition from Explorer to Time Machine
+  // Peaks as Explorer leaves the viewport and Time Machine emerges, settling to zero once centered
   useEffect(() => {
     let raf = 0;
     const update = () => {
       raf = 0;
       const h = window.innerHeight;
 
-      // Determine if we're in labs or mission → warp off
-      const labsEl = document.getElementById("labs");
-      const missionEl = document.getElementById("mission");
-      if (labsEl) {
-        const r = labsEl.getBoundingClientRect();
-        // labs is in view (top < 70% of viewport)
-        if (r.top < h * 0.7) {
-          window.__horizonWarpFactor = 0;
-          return;
-        }
-      }
-      if (missionEl) {
-        const r = missionEl.getBoundingClientRect();
-        if (r.top < h * 0.7) {
-          window.__horizonWarpFactor = 0;
+      const expEl = document.getElementById("explorer");
+      const tmEl = document.getElementById("time-machine");
+
+      if (expEl && tmEl) {
+        const expRect = expEl.getBoundingClientRect();
+        const tmRect = tmEl.getBoundingClientRect();
+
+        // Active warp zone: bottom of explorer is between 80% viewport and scrolled off,
+        // while time-machine top is between bottom of screen and centering (h * 0.4)
+        if (expRect.bottom < h * 0.85 && tmRect.top > h * 0.1) {
+          const zoneStart = h * 0.85;
+          const zoneEnd = h * 0.1;
+          const progress = Math.max(0, Math.min(1, (zoneStart - tmRect.top) / (zoneStart - zoneEnd)));
+          // Smooth sine bell curve (0 -> 1 -> 0)
+          const warp = Math.sin(progress * Math.PI);
+          window.__horizonWarpFactor = warp;
           return;
         }
       }
 
-      // time-machine section progress: map 20%-80% viewport visibility → warpFactor 0..1
-      const tmEl = document.getElementById("time-machine");
-      if (!tmEl) {
-        window.__horizonWarpFactor = 0;
-        return;
-      }
-      const rect = tmEl.getBoundingClientRect();
-      // section progress: how much of the section has entered/left view
-      const rawP = (h - rect.top) / (rect.height + h);
-      // remap [0.2, 0.8] → [0, 1]
-      const warp = Math.max(0, Math.min(1, (rawP - 0.2) / 0.6));
-      window.__horizonWarpFactor = warp;
+      window.__horizonWarpFactor = 0;
     };
     const on = () => { if (!raf) raf = requestAnimationFrame(update); };
     update();
@@ -226,10 +215,7 @@ export const JourneyPage: React.FC = () => {
         {/* Chapter 02 — Explorer: See Beyond the Visible */}
         <ChapterExplorer onScrollToNext={() => scrollToChapter("time-machine")} />
 
-        {/* Signature Spacetime Continuum Transition Bridge */}
-        <TimeWarpTransition />
-
-        {/* Chapter 03 — Time Machine: Travel Through the Changing Sky */}
+        {/* Chapter 03 — Time Machine: Travel Through the Changing Sky (Hyperspace warp naturally transitions directly into REWIND) */}
         <ChapterTimeMachine onScrollToNext={() => scrollToChapter("labs")} />
 
         {/* Transition 03 — Time Machine to Labs: Deceleration into Scientific Investigation */}

@@ -10,10 +10,13 @@ import MyDiscoveriesWorkspace from "./pages/workspaces/MyDiscoveriesWorkspace";
 import LightCurvesWorkspace from "./pages/workspaces/LightCurvesWorkspace";
 import MissionsWorkspace from "./pages/workspaces/MissionsWorkspace";
 import TrainingGameWorkspace from "./pages/workspaces/TrainingGameWorkspace";
+import WorkspaceTransitionOverlay from "./components/navigation/WorkspaceTransitionOverlay";
 
 export function App() {
   return (
     <BrowserRouter>
+      {/* Cinematic Workspace Travel & Return Overlay */}
+      <WorkspaceTransitionOverlay />
       <Routes>
         {/* Layer A — The HORIZON Journey (Continuous Storytelling Showcase) */}
         <Route path="/" element={<JourneyPage />} />

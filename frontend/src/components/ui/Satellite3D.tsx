@@ -63,19 +63,19 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
       isUserInteracting = false;
     });
 
-    // 4. Lighting matching visual prototype: warm golden key, subtle cool rim
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    // 4. Lighting calibrated for authentic aerospace thermal insulation (not overly shiny or gold)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffedd5, 3.4);
+    const dirLight = new THREE.DirectionalLight(0xfff8f0, 2.2);
     dirLight.position.set(5, 6, 4);
     scene.add(dirLight);
 
-    const pointLightBlue = new THREE.PointLight(0x7dd3fc, 30, 25);
+    const pointLightBlue = new THREE.PointLight(0x7dd3fc, 16, 25);
     pointLightBlue.position.set(-5, -2, -4);
     scene.add(pointLightBlue);
 
-    const pointLightOrange = new THREE.PointLight(0xf59e0b, 55, 25);
+    const pointLightOrange = new THREE.PointLight(0xfbbf24, 12, 25);
     pointLightOrange.position.set(1, -4, 3);
     scene.add(pointLightOrange);
 
@@ -91,9 +91,9 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
       g.scale.setScalar(0.88);
 
       const shieldMat = new THREE.MeshStandardMaterial({
-        color: 0xcfd7ee,
-        metalness: 0.35,
-        roughness: 0.38,
+        color: 0xdde3f0,
+        metalness: 0.25,
+        roughness: 0.45,
         side: THREE.DoubleSide,
       });
 
@@ -110,18 +110,17 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
 
       // Core telescope cylinder
       const coreGeo = new THREE.CylinderGeometry(0.38, 0.45, 1.1, 28);
-      const coreMat = new THREE.MeshStandardMaterial({ color: 0x0f1530, metalness: 0.6, roughness: 0.4 });
+      const coreMat = new THREE.MeshStandardMaterial({ color: 0x0f1530, metalness: 0.5, roughness: 0.5 });
       const coreMesh = new THREE.Mesh(coreGeo, coreMat);
       coreMesh.position.y = 0.35;
       g.add(coreMesh);
 
-      // Gold spacecraft bus
+      // Spacecraft bus (aerospace satin finish, not shiny gold)
       const busGeo = new THREE.BoxGeometry(1.2, 0.75, 1.2);
       const busMat = new THREE.MeshStandardMaterial({
-        color: 0xd9a441,
-        metalness: 0.55,
-        roughness: 0.35,
-        emissive: 0x3a2605,
+        color: 0xc8aa6e,
+        metalness: 0.35,
+        roughness: 0.48,
       });
       const busMesh = new THREE.Mesh(busGeo, busMat);
       busMesh.position.y = -0.55;
@@ -132,7 +131,7 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
       const wingMat = new THREE.MeshStandardMaterial({
         color: 0x14286e,
         metalness: 0.4,
-        roughness: 0.3,
+        roughness: 0.35,
         emissive: 0x0a1a55,
       });
       const wingMesh = new THREE.Mesh(wingGeo, wingMat);
@@ -158,6 +157,27 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
         const scaleFactor = 2.65 / (maxDim || 1);
 
         sceneObj.position.set(-center.x, -center.y, -center.z);
+
+        // Calibrate materials to realistic satin aerospace MLI thermal blanket (not shiny gold)
+        sceneObj.traverse((child: any) => {
+          if (child.isMesh && child.material) {
+            const mat = child.material;
+            if (mat.roughness !== undefined) {
+              mat.roughness = Math.max(0.44, mat.roughness);
+            }
+            if (mat.metalness !== undefined) {
+              mat.metalness = Math.min(0.55, mat.metalness);
+            }
+            if (mat.color) {
+              const hsl = { h: 0, s: 0, l: 0 };
+              mat.color.getHSL(hsl);
+              if (hsl.h >= 0.07 && hsl.h <= 0.17 && hsl.s > 0.45) {
+                // Soften high-saturation gold to realistic aluminized polyimide thermal foil
+                mat.color.setHSL(hsl.h, hsl.s * 0.62, Math.min(0.85, hsl.l * 0.94));
+              }
+            }
+          }
+        });
 
         const subGroup = new THREE.Group();
         subGroup.scale.setScalar(scaleFactor);

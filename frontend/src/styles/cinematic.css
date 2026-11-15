@@ -77,32 +77,46 @@ body {
   filter: blur(5px) saturate(0.9);
 }
 
-.bd-glow {
+/* Persistent Multi-Layer Atmosphere Blending Layers */
+.bd-layer {
   position: absolute;
   inset: 0;
-  background: radial-gradient(70% 45% at 50% 108%, rgba(244, 162, 114, 0.28), transparent 70%),
-    radial-gradient(45% 40% at 90% 20%, rgba(109, 74, 255, 0.12), transparent 70%);
-  transition: background 1.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  will-change: opacity;
 }
 
-.backdrop[data-section="explorer"] .bd-glow {
-  background: radial-gradient(60% 45% at 50% 95%, rgba(67, 56, 202, 0.16), transparent 70%),
-    radial-gradient(40% 40% at 20% 25%, rgba(14, 165, 233, 0.08), transparent 70%);
+.bd-layer-home {
+  background:
+    radial-gradient(ellipse 80% 60% at 75% 85%, rgba(220, 150, 60, 0.22), transparent 70%),
+    radial-gradient(ellipse 55% 45% at 30% 30%, rgba(244, 162, 114, 0.1), transparent 70%);
 }
 
-.backdrop[data-section="time-machine"] .bd-glow {
-  background: radial-gradient(60% 45% at 50% 50%, rgba(244, 162, 114, 0.18), transparent 70%),
-    radial-gradient(50% 40% at 80% 30%, rgba(234, 88, 12, 0.1), transparent 70%);
+.bd-layer-explorer {
+  background:
+    radial-gradient(ellipse 85% 75% at 50% 55%, rgba(67, 56, 202, 0.24), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 20% 30%, rgba(14, 165, 233, 0.12), transparent 70%),
+    radial-gradient(ellipse 45% 45% at 80% 65%, rgba(147, 51, 234, 0.14), transparent 70%);
 }
 
-.backdrop[data-section="labs"] .bd-glow {
-  background: radial-gradient(55% 45% at 50% 60%, rgba(124, 58, 237, 0.13), transparent 70%),
-    radial-gradient(40% 40% at 20% 40%, rgba(15, 23, 42, 0.25), transparent 70%);
+.bd-layer-time-machine {
+  background:
+    radial-gradient(ellipse 75% 65% at 50% 50%, rgba(244, 162, 114, 0.22), transparent 70%),
+    radial-gradient(ellipse 55% 45% at 80% 30%, rgba(234, 88, 12, 0.14), transparent 70%),
+    radial-gradient(ellipse 40% 40% at 20% 70%, rgba(180, 83, 9, 0.1), transparent 70%);
 }
 
-.backdrop[data-section="mission"] .bd-glow {
-  background: radial-gradient(60% 45% at 50% 70%, rgba(244, 162, 114, 0.2), transparent 70%),
-    radial-gradient(45% 40% at 80% 25%, rgba(109, 74, 255, 0.12), transparent 70%);
+.bd-layer-labs {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 50%, rgba(148, 163, 184, 0.1), transparent 70%),
+    radial-gradient(ellipse 50% 45% at 25% 40%, rgba(30, 41, 59, 0.25), transparent 70%),
+    radial-gradient(ellipse 40% 40% at 75% 60%, rgba(99, 102, 241, 0.08), transparent 70%);
+}
+
+.bd-layer-mission {
+  background:
+    radial-gradient(ellipse 100% 60% at 50% 90%, rgba(244, 162, 114, 0.22), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 75% 30%, rgba(109, 74, 255, 0.16), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 20% 40%, rgba(30, 58, 138, 0.16), transparent 70%);
 }
 
 .bd-shade {
@@ -1571,30 +1585,7 @@ html.js-reveal .rv.in {
   --ws-focus: 0 0 0 2px rgba(244,162,114,0.5);
 }
 
-/* Chapter-specific backdrop atmosphere tints */
-.backdrop[data-section="home"] .bd-atmosphere {
-  background: radial-gradient(ellipse 80% 60% at 70% 90%, rgba(220,150,60,0.18), transparent 70%);
-}
-.backdrop[data-section="explorer"] .bd-atmosphere {
-  background: radial-gradient(ellipse 80% 70% at 50% 60%, rgba(60,50,200,0.2), transparent 70%);
-}
-.backdrop[data-section="time-machine"] .bd-atmosphere {
-  background: radial-gradient(ellipse 70% 70% at 50% 50%, rgba(220,100,20,0.18), transparent 70%);
-}
-.backdrop[data-section="labs"] .bd-atmosphere {
-  background: radial-gradient(ellipse 70% 50% at 50% 50%, rgba(180,180,210,0.07), transparent 70%);
-}
-.backdrop[data-section="mission"] .bd-atmosphere {
-  background: radial-gradient(ellipse 100% 60% at 50% 85%, rgba(220,160,60,0.15), transparent 70%);
-}
 
-/* bd-atmosphere base positioning */
-.bd-atmosphere {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  transition: background 1.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
 
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -1680,14 +1671,9 @@ html.js-reveal .rv.in {
   transform-origin: left;
 }
 
-/* --- Transition 4: Labs → Mission "Expanding Atlas" --- */
+/* --- Transition 4: Labs → Mission "Expanding Atlas" (Transparent atmospheric glow) --- */
 .labs-to-mission-transition {
-  background: linear-gradient(
-    to bottom,
-    rgba(5, 5, 5, 1) 0%,
-    rgba(2, 3, 15, 0.9) 50%,
-    rgba(10, 8, 30, 0.8) 100%
-  );
+  background: transparent;
   position: relative;
   overflow: hidden;
 }
@@ -1698,25 +1684,11 @@ html.js-reveal .rv.in {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 40%;
+  height: 100%;
   background: radial-gradient(
-    ellipse 60% 100% at 50% 100%,
-    rgba(220, 160, 60, 0.15),
+    ellipse 70% 80% at 50% 100%,
+    rgba(220, 160, 60, 0.12),
     transparent 70%
   );
-}
-
-/* --- TimeWarpTransition enhancement: indigo→amber gradient overlay --- */
-.time-warp-gradient-overlay {
-  position: absolute;
-  inset: 0;
   pointer-events: none;
-  /* blends from explorer-indigo at top to time-machine-amber at bottom */
-  background: linear-gradient(
-    to bottom,
-    rgba(60, 50, 180, 0.08) 0%,
-    rgba(0, 0, 0, 0) 40%,
-    rgba(0, 0, 0, 0) 60%,
-    rgba(200, 100, 20, 0.08) 100%
-  );
 }

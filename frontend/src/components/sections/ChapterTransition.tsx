@@ -23,12 +23,8 @@ export const HomeToExplorerTransition: React.FC = () => {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none select-none w-full relative overflow-hidden"
-      style={{
-        minHeight: '20vh',
-        background:
-          'linear-gradient(to bottom, rgba(220,150,60,0.05) 0%, transparent 45%, rgba(60,50,200,0.08) 100%)',
-      }}
+      className="pointer-events-none select-none w-full relative overflow-hidden h-20 my-2"
+      style={{ background: 'transparent' }}
     >
       {particles.map((p, i) => (
         <span
@@ -48,7 +44,7 @@ export const HomeToExplorerTransition: React.FC = () => {
 
 // ------------------------------------------------------------
 // TRANSITION 3 — TIME MACHINE → LABS: "Deceleration"
-// Warm amber to charcoal. Scan-line freeze-frame aesthetic.
+// Warm amber to charcoal. Scan-line freeze-frame aesthetic on transparent canvas.
 // ------------------------------------------------------------
 export const TimeMachineToLabsTransition: React.FC = () => {
   const lines = [
@@ -60,12 +56,8 @@ export const TimeMachineToLabsTransition: React.FC = () => {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none select-none w-full relative overflow-hidden"
-      style={{
-        minHeight: '18vh',
-        background:
-          'linear-gradient(to bottom, rgba(200,100,20,0.07) 0%, rgba(10,10,10,0.95) 60%, rgba(20,18,22,1) 100%)',
-      }}
+      className="pointer-events-none select-none w-full relative overflow-hidden h-20 my-2"
+      style={{ background: 'transparent' }}
     >
       {lines.map((l, i) => (
         <span
@@ -83,13 +75,13 @@ export const TimeMachineToLabsTransition: React.FC = () => {
 
 // ------------------------------------------------------------
 // TRANSITION 4 — LABS → MISSION: "Expanding Atlas"
-// Charcoal to midnight blue. Golden horizon sunrise glow.
+// Transparent horizon glow revealing celestial depth.
 // ------------------------------------------------------------
 export const LabsToMissionTransition: React.FC = () => (
   <div
     aria-hidden="true"
-    className="labs-to-mission-transition pointer-events-none select-none w-full"
-    style={{ minHeight: '20vh' }}
+    className="labs-to-mission-transition pointer-events-none select-none w-full h-24 my-2"
+    style={{ background: 'transparent' }}
   />
 );
 

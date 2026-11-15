@@ -18,7 +18,7 @@ export const SkeletonLines: React.FC<{ lines?: number }> = ({ lines = 3 }) => (
 );
 
 export const CardSkeleton: React.FC = () => (
-  <div className="bg-[#151E30] border border-[#263247] rounded p-4 space-y-3">
+  <div className="bg-[#111117] border border-[#262635] rounded p-4 space-y-3">
     <LoadingSkeleton className="h-5 w-2/3" />
     <LoadingSkeleton className="h-3 w-1/3" />
     <SkeletonLines lines={3} />

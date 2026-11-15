@@ -185,21 +185,21 @@ export const TimeMachine: React.FC = () => {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Clock className="w-5 h-5 text-[#6EA8FE]" />
-            <h1 className="text-2xl font-bold text-[#E8EDF5]">SPHEREx Time Machine</h1>
+            <Clock className="w-5 h-5 text-[#F4A272]" />
+            <h1 className="text-2xl font-bold text-[#F3EFE8]">SPHEREx Time Machine</h1>
             <Badge variant="blue">NASA Planet X Challenge</Badge>
             {isSingleEpoch && (
               <Badge variant="amber">Single Epoch Available</Badge>
             )}
           </div>
-          <p className="text-sm text-[#94A3B8]">
+          <p className="text-sm text-[#9E9AA7]">
             Multi-epoch time-domain astronomical observation player across actual NASA SPHEREx observation dates
           </p>
         </div>
 
         {/* Target Presets & Coordinate Input */}
         <div data-tour="target-selector" className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-[#94A3B8]">Target Preset:</span>
+          <span className="text-xs text-[#9E9AA7]">Target Preset:</span>
           <select
             value={isCustomMode ? 'custom' : selectedObject.slug}
             onChange={(e) => {
@@ -210,7 +210,7 @@ export const TimeMachine: React.FC = () => {
                 navigate(`/time-machine?object=${e.target.value}`);
               }
             }}
-            className="bg-[#151E30] border border-[#263247] text-[#E8EDF5] text-xs rounded px-3 py-1.5 focus:outline-none focus:border-[#6EA8FE]"
+            className="bg-[#111117] border border-[#262635] text-[#F3EFE8] text-xs rounded px-3 py-1.5 focus:outline-none focus:border-[#F4A272]"
           >
             {FEATURED_OBJECTS.map((obj) => (
               <option key={obj.id} value={obj.slug}>
@@ -224,13 +224,13 @@ export const TimeMachine: React.FC = () => {
 
       {/* Custom Coordinates Bar (when custom selected) */}
       {isCustomMode && (
-        <div className="bg-[#151E30] border border-[#263247] rounded-lg p-3.5 mb-6 flex flex-wrap items-center gap-4 text-xs">
+        <div className="bg-[#111117] border border-[#262635] rounded-lg p-3.5 mb-6 flex flex-wrap items-center gap-4 text-xs">
           <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-[#6EA8FE]" />
-            <span className="font-semibold text-[#E8EDF5]">Custom Celestial Coordinates:</span>
+            <MapPin className="w-4 h-4 text-[#F4A272]" />
+            <span className="font-semibold text-[#F3EFE8]">Custom Celestial Coordinates:</span>
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-[#94A3B8]">RA (deg):</label>
+            <label className="text-[#9E9AA7]">RA (deg):</label>
             <input
               type="number"
               step="0.0001"
@@ -238,11 +238,11 @@ export const TimeMachine: React.FC = () => {
               max="360"
               value={customRa}
               onChange={(e) => setCustomRa(parseFloat(e.target.value) || 0)}
-              className="bg-[#0B1020] border border-[#263247] text-[#E8EDF5] px-2 py-1 rounded w-28 focus:outline-none focus:border-[#6EA8FE]"
+              className="bg-[#08080C] border border-[#262635] text-[#F3EFE8] px-2 py-1 rounded w-28 focus:outline-none focus:border-[#F4A272]"
             />
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-[#94A3B8]">Dec (deg):</label>
+            <label className="text-[#9E9AA7]">Dec (deg):</label>
             <input
               type="number"
               step="0.0001"
@@ -250,17 +250,17 @@ export const TimeMachine: React.FC = () => {
               max="90"
               value={customDec}
               onChange={(e) => setCustomDec(parseFloat(e.target.value) || 0)}
-              className="bg-[#0B1020] border border-[#263247] text-[#E8EDF5] px-2 py-1 rounded w-28 focus:outline-none focus:border-[#6EA8FE]"
+              className="bg-[#08080C] border border-[#262635] text-[#F3EFE8] px-2 py-1 rounded w-28 focus:outline-none focus:border-[#F4A272]"
             />
           </div>
-          <span className="text-[11px] text-[#94A3B8] font-mono">
+          <span className="text-[11px] text-[#9E9AA7] font-mono">
             Searching genuine SPHEREx DR1 Level 2 footprint coverage…
           </span>
         </div>
       )}
 
       {/* Control Strip: Modes, FOV, Palettes, Stretches */}
-      <div className="bg-[#151E30] border border-[#263247] rounded-xl p-3.5 mb-5 shadow-lg">
+      <div className="bg-[#111117] border border-[#262635] rounded-xl p-3.5 mb-5 shadow-lg">
         <div className="flex flex-wrap items-center justify-between gap-4">
           {/* Mode Selector */}
           <div data-tour="comparison-modes" className="flex items-center gap-1.5 flex-wrap">
@@ -268,8 +268,8 @@ export const TimeMachine: React.FC = () => {
               onClick={() => { setViewMode('timelapse'); setIsPlaying(true); }}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
                 viewMode === 'timelapse'
-                  ? 'bg-[#2563EB] text-white border-[#3B82F6] shadow-sm font-semibold'
-                  : 'bg-[#0B1020] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+                  ? 'bg-[#F4A272] text-black border-[#F4A272] shadow-sm font-semibold'
+                  : 'bg-[#08080C] text-[#9E9AA7] border-[#262635] hover:text-[#F3EFE8]'
               }`}
             >
               <Play className="w-3.5 h-3.5 fill-current" />
@@ -279,8 +279,8 @@ export const TimeMachine: React.FC = () => {
               onClick={() => { setViewMode('side-by-side'); setIsPlaying(false); }}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all cursor-pointer ${
                 viewMode === 'side-by-side'
-                  ? 'bg-[#2563EB] text-white border-[#3B82F6] font-semibold'
-                  : 'bg-[#0B1020] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+                  ? 'bg-[#F4A272] text-black border-[#F4A272] font-semibold'
+                  : 'bg-[#08080C] text-[#9E9AA7] border-[#262635] hover:text-[#F3EFE8]'
               }`}
             >
               Side-by-Side
@@ -289,8 +289,8 @@ export const TimeMachine: React.FC = () => {
               onClick={() => { setViewMode('slider'); setIsPlaying(false); }}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all cursor-pointer ${
                 viewMode === 'slider'
-                  ? 'bg-[#2563EB] text-white border-[#3B82F6] font-semibold'
-                  : 'bg-[#0B1020] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+                  ? 'bg-[#F4A272] text-black border-[#F4A272] font-semibold'
+                  : 'bg-[#08080C] text-[#9E9AA7] border-[#262635] hover:text-[#F3EFE8]'
               }`}
             >
               Split Slider
@@ -299,8 +299,8 @@ export const TimeMachine: React.FC = () => {
               onClick={() => { setViewMode('blink'); setIsPlaying(false); }}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all cursor-pointer ${
                 viewMode === 'blink'
-                  ? 'bg-[#2563EB] text-white border-[#3B82F6] font-semibold'
-                  : 'bg-[#0B1020] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+                  ? 'bg-[#F4A272] text-black border-[#F4A272] font-semibold'
+                  : 'bg-[#08080C] text-[#9E9AA7] border-[#262635] hover:text-[#F3EFE8]'
               }`}
             >
               Blink Mode
@@ -309,8 +309,8 @@ export const TimeMachine: React.FC = () => {
               onClick={() => { setViewMode('difference'); setIsPlaying(false); }}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all cursor-pointer ${
                 viewMode === 'difference'
-                  ? 'bg-[#2563EB] text-white border-[#3B82F6] font-semibold'
-                  : 'bg-[#0B1020] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+                  ? 'bg-[#F4A272] text-black border-[#F4A272] font-semibold'
+                  : 'bg-[#08080C] text-[#9E9AA7] border-[#262635] hover:text-[#F3EFE8]'
               }`}
             >
               Difference Map
@@ -321,11 +321,11 @@ export const TimeMachine: React.FC = () => {
           <div className="flex items-center gap-3 text-xs flex-wrap">
             {/* FOV Dropdown */}
             <div data-tour="fov-selector" className="flex items-center gap-1.5">
-              <span className="text-[#94A3B8]">FOV:</span>
+              <span className="text-[#9E9AA7]">FOV:</span>
               <select
                 value={fovArcsec}
                 onChange={(e) => setFovArcsec(Number(e.target.value))}
-                className="bg-[#0B1020] border border-[#263247] text-[#6EA8FE] font-mono text-xs rounded-lg px-2.5 py-1 focus:outline-none focus:border-[#6EA8FE]"
+                className="bg-[#08080C] border border-[#262635] text-[#F4A272] font-mono text-xs rounded-lg px-2.5 py-1 focus:outline-none focus:border-[#F4A272]"
               >
                 <option value={120}>2′ (120″) High Zoom</option>
                 <option value={300}>5′ (300″) Star Field</option>
@@ -340,7 +340,7 @@ export const TimeMachine: React.FC = () => {
               <select
                 value={stretch}
                 onChange={(e) => setStretch(e.target.value)}
-                className="bg-[#0B1020] border border-[#263247] text-[#94A3B8] text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-[#6EA8FE]"
+                className="bg-[#08080C] border border-[#262635] text-[#9E9AA7] text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-[#F4A272]"
               >
                 <option value="asinh">Asinh Stretch</option>
                 <option value="linear">Linear</option>
@@ -350,7 +350,7 @@ export const TimeMachine: React.FC = () => {
               <select
                 value={colormap}
                 onChange={(e) => setColormap(e.target.value)}
-                className="bg-[#0B1020] border border-[#263247] text-[#94A3B8] text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-[#6EA8FE]"
+                className="bg-[#08080C] border border-[#262635] text-[#9E9AA7] text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-[#F4A272]"
               >
                 <option value="gray">Grayscale (Standard)</option>
                 <option value="inferno">Inferno</option>
@@ -360,12 +360,12 @@ export const TimeMachine: React.FC = () => {
             </div>
 
             {/* Smooth Display Toggle */}
-            <label className="flex items-center gap-1.5 text-[#94A3B8] cursor-pointer text-xs select-none">
+            <label className="flex items-center gap-1.5 text-[#9E9AA7] cursor-pointer text-xs select-none">
               <input
                 type="checkbox"
                 checked={smooth}
                 onChange={(e) => setSmooth(e.target.checked)}
-                className="accent-[#6EA8FE] rounded"
+                className="accent-[#F4A272] rounded"
               />
               <span>Smooth</span>
             </label>
@@ -377,14 +377,14 @@ export const TimeMachine: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Column: Compact Astronomical Viewer & Playback Controls (~65% width) */}
         <div className="lg:col-span-8 flex flex-col space-y-4">
-          <div className="bg-[#111927] border border-[#263247] rounded-xl p-4 relative shadow-xl">
+          <div className="bg-[#111117] border border-[#262635] rounded-xl p-4 relative shadow-xl">
             {(loadingManifest && viewMode === 'timelapse') || (loadingComparison && viewMode !== 'timelapse' && !comparison) ? (
               <div className="h-[440px] flex flex-col items-center justify-center text-center">
-                <RefreshCw className="w-8 h-8 text-[#6EA8FE] animate-spin mb-3" />
-                <h4 className="text-sm font-semibold text-[#E8EDF5] mb-1">
+                <RefreshCw className="w-8 h-8 text-[#F4A272] animate-spin mb-3" />
+                <h4 className="text-sm font-semibold text-[#F3EFE8] mb-1">
                   {viewMode === 'timelapse' ? 'Loading Authentic NASA SPHEREx Observations…' : 'Aligning Authentic SPHEREx Observations…'}
                 </h4>
-                <p className="text-xs text-[#94A3B8] max-w-sm">
+                <p className="text-xs text-[#9E9AA7] max-w-sm">
                   {viewMode === 'timelapse'
                     ? 'Retrieving calibrated Level 2 FITS arrays and aligning onto fixed tangent celestial grid.'
                     : 'Performing celestial WCS reprojection and sigma-clipped background matching.'}
@@ -401,16 +401,16 @@ export const TimeMachine: React.FC = () => {
                         <Badge variant="blue">
                           Epoch {activeFrame.frame_index + 1} of {manifest?.total_frames || 1}
                         </Badge>
-                        <span className="font-semibold text-[#E8EDF5]">{activeFrame.date_display}</span>
-                        <span className="text-[#94A3B8] font-mono text-[11px]">[{activeFrame.bandpass}]</span>
+                        <span className="font-semibold text-[#F3EFE8]">{activeFrame.date_display}</span>
+                        <span className="text-[#9E9AA7] font-mono text-[11px]">[{activeFrame.bandpass}]</span>
                       </div>
-                      <div className="text-[11px] font-mono text-[#6EA8FE]">
+                      <div className="text-[11px] font-mono text-[#F4A272]">
                         ObsID: {activeFrame.obs_id}
                       </div>
                     </div>
 
                     {/* Compact Astronomical Viewport (~440px height) */}
-                    <div className="relative h-[420px] sm:h-[460px] w-full bg-[#0B1020] border border-[#263247] rounded-lg overflow-hidden flex items-center justify-center shadow-inner">
+                    <div className="relative h-[420px] sm:h-[460px] w-full bg-[#08080C] border border-[#262635] rounded-lg overflow-hidden flex items-center justify-center shadow-inner">
                       <img
                         src={activeFrame.image_base64}
                         alt={`Observation ${activeFrame.date_display}`}
@@ -419,29 +419,29 @@ export const TimeMachine: React.FC = () => {
 
                       {/* Celestial Compass (North / East) */}
                       {showCompass && (
-                        <div className="absolute top-3 left-3 bg-[#0B1020]/80 border border-[#263247] rounded px-2 py-1 text-[10px] text-[#94A3B8] flex items-center gap-1.5 shadow backdrop-blur-sm pointer-events-none">
-                          <Compass className="w-3.5 h-3.5 text-[#6EA8FE]" />
+                        <div className="absolute top-3 left-3 bg-[#08080C]/80 border border-[#262635] rounded px-2 py-1 text-[10px] text-[#9E9AA7] flex items-center gap-1.5 shadow backdrop-blur-sm pointer-events-none">
+                          <Compass className="w-3.5 h-3.5 text-[#F4A272]" />
                           <span>N ↑ &nbsp; E ←</span>
                         </div>
                       )}
 
                       {/* Observation-Date Target Coordinates Badge */}
                       {activeFrame.target_ra !== undefined && activeFrame.target_ra !== null && (
-                        <div className="absolute top-3 right-3 bg-[#0B1020]/85 border border-[#6EA8FE]/40 rounded px-2 py-1 text-[10px] font-mono text-[#E8EDF5] shadow backdrop-blur-sm pointer-events-none">
-                          <span className="text-[#94A3B8]">Target:</span>{' '}
-                          <span className="text-[#6EA8FE]">{activeFrame.target_ra.toFixed(4)}°, {activeFrame.target_dec?.toFixed(4)}°</span>
+                        <div className="absolute top-3 right-3 bg-[#08080C]/85 border border-[#F4A272]/40 rounded px-2 py-1 text-[10px] font-mono text-[#F3EFE8] shadow backdrop-blur-sm pointer-events-none">
+                          <span className="text-[#9E9AA7]">Target:</span>{' '}
+                          <span className="text-[#F4A272]">{activeFrame.target_ra.toFixed(4)}°, {activeFrame.target_dec?.toFixed(4)}°</span>
                         </div>
                       )}
 
                       {/* Physical Angular Scale Bar */}
-                      <div className="absolute bottom-3 right-3 bg-[#0B1020]/85 border border-[#263247] rounded px-2.5 py-1 text-[10px] font-mono text-[#94A3B8] flex flex-col items-end gap-0.5 shadow backdrop-blur-sm pointer-events-none">
-                        <div className="w-16 h-0.5 bg-[#6EA8FE]" />
+                      <div className="absolute bottom-3 right-3 bg-[#08080C]/85 border border-[#262635] rounded px-2.5 py-1 text-[10px] font-mono text-[#9E9AA7] flex flex-col items-end gap-0.5 shadow backdrop-blur-sm pointer-events-none">
+                        <div className="w-16 h-0.5 bg-[#F4A272]" />
                         <span>~{Math.round(fovArcsec / 4)}"</span>
                       </div>
                     </div>
 
                     {/* Video Playback Controls Bar placed immediately below image */}
-                    <div data-tour="timelapse-player" className="mt-3.5 bg-[#151E30] border border-[#263247] rounded-lg p-3">
+                    <div data-tour="timelapse-player" className="mt-3.5 bg-[#111117] border border-[#262635] rounded-lg p-3">
                       <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
                         {/* Play/Pause & Step Buttons */}
                         <div className="flex items-center gap-2">
@@ -461,7 +461,7 @@ export const TimeMachine: React.FC = () => {
                               setCurrentFrameIndex((prev) => Math.max(0, prev - 1));
                             }}
                             disabled={currentFrameIndex === 0}
-                            className="p-1.5 rounded bg-[#0B1020] border border-[#263247] text-[#94A3B8] hover:text-[#E8EDF5] disabled:opacity-40 cursor-pointer"
+                            className="p-1.5 rounded bg-[#08080C] border border-[#262635] text-[#9E9AA7] hover:text-[#F3EFE8] disabled:opacity-40 cursor-pointer"
                             title="Previous Epoch"
                           >
                             <SkipBack className="w-3.5 h-3.5" />
@@ -473,7 +473,7 @@ export const TimeMachine: React.FC = () => {
                               setCurrentFrameIndex((prev) => Math.min((manifest?.frames.length || 1) - 1, prev + 1));
                             }}
                             disabled={!manifest || currentFrameIndex === manifest.frames.length - 1}
-                            className="p-1.5 rounded bg-[#0B1020] border border-[#263247] text-[#94A3B8] hover:text-[#E8EDF5] disabled:opacity-40 cursor-pointer"
+                            className="p-1.5 rounded bg-[#08080C] border border-[#262635] text-[#9E9AA7] hover:text-[#F3EFE8] disabled:opacity-40 cursor-pointer"
                             title="Next Epoch"
                           >
                             <SkipForward className="w-3.5 h-3.5" />
@@ -483,8 +483,8 @@ export const TimeMachine: React.FC = () => {
                             onClick={() => setLoopPlayback(!loopPlayback)}
                             className={`p-1.5 rounded border text-xs transition-colors cursor-pointer ${
                               loopPlayback
-                                ? 'bg-[#1a2540] border-[#6EA8FE] text-[#6EA8FE]'
-                                : 'bg-[#0B1020] border-[#263247] text-[#94A3B8]'
+                                ? 'bg-[#1c1c28] border-[#F4A272] text-[#F4A272]'
+                                : 'bg-[#08080C] border-[#262635] text-[#9E9AA7]'
                             }`}
                             title="Loop Playback"
                           >
@@ -493,12 +493,12 @@ export const TimeMachine: React.FC = () => {
                         </div>
 
                         {/* Playback Speed Selector */}
-                        <div className="flex items-center gap-1.5 text-xs text-[#94A3B8]">
+                        <div className="flex items-center gap-1.5 text-xs text-[#9E9AA7]">
                           <span>Speed:</span>
                           <select
                             value={playbackSpeedMs}
                             onChange={(e) => setPlaybackSpeedMs(Number(e.target.value))}
-                            className="bg-[#0B1020] border border-[#263247] text-[#E8EDF5] text-xs rounded px-2 py-1"
+                            className="bg-[#08080C] border border-[#262635] text-[#F3EFE8] text-xs rounded px-2 py-1"
                           >
                             <option value={1200}>0.5× Slow</option>
                             <option value={800}>1.0× Normal</option>
@@ -518,9 +518,9 @@ export const TimeMachine: React.FC = () => {
                             setIsPlaying(false);
                             setCurrentFrameIndex(Number(e.target.value));
                           }}
-                          className="w-full accent-[#6EA8FE] cursor-pointer"
+                          className="w-full accent-[#F4A272] cursor-pointer"
                         />
-                        <div className="flex justify-between text-[11px] font-mono text-[#94A3B8]">
+                        <div className="flex justify-between text-[11px] font-mono text-[#9E9AA7]">
                           {manifest?.frames.map((f, i) => (
                             <button
                               key={f.obs_id}
@@ -528,8 +528,8 @@ export const TimeMachine: React.FC = () => {
                                 setIsPlaying(false);
                                 setCurrentFrameIndex(i);
                               }}
-                              className={`hover:text-[#6EA8FE] transition-colors cursor-pointer ${
-                                i === currentFrameIndex ? 'text-[#6EA8FE] font-bold underline' : ''
+                              className={`hover:text-[#F4A272] transition-colors cursor-pointer ${
+                                i === currentFrameIndex ? 'text-[#F4A272] font-bold underline' : ''
                               }`}
                             >
                               {f.date_display}
@@ -546,14 +546,14 @@ export const TimeMachine: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                     <div className="flex flex-col">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-[#6EA8FE]">
+                        <span className="text-xs font-semibold text-[#F4A272]">
                           Earlier: {comparison.observation_1?.date_obs?.slice(0, 10)}
                         </span>
-                        <span className="text-[11px] font-mono text-[#94A3B8]">
+                        <span className="text-[11px] font-mono text-[#9E9AA7]">
                           {comparison.observation_1?.obs_id}
                         </span>
                       </div>
-                      <div className="h-[380px] bg-[#070B14] border border-[#263247] rounded-lg overflow-hidden flex items-center justify-center">
+                      <div className="h-[380px] bg-[#08080C] border border-[#262635] rounded-lg overflow-hidden flex items-center justify-center">
                         {comparison.epoch1_image_base64 ? (
                           <img
                             src={comparison.epoch1_image_base64}
@@ -561,7 +561,7 @@ export const TimeMachine: React.FC = () => {
                             className="w-full h-full object-contain"
                           />
                         ) : (
-                          <span className="text-xs text-[#94A3B8]">Observation unavailable</span>
+                          <span className="text-xs text-[#9E9AA7]">Observation unavailable</span>
                         )}
                       </div>
                     </div>
@@ -571,16 +571,16 @@ export const TimeMachine: React.FC = () => {
                         <span className="text-xs font-semibold text-[#F3B85B]">
                           {isSingleEpoch ? 'Second Epoch (Pending)' : `Later: ${comparison.observation_2?.date_obs?.slice(0, 10)}`}
                         </span>
-                        <span className="text-[11px] font-mono text-[#94A3B8]">
+                        <span className="text-[11px] font-mono text-[#9E9AA7]">
                           {isSingleEpoch ? 'Single Visit' : comparison.observation_2?.obs_id}
                         </span>
                       </div>
-                      <div className="h-[380px] bg-[#070B14] border border-[#263247] rounded-lg overflow-hidden flex items-center justify-center">
+                      <div className="h-[380px] bg-[#08080C] border border-[#262635] rounded-lg overflow-hidden flex items-center justify-center">
                         {isSingleEpoch ? (
                           <div className="text-center p-6 space-y-2 max-w-xs">
                             <Clock className="w-8 h-8 text-[#F3B85B] mx-auto opacity-70" />
-                            <p className="text-xs font-semibold text-[#E8EDF5]">Single Observation Epoch Prepared</p>
-                            <p className="text-[11px] text-[#94A3B8] leading-relaxed">
+                            <p className="text-xs font-semibold text-[#F3EFE8]">Single Observation Epoch Prepared</p>
+                            <p className="text-[11px] text-[#9E9AA7] leading-relaxed">
                               1 calibrated Level 2 observation visit is currently prepared for this field.
                             </p>
                           </div>
@@ -591,7 +591,7 @@ export const TimeMachine: React.FC = () => {
                             className="w-full h-full object-contain"
                           />
                         ) : (
-                          <span className="text-xs text-[#94A3B8]">Observation unavailable</span>
+                          <span className="text-xs text-[#9E9AA7]">Observation unavailable</span>
                         )}
                       </div>
                     </div>
@@ -601,11 +601,11 @@ export const TimeMachine: React.FC = () => {
                 {/* MODE 3: SPLIT SLIDER COMPARISON */}
                 {viewMode === 'slider' && comparison && (
                   <div className="flex flex-col">
-                    <div className="flex items-center justify-between mb-2 text-xs text-[#94A3B8]">
+                    <div className="flex items-center justify-between mb-2 text-xs text-[#9E9AA7]">
                       <span>Drag slider to reveal Earlier (left) vs Later (right)</span>
-                      <span className="font-mono text-[#6EA8FE]">{sliderPosition}%</span>
+                      <span className="font-mono text-[#F4A272]">{sliderPosition}%</span>
                     </div>
-                    <div className="relative h-[420px] sm:h-[460px] w-full bg-[#0B1020] border border-[#263247] rounded-lg overflow-hidden select-none">
+                    <div className="relative h-[420px] sm:h-[460px] w-full bg-[#08080C] border border-[#262635] rounded-lg overflow-hidden select-none">
                       <img
                         src={comparison.epoch2_image_base64}
                         alt="Epoch 2"
@@ -623,10 +623,10 @@ export const TimeMachine: React.FC = () => {
                         />
                       </div>
                       <div
-                        className="absolute top-0 bottom-0 w-0.5 bg-[#6EA8FE] shadow-lg cursor-ew-resize flex items-center justify-center"
+                        className="absolute top-0 bottom-0 w-0.5 bg-[#F4A272] shadow-lg cursor-ew-resize flex items-center justify-center"
                         style={{ left: `${sliderPosition}%` }}
                       >
-                        <div className="w-6 h-6 rounded-full bg-[#6EA8FE] text-[#0B1020] text-[10px] font-bold flex items-center justify-center shadow-md">
+                        <div className="w-6 h-6 rounded-full bg-[#F4A272] text-[#08080C] text-[10px] font-bold flex items-center justify-center shadow-md">
                           ↔
                         </div>
                       </div>
@@ -638,7 +638,7 @@ export const TimeMachine: React.FC = () => {
                         max="100"
                         value={sliderPosition}
                         onChange={(e) => setSliderPosition(Number(e.target.value))}
-                        className="w-full accent-[#6EA8FE] cursor-pointer"
+                        className="w-full accent-[#F4A272] cursor-pointer"
                       />
                     </div>
                   </div>
@@ -663,12 +663,12 @@ export const TimeMachine: React.FC = () => {
                             : `Epoch 2: ${comparison.observation_2?.date_obs?.slice(0, 10)}`}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-[#94A3B8]">
+                      <div className="flex items-center gap-2 text-xs text-[#9E9AA7]">
                         <span>Speed:</span>
                         <select
                           value={blinkSpeedMs}
                           onChange={(e) => setBlinkSpeedMs(Number(e.target.value))}
-                          className="bg-[#0B1020] border border-[#263247] text-[#94A3B8] text-xs rounded px-2 py-1"
+                          className="bg-[#08080C] border border-[#262635] text-[#9E9AA7] text-xs rounded px-2 py-1"
                         >
                           <option value={250}>Fast (250ms)</option>
                           <option value={400}>Normal (400ms)</option>
@@ -677,7 +677,7 @@ export const TimeMachine: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="h-[420px] sm:h-[460px] w-full bg-[#0B1020] border border-[#263247] rounded-lg overflow-hidden flex items-center justify-center">
+                    <div className="h-[420px] sm:h-[460px] w-full bg-[#08080C] border border-[#262635] rounded-lg overflow-hidden flex items-center justify-center">
                       <img
                         src={blinkIndex === 0 ? comparison.epoch1_image_base64 : comparison.epoch2_image_base64}
                         alt="Blink view"
@@ -691,13 +691,13 @@ export const TimeMachine: React.FC = () => {
                 {viewMode === 'difference' && comparison && (
                   <div className="flex flex-col">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-[#E8EDF5]">
+                      <span className="text-xs font-semibold text-[#F3EFE8]">
                         Scientific Difference Image: Epoch 2 − Epoch 1
                       </span>
                       <Badge variant="purple">Coolwarm Diverging Normalization</Badge>
                     </div>
 
-                    <div className="h-[420px] sm:h-[460px] w-full bg-[#0B1020] border border-[#263247] rounded-lg overflow-hidden mb-3 flex items-center justify-center">
+                    <div className="h-[420px] sm:h-[460px] w-full bg-[#08080C] border border-[#262635] rounded-lg overflow-hidden mb-3 flex items-center justify-center">
                       {comparison.difference_image_base64 ? (
                         <img
                           src={comparison.difference_image_base64}
@@ -705,11 +705,11 @@ export const TimeMachine: React.FC = () => {
                           className="w-full h-full object-contain"
                         />
                       ) : (
-                        <p className="text-xs text-[#94A3B8] p-6 text-center">Calculating difference...</p>
+                        <p className="text-xs text-[#9E9AA7] p-6 text-center">Calculating difference...</p>
                       )}
                     </div>
 
-                    <div className="text-xs text-[#94A3B8] flex items-center gap-2 text-green-400">
+                    <div className="text-xs text-[#9E9AA7] flex items-center gap-2 text-green-400">
                       <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
                       <span>Stationary celestial background is subtracted out cleanly to zero signal.</span>
                     </div>
@@ -723,50 +723,50 @@ export const TimeMachine: React.FC = () => {
         {/* Right Column: Observation Details, Astrometry Context & Metadata (~35% width) */}
         <div className="lg:col-span-4 flex flex-col space-y-4">
           {/* 1. Observation Epoch Details Card */}
-          <div className="bg-[#151E30] border border-[#263247] rounded-xl p-4 shadow-lg space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-[#263247]">
-              <span className="text-xs font-semibold text-[#E8EDF5]">Observation Telemetry</span>
+          <div className="bg-[#111117] border border-[#262635] rounded-xl p-4 shadow-lg space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#262635]">
+              <span className="text-xs font-semibold text-[#F3EFE8]">Observation Telemetry</span>
               <Badge variant={manifest && manifest.total_frames >= 2 ? "green" : "blue"}>
                 {manifest?.total_frames ?? (selectedObject.slug === 'barnards-star' ? 2 : 1)} {manifest?.total_frames === 1 ? 'Frame Prepared' : 'Frames Prepared'}
               </Badge>
             </div>
 
             <div className="space-y-2 text-xs font-mono">
-              <div className="flex justify-between items-center text-[#94A3B8]">
+              <div className="flex justify-between items-center text-[#9E9AA7]">
                 <span>Target:</span>
-                <span className="text-[#E8EDF5] font-semibold">{isCustomMode ? 'Custom Target' : selectedObject.name}</span>
+                <span className="text-[#F3EFE8] font-semibold">{isCustomMode ? 'Custom Target' : selectedObject.name}</span>
               </div>
-              <div className="flex justify-between items-center text-[#94A3B8]">
+              <div className="flex justify-between items-center text-[#9E9AA7]">
                 <span>Baseline:</span>
                 <span className="text-[#F59E0B] font-bold">
                   {manifest?.baseline_days && manifest.baseline_days > 0 ? `${manifest.baseline_days} Days` : 'Single Visit'}
                 </span>
               </div>
-              <div className="flex justify-between items-center text-[#94A3B8]">
+              <div className="flex justify-between items-center text-[#9E9AA7]">
                 <span>Archive Products:</span>
-                <span className="text-[#6EA8FE]">
+                <span className="text-[#F4A272]">
                   {manifest?.total_archive_products ?? 80} products ({manifest?.archive_distinct_dates ?? 13} dates)
                 </span>
               </div>
-              <div className="flex justify-between items-center text-[#94A3B8]">
+              <div className="flex justify-between items-center text-[#9E9AA7]">
                 <span>Detector Scale:</span>
-                <span className="text-[#E8EDF5]">6.15 arcsec / pixel</span>
+                <span className="text-[#F3EFE8]">6.15 arcsec / pixel</span>
               </div>
-              <div className="flex justify-between items-center text-[#94A3B8]">
+              <div className="flex justify-between items-center text-[#9E9AA7]">
                 <span>Calibration Units:</span>
-                <span className="text-[#E8EDF5]">MJy / sr (Calibrated)</span>
+                <span className="text-[#F3EFE8]">MJy / sr (Calibrated)</span>
               </div>
-              <div className="flex justify-between items-center text-[#94A3B8]">
+              <div className="flex justify-between items-center text-[#9E9AA7]">
                 <span>Archive Source:</span>
-                <span className="text-[#6EA8FE]">NASA/IPAC IRSA TAP</span>
+                <span className="text-[#F4A272]">NASA/IPAC IRSA TAP</span>
               </div>
             </div>
           </div>
 
           {/* 2. Astrometric Proper Motion Distinction (Barnard's Star) */}
           {!isCustomMode && selectedObject?.slug === 'barnards-star' && manifest && manifest.total_frames >= 2 && (
-            <div className="bg-[#151E30] border border-[#263247] rounded-xl p-4 shadow-lg space-y-2">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#E8EDF5]">
+            <div className="bg-[#111117] border border-[#262635] rounded-xl p-4 shadow-lg space-y-2">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#F3EFE8]">
                 <Info className="w-4 h-4 text-[#F59E0B] flex-shrink-0" />
                 <span>Astrometric Motion Distinction</span>
               </div>
@@ -774,34 +774,34 @@ export const TimeMachine: React.FC = () => {
                 <Badge variant="amber">Predicted Shift: 10.223″</Badge>
                 <Badge variant="blue">Gaia DR3 Astrometry</Badge>
               </div>
-              <p className="text-[#94A3B8] text-[11px] leading-relaxed">
-                Between the 2025-08-27 and 2026-08-21 observation visits (359-day baseline), Barnard's Star has a <strong className="text-[#E8EDF5]">predicted catalogue displacement of 10.223″</strong> (predominantly northward along +Dec) computed from Gaia DR3 linear proper motion astrometry (μ_α* = -801.55 mas/yr, μ_δ = +10362.55 mas/yr).
+              <p className="text-[#9E9AA7] text-[11px] leading-relaxed">
+                Between the 2025-08-27 and 2026-08-21 observation visits (359-day baseline), Barnard's Star has a <strong className="text-[#F3EFE8]">predicted catalogue displacement of 10.223″</strong> (predominantly northward along +Dec) computed from Gaia DR3 linear proper motion astrometry (μ_α* = -801.55 mas/yr, μ_δ = +10362.55 mas/yr).
               </p>
             </div>
           )}
 
           {/* 3. Companion Star / Target Annotation Banner (e.g. Epsilon Indi A & B) */}
           {!isCustomMode && selectedObject?.companion && (
-            <div className="bg-[#151E30] border border-[#263247] rounded-xl p-4 shadow-lg space-y-2">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#E8EDF5]">
-                <Info className="w-4 h-4 text-[#6EA8FE] flex-shrink-0" />
+            <div className="bg-[#111117] border border-[#262635] rounded-xl p-4 shadow-lg space-y-2">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#F3EFE8]">
+                <Info className="w-4 h-4 text-[#F4A272] flex-shrink-0" />
                 <span>Field Source Identification</span>
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="amber">{selectedObject.companion.name} ({selectedObject.companion.type})</Badge>
-                <span className="text-[#94A3B8] font-mono text-xs">Sep: {selectedObject.companion.separationArcsec}"</span>
+                <span className="text-[#9E9AA7] font-mono text-xs">Sep: {selectedObject.companion.separationArcsec}"</span>
               </div>
-              <p className="text-[#94A3B8] text-[11px] leading-relaxed">
-                Prominent saturated source is primary star <strong className="text-[#E8EDF5]">Epsilon Indi A</strong> (K5V). Target <strong className="text-[#6EA8FE]">Epsilon Indi B</strong> (T-dwarf binary, ~0.30 MJy/sr) is located ~402" (~6.7′) to the ENE.
+              <p className="text-[#9E9AA7] text-[11px] leading-relaxed">
+                Prominent saturated source is primary star <strong className="text-[#F3EFE8]">Epsilon Indi A</strong> (K5V). Target <strong className="text-[#F4A272]">Epsilon Indi B</strong> (T-dwarf binary, ~0.30 MJy/sr) is located ~402" (~6.7′) to the ENE.
               </p>
             </div>
           )}
 
           {/* 4. Detected Candidate Changes Summary */}
           {comparison && comparison.candidates.length > 0 && (
-            <div className="bg-[#151E30] border border-[#263247] rounded-xl p-4 shadow-lg space-y-3">
+            <div className="bg-[#111117] border border-[#262635] rounded-xl p-4 shadow-lg space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-[#E8EDF5]">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-[#F3EFE8]">
                   <Sparkles className="w-4 h-4 text-[#F3B85B]" />
                   <span>Detected Candidates ({comparison.candidates.length})</span>
                 </div>
@@ -816,14 +816,14 @@ export const TimeMachine: React.FC = () => {
 
               <div className="space-y-2">
                 {comparison.candidates.slice(0, 2).map((cand) => (
-                  <div key={cand.id} className="bg-[#0B1020] border border-[#263247] rounded-lg p-2.5 text-xs">
+                  <div key={cand.id} className="bg-[#08080C] border border-[#262635] rounded-lg p-2.5 text-xs">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-semibold text-[#E8EDF5]">{cand.target_name}</span>
+                      <span className="font-semibold text-[#F3EFE8]">{cand.target_name}</span>
                       <Badge variant={cand.candidate_type === 'moving_source' ? 'amber' : 'blue'}>
                         {cand.candidate_type.replace('_', ' ')}
                       </Badge>
                     </div>
-                    <div className="flex justify-between text-[11px] font-mono text-[#6EA8FE]">
+                    <div className="flex justify-between text-[11px] font-mono text-[#F4A272]">
                       <span>Shift: {cand.angular_displacement_arcsec}"</span>
                       <span>Conf: {cand.confidence}</span>
                     </div>
@@ -841,13 +841,13 @@ export const TimeMachine: React.FC = () => {
           NASA’s SPHEREx mission visits every patch of sky approximately every six months. By comparing observations taken on different dates, astronomers track what moves and what changes:
         </p>
         <p>
-          <strong className="text-[#E8EDF5]">Moving Objects:</strong> Nearby stars with high proper motion (like Barnard’s Star) and cold brown dwarfs (like WISE 0855) shift their celestial coordinates across months and years.
+          <strong className="text-[#F3EFE8]">Moving Objects:</strong> Nearby stars with high proper motion (like Barnard’s Star) and cold brown dwarfs (like WISE 0855) shift their celestial coordinates across months and years.
         </p>
         <p>
-          <strong className="text-[#E8EDF5]">Variable Sources:</strong> Young stellar systems (like RW Aurigae) and pulsating Mira stars (like R Draconis) change brightness while remaining stationary on the celestial sphere.
+          <strong className="text-[#F3EFE8]">Variable Sources:</strong> Young stellar systems (like RW Aurigae) and pulsating Mira stars (like R Draconis) change brightness while remaining stationary on the celestial sphere.
         </p>
         <p>
-          <strong className="text-[#E8EDF5]">Scientific Integrity:</strong> All images are extracted from authentic NASA Level 2 SPHEREx FITS products with celestial WCS reprojection. No synthetic Gaussian stars or simulated motions are used.
+          <strong className="text-[#F3EFE8]">Scientific Integrity:</strong> All images are extracted from authentic NASA Level 2 SPHEREx FITS products with celestial WCS reprojection. No synthetic Gaussian stars or simulated motions are used.
         </p>
       </InfoPanel>
     </div>

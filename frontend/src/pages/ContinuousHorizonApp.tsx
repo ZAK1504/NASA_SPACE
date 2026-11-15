@@ -5,7 +5,6 @@ import Backdrop from "../components/ui/Backdrop";
 import Starfield from "../components/ui/Starfield";
 import Home from "./Home";
 import ExplorerSection, { ExplorerSubTab } from "../components/sections/ExplorerSection";
-import TimeWarpTransition from "../components/sections/TimeWarpTransition";
 import TimeMachineSection from "../components/sections/TimeMachineSection";
 import LabsSection, { LabsSubTab } from "../components/sections/LabsSection";
 import MissionSection from "../components/sections/MissionSection";
@@ -185,9 +184,6 @@ export const ContinuousHorizonApp: React.FC = () => {
           onContinueToTimeMachine={() => scrollToSection("time-machine")}
           isSectionActive={activeSection === "explorer"}
         />
-
-        {/* Signature Cinematic Time-Warp Transition */}
-        <TimeWarpTransition />
 
         {/* Section 3: Time Machine */}
         <TimeMachineSection

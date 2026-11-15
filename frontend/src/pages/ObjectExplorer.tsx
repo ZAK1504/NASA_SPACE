@@ -26,8 +26,8 @@ export const ObjectExplorer: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#E8EDF5] mb-2">Object Explorer</h1>
-        <p className="text-sm text-[#94A3B8]">
+        <h1 className="text-2xl font-bold text-[#F3EFE8] mb-2">Object Explorer</h1>
+        <p className="text-sm text-[#9E9AA7]">
           Search and explore astronomical objects with SPHEREx observations
         </p>
       </div>
@@ -35,13 +35,13 @@ export const ObjectExplorer: React.FC = () => {
       {/* Search + type filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9E9AA7]" />
           <input
             type="text"
             placeholder="Search by name, type, or tag…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full bg-[#151E30] border border-[#263247] rounded pl-9 pr-3 py-2 text-sm text-[#E8EDF5] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#6EA8FE] transition-colors"
+            className="w-full bg-[#111117] border border-[#262635] rounded pl-9 pr-3 py-2 text-sm text-[#F3EFE8] placeholder:text-[#9E9AA7] focus:outline-none focus:border-[#F4A272] transition-colors"
           />
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -51,8 +51,8 @@ export const ObjectExplorer: React.FC = () => {
               onClick={() => setTypeFilter(type)}
               className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors ${
                 typeFilter === type
-                  ? 'bg-[#6EA8FE]/10 text-[#6EA8FE] border-[#6EA8FE]/30'
-                  : 'bg-transparent text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5] hover:border-[#3a4d6b]'
+                  ? 'bg-[#F4A272]/10 text-[#F4A272] border-[#F4A272]/30'
+                  : 'bg-transparent text-[#9E9AA7] border-[#262635] hover:text-[#F3EFE8] hover:border-[#3c3c4d]'
               }`}
             >
               {type}
@@ -61,7 +61,7 @@ export const ObjectExplorer: React.FC = () => {
         </div>
       </div>
 
-      <div className="text-xs text-[#94A3B8] mb-4">
+      <div className="text-xs text-[#9E9AA7] mb-4">
         {filtered.length} object{filtered.length !== 1 ? 's' : ''} found
       </div>
 

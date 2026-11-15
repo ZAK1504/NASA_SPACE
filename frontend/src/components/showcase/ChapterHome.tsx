@@ -2,7 +2,7 @@ import React from "react";
 import Satellite3D from "../ui/Satellite3D";
 import { ArrowDown, Compass, Clock, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { navigateToWorkspace } from "../../lib/journeyState";
+import { travelToWorkspace } from "../../lib/journeyState";
 
 interface ChapterHomeProps {
   onScrollToExplorer: () => void;
@@ -63,7 +63,7 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
             </button>
 
             <button
-              onClick={() => navigateToWorkspace(navigate, "/explore", "home")}
+              onClick={() => travelToWorkspace(navigate, "/explore", "home")}
               className="group px-5 py-3.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 hover:border-[#f4a272] text-white text-sm font-medium transition-all cursor-pointer inline-flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f4a272]/50"
             >
               <Compass className="w-4 h-4 text-[#f4a272] group-hover:rotate-45 transition-transform" />
@@ -71,7 +71,7 @@ export const ChapterHome: React.FC<ChapterHomeProps> = ({ onScrollToExplorer }) 
             </button>
 
             <button
-              onClick={() => navigateToWorkspace(navigate, "/time-machine", "home")}
+              onClick={() => travelToWorkspace(navigate, "/time-machine", "home")}
               className="group px-5 py-3.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 hover:border-[#f4a272] text-white text-sm font-medium transition-all cursor-pointer inline-flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f4a272]/50"
             >
               <Clock className="w-4 h-4 text-[#f4a272] group-hover:rotate-45 transition-transform" />

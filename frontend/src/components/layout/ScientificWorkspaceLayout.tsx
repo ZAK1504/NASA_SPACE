@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Compass, Eye, Layers, FlaskConical, TrendingUp, Sparkles, BookOpen } from "lucide-react";
-import { returnToJourney } from "../../lib/journeyState";
+import { returnToJourney, travelBackToJourney } from "../../lib/journeyState";
 import { CosmicCopilot } from "../assistant/CosmicCopilot";
 import { useGuidedTour } from "../../hooks/useGuidedTour";
 
@@ -53,7 +53,7 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
   }, [location.pathname]);
 
   const handleBackToJourney = () => {
-    returnToJourney(navigate, defaultChapter);
+    travelBackToJourney(navigate, defaultChapter);
   };
 
   // Determine route-specific tour ID

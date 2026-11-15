@@ -152,7 +152,7 @@ function MiniGame() {
           {state !== "play" && (
             <div className="game-over">
               <h3>{state === "over" ? `Time! You found ${score} anomalies.` : "Spot the star with the odd spectral colour"}</h3>
-              <p className="text-xs text-[#94A3B8] mb-4">
+              <p className="text-xs text-[#9E9AA7] mb-4">
                 Educational mini-game training human eyes to recognize subtle infrared wavelength variations.
               </p>
               <button className="btn white cursor-pointer" onClick={start}>

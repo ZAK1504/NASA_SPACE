@@ -6,6 +6,27 @@ export interface JourneyReturnState {
   timestamp: number;
 }
 
+export type TransitionDirection = "enter" | "return";
+
+export interface TransitionPayload {
+  direction: TransitionDirection;
+  path: string;
+  onNavigate: () => void;
+}
+
+type TransitionListener = (payload: TransitionPayload) => void;
+
+let activeListener: TransitionListener | null = null;
+
+export function registerTransitionOverlay(listener: TransitionListener): () => void {
+  activeListener = listener;
+  return () => {
+    if (activeListener === listener) {
+      activeListener = null;
+    }
+  };
+}
+
 const STORAGE_KEY = "horizon_journey_state";
 
 /** Save the current Journey chapter and scroll position before opening a dedicated workspace. */
@@ -42,7 +63,7 @@ export function clearJourneyReturnState(): void {
   }
 }
 
-/** Navigate from Journey to a dedicated scientific workspace with return state recorded. */
+/** Direct navigate to workspace without cinematic animation (e.g. internal redirects). */
 export function navigateToWorkspace(
   navigate: NavigateFunction,
   path: string,
@@ -58,7 +79,36 @@ export function navigateToWorkspace(
   });
 }
 
-/** Return from a dedicated scientific workspace back to the originating Journey chapter and scroll position. */
+/** Trigger cinematic travel from Journey to a dedicated scientific workspace. */
+export function travelToWorkspace(
+  navigate: NavigateFunction,
+  path: string,
+  originChapter: string
+): void {
+  saveJourneyState(originChapter);
+
+  const performNavigation = () => {
+    navigate(path, {
+      state: {
+        fromJourney: true,
+        originChapter,
+        scrollY: window.scrollY,
+      },
+    });
+  };
+
+  if (activeListener) {
+    activeListener({
+      direction: "enter",
+      path,
+      onNavigate: performNavigation,
+    });
+  } else {
+    performNavigation();
+  }
+}
+
+/** Direct return from workspace back to Journey. */
 export function returnToJourney(
   navigate: NavigateFunction,
   defaultChapter = "home"
@@ -74,4 +124,24 @@ export function returnToJourney(
       targetScrollY,
     },
   });
+}
+
+/** Trigger cinematic reverse travel from workspace back to originating Journey position. */
+export function travelBackToJourney(
+  navigate: NavigateFunction,
+  defaultChapter = "home"
+): void {
+  const performNavigation = () => {
+    returnToJourney(navigate, defaultChapter);
+  };
+
+  if (activeListener) {
+    activeListener({
+      direction: "return",
+      path: "/#" + (getJourneyReturnState()?.originChapter || defaultChapter),
+      onNavigate: performNavigation,
+    });
+  } else {
+    performNavigation();
+  }
 }

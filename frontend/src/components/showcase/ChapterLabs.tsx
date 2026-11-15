@@ -3,7 +3,7 @@ import ChapterShowcase from "./ChapterShowcase";
 import LabsShowcaseVisual from "./LabsShowcaseVisual";
 import { FlaskConical, TrendingUp, ArrowRight, BookOpen, Layers } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { navigateToWorkspace } from "../../lib/journeyState";
+import { travelToWorkspace } from "../../lib/journeyState";
 
 interface ChapterLabsProps {
   onScrollToNext?: () => void;
@@ -16,7 +16,7 @@ export const ChapterLabs: React.FC<ChapterLabsProps> = ({ onScrollToNext }) => {
     <div className="flex flex-col gap-3.5 w-full">
       {/* Action 1: Discovery Lab */}
       <button
-        onClick={() => navigateToWorkspace(navigate, "/discovery-lab", "labs")}
+        onClick={() => travelToWorkspace(navigate, "/discovery-lab", "labs")}
         className="group p-4 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
       >
         <div className="flex items-center gap-3.5">
@@ -37,7 +37,7 @@ export const ChapterLabs: React.FC<ChapterLabsProps> = ({ onScrollToNext }) => {
 
       {/* Action 2: Light Curves */}
       <button
-        onClick={() => navigateToWorkspace(navigate, "/light-curves", "labs")}
+        onClick={() => travelToWorkspace(navigate, "/light-curves", "labs")}
         className="group p-4 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
       >
         <div className="flex items-center gap-3.5">

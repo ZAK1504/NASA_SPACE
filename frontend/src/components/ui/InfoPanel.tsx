@@ -15,21 +15,21 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-[#263247] rounded overflow-hidden">
+    <div className="border border-[#262635] rounded overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-[#111827] hover:bg-[#151E30] transition-colors text-left"
+        className="w-full flex items-center justify-between px-4 py-3 bg-[#111827] hover:bg-[#111117] transition-colors text-left"
       >
         <div className="flex items-center gap-2">
-          <HelpCircle className="w-4 h-4 text-[#6EA8FE] flex-shrink-0" />
-          <span className="text-sm font-medium text-[#E8EDF5]">{title}</span>
+          <HelpCircle className="w-4 h-4 text-[#F4A272] flex-shrink-0" />
+          <span className="text-sm font-medium text-[#F3EFE8]">{title}</span>
         </div>
         <ChevronDown
-          className={`w-4 h-4 text-[#94A3B8] transition-transform duration-200 flex-shrink-0 ${open ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-[#9E9AA7] transition-transform duration-200 flex-shrink-0 ${open ? 'rotate-180' : ''}`}
         />
       </button>
       {open && (
-        <div className="px-4 py-4 bg-[#0d1526] border-t border-[#263247] text-sm text-[#94A3B8] space-y-2 leading-relaxed">
+        <div className="px-4 py-4 bg-[#0d1526] border-t border-[#262635] text-sm text-[#9E9AA7] space-y-2 leading-relaxed">
           {children}
         </div>
       )}

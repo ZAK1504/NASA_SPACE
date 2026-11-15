@@ -3,7 +3,7 @@ import ChapterShowcase from "./ChapterShowcase";
 import TimeMachineShowcaseVisual from "./TimeMachineShowcaseVisual";
 import { Clock, Play, ArrowRight, Activity, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { navigateToWorkspace } from "../../lib/journeyState";
+import { travelToWorkspace } from "../../lib/journeyState";
 
 interface ChapterTimeMachineProps {
   onScrollToNext?: () => void;
@@ -32,7 +32,7 @@ export const ChapterTimeMachine: React.FC<ChapterTimeMachineProps> = ({ onScroll
 
       {/* Main Launch Button */}
       <button
-        onClick={() => navigateToWorkspace(navigate, "/time-machine", "time-machine")}
+        onClick={() => travelToWorkspace(navigate, "/time-machine", "time-machine")}
         className="group px-6 py-4 rounded-2xl bg-gradient-to-r from-[#f4a272] to-[#ff7b3d] text-black font-semibold text-base hover:brightness-110 transition-all cursor-pointer inline-flex items-center justify-between gap-3 shadow-[0_0_30px_rgba(244,162,114,0.35)] hover:shadow-[0_0_40px_rgba(244,162,114,0.5)] w-full hover:-translate-y-0.5"
       >
         <div className="flex items-center gap-3">

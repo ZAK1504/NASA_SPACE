@@ -154,18 +154,18 @@ export const SpectralExplorer: React.FC = () => {
             showFrame: false,
             showSimbadPointerControl: false,
             showShareControl: false,
-            backgroundColor: '#070B14',
+            backgroundColor: '#08080C',
           });
 
           try {
-            aladinInstanceRef.current.setBackgroundColor('#070B14');
+            aladinInstanceRef.current.setBackgroundColor('#08080C');
           } catch (e) {
             // ignore
           }
 
           // Add target marker
           try {
-            const cat = A.catalog({ name: 'Selected Target', sourceSize: 20, color: '#6EA8FE' });
+            const cat = A.catalog({ name: 'Selected Target', sourceSize: 20, color: '#F4A272' });
             aladinInstanceRef.current.addCatalog(cat);
             const marker = A.marker(selectedObject.ra, selectedObject.dec, {
               popupTitle: selectedObject.name,
@@ -409,23 +409,23 @@ export const SpectralExplorer: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-1">
-            <BarChart2 className="w-5 h-5 text-[#6EA8FE]" />
-            <h1 className="text-2xl font-bold text-[#E8EDF5]">SPHEREx Spectral Explorer</h1>
+            <BarChart2 className="w-5 h-5 text-[#F4A272]" />
+            <h1 className="text-2xl font-bold text-[#F3EFE8]">SPHEREx Spectral Explorer</h1>
             <Badge variant="blue">Official DR1 All-Sky Cube</Badge>
             <Badge variant="amber">Cube Resolution: ~12.9″/px (DR1 Order 5)</Badge>
           </div>
-          <p className="text-sm text-[#94A3B8]">
+          <p className="text-sm text-[#9E9AA7]">
             Explore genuine all-sky near-infrared observations across all 102 SPHEREx spectral channels (0.75 μm – 5.0 μm)
           </p>
         </div>
 
         {/* Object selection */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-[#94A3B8]">Target:</span>
+          <span className="text-xs text-[#9E9AA7]">Target:</span>
           <select
             value={selectedObject.slug}
             onChange={(e) => navigate(`/spectra?object=${e.target.value}`)}
-            className="bg-[#151E30] border border-[#263247] text-[#E8EDF5] text-xs rounded px-3 py-1.5 focus:outline-none focus:border-[#6EA8FE]"
+            className="bg-[#111117] border border-[#262635] text-[#F3EFE8] text-xs rounded px-3 py-1.5 focus:outline-none focus:border-[#F4A272]"
           >
             {FEATURED_OBJECTS.map((obj) => (
               <option key={obj.id} value={obj.slug}>
@@ -437,19 +437,19 @@ export const SpectralExplorer: React.FC = () => {
       </div>
 
       {/* Official DR1 All-Sky Spectral Map Viewport */}
-      <div className="bg-[#151E30] border border-[#263247] rounded-lg overflow-hidden mb-6 shadow-2xl">
-        <div className="p-3.5 bg-[#0D1526] border-b border-[#263247] flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div className="bg-[#111117] border border-[#262635] rounded-lg overflow-hidden mb-6 shadow-2xl">
+        <div className="p-3.5 bg-[#0D1526] border-b border-[#262635] flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <Globe className="w-4 h-4 text-[#6EA8FE]" />
-              <span className="font-semibold text-[#E8EDF5]">Official SPHEREx DR1 Spectral Cube</span>
+              <Globe className="w-4 h-4 text-[#F4A272]" />
+              <span className="font-semibold text-[#F3EFE8]">Official SPHEREx DR1 Spectral Cube</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-[#0B1020] border border-[#263247] rounded px-2 py-0.5 text-[11px]">
-              <span className="text-[#94A3B8]">Survey:</span>
+            <div className="flex items-center gap-1.5 bg-[#08080C] border border-[#262635] rounded px-2 py-0.5 text-[11px]">
+              <span className="text-[#9E9AA7]">Survey:</span>
               <select
                 value={activeSurvey}
                 onChange={(e) => handleSurveyChange(e.target.value)}
-                className="bg-transparent text-[#6EA8FE] font-mono focus:outline-none cursor-pointer"
+                className="bg-transparent text-[#F4A272] font-mono focus:outline-none cursor-pointer"
               >
                 <option value="spherex">SPHEREx DR1 All-Sky Cube (102 Bands)</option>
                 <option value="allwise">AllWISE Mid-IR (NASA IRSA)</option>
@@ -458,11 +458,11 @@ export const SpectralExplorer: React.FC = () => {
             </div>
 
             {/* View Mode Switcher */}
-            <div className="flex items-center gap-1 bg-[#0B1020] border border-[#263247] rounded p-0.5">
+            <div className="flex items-center gap-1 bg-[#08080C] border border-[#262635] rounded p-0.5">
               <button
                 onClick={() => setViewerMode('scan')}
                 className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
-                  viewerMode === 'scan' ? 'bg-[#2563EB] text-white' : 'text-[#94A3B8] hover:text-[#E8EDF5]'
+                  viewerMode === 'scan' ? 'bg-[#F4A272] text-black font-semibold' : 'text-[#9E9AA7] hover:text-[#F3EFE8]'
                 }`}
                 title="Synchronized spectral playback view across all 100 bands"
               >
@@ -474,7 +474,7 @@ export const SpectralExplorer: React.FC = () => {
                   setViewerMode('aladin');
                 }}
                 className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
-                  viewerMode === 'aladin' ? 'bg-[#2563EB] text-white' : 'text-[#94A3B8] hover:text-[#E8EDF5]'
+                  viewerMode === 'aladin' ? 'bg-[#F4A272] text-black font-semibold' : 'text-[#9E9AA7] hover:text-[#F3EFE8]'
                 }`}
                 title="Interactive Aladin Lite pan & zoom sky atlas"
               >
@@ -484,26 +484,26 @@ export const SpectralExplorer: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3 font-mono text-[11px]">
-            <span className="text-[#6EA8FE] font-bold">Channel {renderedChannel} / 102</span>
-            <span className="text-[#94A3B8]">·</span>
+            <span className="text-[#F4A272] font-bold">Channel {renderedChannel} / 102</span>
+            <span className="text-[#9E9AA7]">·</span>
             <span className="text-[#F3B85B] font-bold">λ = {currentWavelengthUm} μm</span>
-            <span className="text-[#94A3B8]">·</span>
-            <span className="text-[#94A3B8]">Band: Array {currentDetector}</span>
+            <span className="text-[#9E9AA7]">·</span>
+            <span className="text-[#9E9AA7]">Band: Array {currentDetector}</span>
           </div>
         </div>
 
         {/* Interactive Sky Canvas */}
-        <div data-tour="spectral-viewer" className="relative aspect-[21/9] sm:aspect-[16/7] bg-[#070B14] flex items-center justify-center overflow-hidden">
+        <div data-tour="spectral-viewer" className="relative aspect-[21/9] sm:aspect-[16/7] bg-[#08080C] flex items-center justify-center overflow-hidden">
           {/* Synchronized Spectral Scan View (All-Sky 100-plane Image Player) */}
           {viewerMode === 'scan' && !isGap && (
-            <div className="relative w-full h-full flex items-center justify-center bg-[#070B14]">
+            <div className="relative w-full h-full flex items-center justify-center bg-[#08080C]">
               <img
                 src={`http://${typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1'}:8000/api/spectra/frame/${renderedChannel}`}
                 alt={`SPHEREx DR1 Channel ${renderedChannel}`}
                 className="max-w-full max-h-full object-contain select-none"
               />
-              <div className="absolute top-3 left-3 bg-[#0B1020]/90 border border-[#263247] rounded px-2.5 py-1 text-xs font-mono text-[#E8EDF5] flex items-center gap-2 shadow-lg backdrop-blur-sm">
-                <span className={`w-2 h-2 rounded-full ${isScanning ? 'bg-green-400 animate-pulse' : 'bg-[#6EA8FE]'}`} />
+              <div className="absolute top-3 left-3 bg-[#08080C]/90 border border-[#262635] rounded px-2.5 py-1 text-xs font-mono text-[#F3EFE8] flex items-center gap-2 shadow-lg backdrop-blur-sm">
+                <span className={`w-2 h-2 rounded-full ${isScanning ? 'bg-green-400 animate-pulse' : 'bg-[#F4A272]'}`} />
                 <span>SPHEREx DR1 All-Sky Scan: Ch {renderedChannel} ({currentWavelengthUm} μm · Array {currentDetector}) · All-Sky Preview · Science Cube: ~12.9″/px (Order 5)</span>
               </div>
             </div>
@@ -514,13 +514,13 @@ export const SpectralExplorer: React.FC = () => {
             ref={aladinContainerRef}
             className="w-full h-full relative"
             style={{
-              backgroundColor: '#070B14',
+              backgroundColor: '#08080C',
               display: viewerMode === 'aladin' ? 'block' : 'none'
             }}
           >
             {viewerMode === 'aladin' && (
-              <div className="absolute top-3 left-3 z-10 bg-[#0B1020]/90 border border-[#263247] rounded px-2.5 py-1 text-xs font-mono text-[#E8EDF5] flex items-center gap-2 shadow-lg backdrop-blur-sm pointer-events-none">
-                <span className={`w-2 h-2 rounded-full ${isScanning ? 'bg-green-400 animate-pulse' : 'bg-[#6EA8FE]'}`} />
+              <div className="absolute top-3 left-3 z-10 bg-[#08080C]/90 border border-[#262635] rounded px-2.5 py-1 text-xs font-mono text-[#F3EFE8] flex items-center gap-2 shadow-lg backdrop-blur-sm pointer-events-none">
+                <span className={`w-2 h-2 rounded-full ${isScanning ? 'bg-green-400 animate-pulse' : 'bg-[#F4A272]'}`} />
                 <span>SPHEREx DR1 Target View: Ch {renderedChannel} ({currentWavelengthUm} μm · Array {currentDetector}) · Active Viewport · HiPS Order 5 (~12.9″/px)</span>
               </div>
             )}
@@ -528,12 +528,12 @@ export const SpectralExplorer: React.FC = () => {
 
           {/* Dichroic Gap Banner when Ch 51 or 52 is selected (Overlay, never destroys canvas) */}
           {isGap && (
-            <div className="absolute inset-0 bg-[#0B1020]/95 flex flex-col items-center justify-center p-6 text-center z-20 animate-fade-in">
+            <div className="absolute inset-0 bg-[#08080C]/95 flex flex-col items-center justify-center p-6 text-center z-20 animate-fade-in">
               <AlertTriangle className="w-12 h-12 text-amber-400 mb-3" />
-              <h3 className="text-base font-bold text-[#E8EDF5] mb-1">
+              <h3 className="text-base font-bold text-[#F3EFE8] mb-1">
                 2.42 μm Optical Dichroic Gap (Channels 51 & 52)
               </h3>
-              <p className="text-xs text-[#94A3B8] max-w-md leading-relaxed mb-4">
+              <p className="text-xs text-[#9E9AA7] max-w-md leading-relaxed mb-4">
                 This channel sits precisely at the physical beam-splitter transition between Array 3 and Array 4.
                 Scientific data is unobserved at this boundary. No simulated measurements are substituted.
               </p>
@@ -552,21 +552,21 @@ export const SpectralExplorer: React.FC = () => {
 
           {/* Loading state indicator */}
           {!isPreloaded && preloading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#070B14]/90 backdrop-blur-sm p-6 text-center z-10">
-              <RefreshCw className="w-8 h-8 text-[#6EA8FE] animate-spin mb-3" />
-              <h4 className="text-sm font-semibold text-[#E8EDF5] mb-1">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#08080C]/90 backdrop-blur-sm p-6 text-center z-10">
+              <RefreshCw className="w-8 h-8 text-[#F4A272] animate-spin mb-3" />
+              <h4 className="text-sm font-semibold text-[#F3EFE8] mb-1">
                 Preparing Authentic NASA SPHEREx DR1 Infrared Stream…
               </h4>
-              <p className="text-xs text-[#94A3B8] max-w-sm mb-3">
+              <p className="text-xs text-[#9E9AA7] max-w-sm mb-3">
                 Pre-decoding all 100 valid infrared spectral channels for jitter-free synchronized playback.
               </p>
-              <div className="w-48 bg-[#151E30] rounded-full h-2 overflow-hidden border border-[#263247]">
+              <div className="w-48 bg-[#111117] rounded-full h-2 overflow-hidden border border-[#262635]">
                 <div
-                  className="bg-[#6EA8FE] h-full transition-all duration-300"
+                  className="bg-[#F4A272] h-full transition-all duration-300"
                   style={{ width: `${Math.round((preparedCount / totalPreloadPlanes) * 100)}%` }}
                 />
               </div>
-              <span className="text-[11px] font-mono text-[#94A3B8] mt-1.5">
+              <span className="text-[11px] font-mono text-[#9E9AA7] mt-1.5">
                 {preparedCount} / {totalPreloadPlanes} Planes Ready ({Math.round((preparedCount / totalPreloadPlanes) * 100)}%)
               </span>
             </div>
@@ -574,17 +574,17 @@ export const SpectralExplorer: React.FC = () => {
         </div>
 
         {/* Bottom Wavelength Slider Bar */}
-        <div className="p-4 bg-[#0D1526] border-t border-[#263247] space-y-3">
+        <div className="p-4 bg-[#0D1526] border-t border-[#262635] space-y-3">
           {/* Preload Preparation Status Banner */}
           {preloading && (
-            <div className="bg-[#0B1020] border border-[#263247] rounded px-3 py-2 text-xs flex items-center justify-between gap-3 text-[#94A3B8]">
+            <div className="bg-[#08080C] border border-[#262635] rounded px-3 py-2 text-xs flex items-center justify-between gap-3 text-[#9E9AA7]">
               <div className="flex items-center gap-2">
-                <RefreshCw className="w-3.5 h-3.5 text-[#6EA8FE] animate-spin" />
+                <RefreshCw className="w-3.5 h-3.5 text-[#F4A272] animate-spin" />
                 <span>Preparing infrared wavelength scan… Prepared {preparedCount} of {totalPreloadPlanes} valid wavelength planes</span>
               </div>
-              <div className="w-32 bg-[#151E30] rounded-full h-1.5 overflow-hidden">
+              <div className="w-32 bg-[#111117] rounded-full h-1.5 overflow-hidden">
                 <div
-                  className="bg-[#6EA8FE] h-full transition-all duration-300"
+                  className="bg-[#F4A272] h-full transition-all duration-300"
                   style={{ width: `${Math.round((preparedCount / totalPreloadPlanes) * 100)}%` }}
                 />
               </div>
@@ -607,7 +607,7 @@ export const SpectralExplorer: React.FC = () => {
                 <select
                   value={scanMode}
                   onChange={(e) => setScanMode(e.target.value)}
-                  className="bg-[#151E30] border border-[#263247] text-[#E8EDF5] text-xs rounded px-2 py-1.5 focus:outline-none focus:border-[#6EA8FE]"
+                  className="bg-[#111117] border border-[#262635] text-[#F3EFE8] text-xs rounded px-2 py-1.5 focus:outline-none focus:border-[#F4A272]"
                   title="Select scan preparation scope"
                 >
                   <option value="all">Full Spectrum (100 Bands)</option>
@@ -621,7 +621,7 @@ export const SpectralExplorer: React.FC = () => {
                 <select
                   value={scanSpeedMs}
                   onChange={(e) => setScanSpeedMs(Number(e.target.value))}
-                  className="bg-[#151E30] border border-[#263247] text-[#E8EDF5] text-xs rounded px-2 py-1.5 focus:outline-none focus:border-[#6EA8FE]"
+                  className="bg-[#111117] border border-[#262635] text-[#F3EFE8] text-xs rounded px-2 py-1.5 focus:outline-none focus:border-[#F4A272]"
                   title="Scan Speed"
                 >
                   <option value={800}>0.8s / band</option>
@@ -631,21 +631,21 @@ export const SpectralExplorer: React.FC = () => {
                 </select>
                 <button
                   onClick={handlePrevChannel}
-                  className="p-1.5 rounded bg-[#151E30] border border-[#263247] text-[#94A3B8] hover:text-[#E8EDF5]"
+                  className="p-1.5 rounded bg-[#111117] border border-[#262635] text-[#9E9AA7] hover:text-[#F3EFE8]"
                   title="Previous Channel"
                 >
                   <SkipBack className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={handleNextChannel}
-                  className="p-1.5 rounded bg-[#151E30] border border-[#263247] text-[#94A3B8] hover:text-[#E8EDF5]"
+                  className="p-1.5 rounded bg-[#111117] border border-[#262635] text-[#9E9AA7] hover:text-[#F3EFE8]"
                   title="Next Channel"
                 >
                   <SkipForward className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              <span className="text-xs text-[#94A3B8] hidden sm:inline font-mono">
+              <span className="text-xs text-[#9E9AA7] hidden sm:inline font-mono">
                 Channel {renderedChannel} of 102
               </span>
             </div>
@@ -660,8 +660,8 @@ export const SpectralExplorer: React.FC = () => {
                     onClick={() => handleSelectDetector(det.id)}
                     className={`px-2 py-1 rounded text-[11px] font-mono border transition-all ${
                       isActive
-                        ? 'bg-[#2563EB] text-white border-[#3B82F6]'
-                        : 'bg-[#151E30] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+                        ? 'bg-[#F4A272] text-black border-[#F4A272] font-semibold'
+                        : 'bg-[#111117] text-[#9E9AA7] border-[#262635] hover:text-[#F3EFE8]'
                     }`}
                   >
                     {det.id}
@@ -679,9 +679,9 @@ export const SpectralExplorer: React.FC = () => {
               max="102"
               value={renderedChannel}
               onChange={(e) => handleSliderChange(Number(e.target.value))}
-              className="w-full accent-[#6EA8FE] cursor-pointer"
+              className="w-full accent-[#F4A272] cursor-pointer"
             />
-            <div className="flex justify-between text-[10px] font-mono text-[#94A3B8]">
+            <div className="flex justify-between text-[10px] font-mono text-[#9E9AA7]">
               <span>Ch 1 (0.75 μm)</span>
               <span>Ch 18 (1.11 μm)</span>
               <span>Ch 35 (1.64 μm)</span>
@@ -697,8 +697,8 @@ export const SpectralExplorer: React.FC = () => {
       {/* Detector Filter Tabs for Chart */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <span className="text-xs text-[#94A3B8] font-medium flex items-center gap-1.5">
-            <Filter className="w-3.5 h-3.5 text-[#6EA8FE]" />
+          <span className="text-xs text-[#9E9AA7] font-medium flex items-center gap-1.5">
+            <Filter className="w-3.5 h-3.5 text-[#F4A272]" />
             Filter Spectrum Chart & Table by Detector:
           </span>
           <div className="flex flex-wrap gap-1.5">
@@ -708,8 +708,8 @@ export const SpectralExplorer: React.FC = () => {
                 onClick={() => handleSelectDetector(det.id)}
                 className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors cursor-pointer ${
                   activeDetector === det.id
-                    ? 'bg-[#6EA8FE] text-[#0B1020] border-[#6EA8FE]'
-                    : 'bg-[#151E30] text-[#94A3B8] border-[#263247] hover:text-[#E8EDF5]'
+                    ? 'bg-[#F4A272] text-[#08080C] border-[#F4A272]'
+                    : 'bg-[#111117] text-[#9E9AA7] border-[#262635] hover:text-[#F3EFE8]'
                 }`}
               >
                 <span>{det.name}</span>
@@ -733,18 +733,18 @@ export const SpectralExplorer: React.FC = () => {
       </div>
 
       {/* Main Spectral Chart Panel */}
-      <div className="bg-[#151E30] border border-[#263247] rounded p-6 mb-6">
+      <div className="bg-[#111117] border border-[#262635] rounded p-6 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
           <div>
-            <h3 className="text-sm font-semibold text-[#E8EDF5]">
+            <h3 className="text-sm font-semibold text-[#F3EFE8]">
               Calibrated Infrared Spectral Energy Distribution
             </h3>
-            <p className="text-xs text-[#94A3B8]">
-              Target: <strong className="text-[#E8EDF5]">{selectedObject.name}</strong> · Showing {filteredChannels.length} spectral bands
+            <p className="text-xs text-[#9E9AA7]">
+              Target: <strong className="text-[#F3EFE8]">{selectedObject.name}</strong> · Showing {filteredChannels.length} spectral bands
             </p>
           </div>
           {hoveredChannel && (
-            <div className="text-xs font-mono bg-[#0B1020] border border-[#263247] rounded px-3 py-1.5 text-[#6EA8FE]">
+            <div className="text-xs font-mono bg-[#08080C] border border-[#262635] rounded px-3 py-1.5 text-[#F4A272]">
               <span className="font-semibold">Channel {hoveredChannel.channel}</span> ({hoveredChannel.detector}) · {hoveredChannel.wavelength_um} μm
               {hoveredChannel.is_dichroic_gap || hoveredChannel.channel === 51 || hoveredChannel.channel === 52 ? (
                 <span className="ml-2 text-amber-400 font-bold">⚠ Dichroic Gap (2.42 μm beam-splitter)</span>
@@ -753,7 +753,7 @@ export const SpectralExplorer: React.FC = () => {
                   ✓ Authentic SPHEREx L2: {hoveredChannel.flux_mjy_sr != null ? `${hoveredChannel.flux_mjy_sr.toFixed(3)} MJy/sr` : 'Calibrated'} {hoveredChannel.flux_uJy ? `(${hoveredChannel.flux_uJy} μJy)` : ''}
                 </span>
               ) : (
-                <span className="ml-2 text-[#94A3B8]">
+                <span className="ml-2 text-[#9E9AA7]">
                   ○ Unobserved in public release {hoveredChannel.reference_model_flux_uJy ? `(Reference Model: ${hoveredChannel.reference_model_flux_uJy} μJy)` : ''}
                 </span>
               )}
@@ -762,13 +762,13 @@ export const SpectralExplorer: React.FC = () => {
         </div>
 
         {/* Chart Legend */}
-        <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-[#94A3B8] mb-3">
+        <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-[#9E9AA7] mb-3">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 bg-[#6EA8FE] rounded-sm" />
+            <div className="w-3 h-3 bg-[#F4A272] rounded-sm" />
             <span>Authentic SPHEREx Level 2 Observation</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 bg-[#263247] rounded-sm" />
+            <div className="w-3 h-3 bg-[#262635] rounded-sm" />
             <span>Unobserved Channel</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -782,7 +782,7 @@ export const SpectralExplorer: React.FC = () => {
         </div>
 
         {/* Interactive Bar Chart for Spectral Bands */}
-        <div className="h-64 bg-[#0B1020] border border-[#263247] rounded p-4 flex items-end gap-1 overflow-x-auto relative">
+        <div className="h-64 bg-[#08080C] border border-[#262635] rounded p-4 flex items-end gap-1 overflow-x-auto relative">
           {/* Molecular Line Overlays */}
           {MOLECULAR_FEATURES.map((mol) => {
             const pct = ((mol.wavelength - 0.75) / (5.0 - 0.75)) * 100;
@@ -792,7 +792,7 @@ export const SpectralExplorer: React.FC = () => {
                 className="absolute top-2 bottom-0 w-px border-l border-dashed border-[#F3B85B]/70 pointer-events-none z-10"
                 style={{ left: `${pct}%` }}
               >
-                <span className="absolute top-0 -translate-x-1/2 text-[9px] font-mono text-[#F3B85B] bg-[#0B1020]/90 px-1 rounded whitespace-nowrap">
+                <span className="absolute top-0 -translate-x-1/2 text-[9px] font-mono text-[#F3B85B] bg-[#08080C]/90 px-1 rounded whitespace-nowrap">
                   {mol.name} ({mol.wavelength}μm)
                 </span>
               </div>
@@ -826,7 +826,7 @@ export const SpectralExplorer: React.FC = () => {
                 onMouseEnter={() => setHoveredChannel(ch)}
                 onMouseLeave={() => setHoveredChannel(null)}
                 className={`flex-1 h-full flex flex-col justify-end group cursor-pointer relative ${
-                  isCurrent ? 'ring-2 ring-[#6EA8FE] rounded-t' : ''
+                  isCurrent ? 'ring-2 ring-[#F4A272] rounded-t' : ''
                 }`}
               >
                 <div
@@ -834,8 +834,8 @@ export const SpectralExplorer: React.FC = () => {
                     isChGap
                       ? 'bg-amber-600/60 border-t-2 border-amber-400 group-hover:bg-amber-500'
                       : isObserved
-                      ? 'bg-[#6EA8FE] shadow-sm shadow-[#6EA8FE]/30 group-hover:bg-[#99c4ff]'
-                      : 'bg-[#1E293B] border border-dashed border-[#334155] group-hover:bg-[#263247]'
+                      ? 'bg-[#F4A272] shadow-sm shadow-[#F4A272]/30 group-hover:bg-[#ffb088]'
+                      : 'bg-[#181822] border border-dashed border-[#262635] group-hover:bg-[#262635]'
                   }`}
                   style={{ height: `${barHeightPct}%` }}
                 />
@@ -845,7 +845,7 @@ export const SpectralExplorer: React.FC = () => {
         </div>
 
         {/* Wavelength Axis Labels */}
-        <div className="flex justify-between text-xs font-mono text-[#94A3B8] mt-2 px-1">
+        <div className="flex justify-between text-xs font-mono text-[#9E9AA7] mt-2 px-1">
           <span>0.75 μm (Near-IR edge)</span>
           <span>1.11 μm (D1/D2)</span>
           <span>1.64 μm (D2/D3)</span>
@@ -857,19 +857,19 @@ export const SpectralExplorer: React.FC = () => {
       </div>
 
       {/* Molecular Features Grid */}
-      <div className="bg-[#151E30] border border-[#263247] rounded p-5 mb-6">
-        <h3 className="text-sm font-semibold text-[#E8EDF5] mb-3">
+      <div className="bg-[#111117] border border-[#262635] rounded p-5 mb-6">
+        <h3 className="text-sm font-semibold text-[#F3EFE8] mb-3">
           Key Interstellar & Planetary Molecular Signatures in SPHEREx Range
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {MOLECULAR_FEATURES.map((mol) => (
-            <div key={mol.name} className="bg-[#0B1020] border border-[#263247] rounded p-3 text-xs">
+            <div key={mol.name} className="bg-[#08080C] border border-[#262635] rounded p-3 text-xs">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="font-semibold text-[#E8EDF5]">{mol.name}</span>
+                <span className="font-semibold text-[#F3EFE8]">{mol.name}</span>
                 <Badge variant="amber">{mol.detector}</Badge>
               </div>
-              <div className="font-mono text-[#6EA8FE] mb-1">{mol.wavelength} μm</div>
-              <p className="text-[#94A3B8] text-[11px] leading-relaxed">{mol.desc}</p>
+              <div className="font-mono text-[#F4A272] mb-1">{mol.wavelength} μm</div>
+              <p className="text-[#9E9AA7] text-[11px] leading-relaxed">{mol.desc}</p>
             </div>
           ))}
         </div>

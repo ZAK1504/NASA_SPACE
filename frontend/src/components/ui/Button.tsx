@@ -21,21 +21,21 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const base =
-    'inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 border focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-[#0B1020] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none active:scale-[0.98]';
+    'inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 border focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-[#08080C] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none active:scale-[0.98]';
 
   const variants: Record<string, string> = {
     primary:
-      'bg-gradient-to-r from-[#6EA8FE] to-[#5b95ea] text-[#0B1020] font-semibold border-[#6EA8FE] hover:shadow-glow-blue hover:brightness-105 focus:ring-[#6EA8FE]',
+      'bg-gradient-to-r from-[#F4A272] to-[#5b95ea] text-[#08080C] font-semibold border-[#F4A272] hover:shadow-glow-blue hover:brightness-105 focus:ring-[#F4A272]',
     glow:
-      'bg-[#6EA8FE]/15 text-[#6EA8FE] border-[#6EA8FE]/50 hover:bg-[#6EA8FE]/25 hover:border-[#6EA8FE] hover:shadow-glow-blue focus:ring-[#6EA8FE]',
+      'bg-[#F4A272]/15 text-[#F4A272] border-[#F4A272]/50 hover:bg-[#F4A272]/25 hover:border-[#F4A272] hover:shadow-glow-blue focus:ring-[#F4A272]',
     secondary:
-      'bg-[#151E30] text-[#6EA8FE] border-[#263247] hover:border-[#6EA8FE]/60 hover:bg-[#1a2540] focus:ring-[#6EA8FE]',
+      'bg-[#111117] text-[#F4A272] border-[#262635] hover:border-[#F4A272]/60 hover:bg-[#1c1c28] focus:ring-[#F4A272]',
     ghost:
-      'bg-transparent text-[#94A3B8] border-transparent hover:text-[#E8EDF5] hover:bg-[#1a2540]/60 hover:border-[#263247] focus:ring-[#263247]',
+      'bg-transparent text-[#9E9AA7] border-transparent hover:text-[#F3EFE8] hover:bg-[#1c1c28]/60 hover:border-[#262635] focus:ring-[#262635]',
     danger:
       'bg-red-950/30 text-red-300 border-red-800/60 hover:bg-red-900/40 hover:border-red-700 focus:ring-red-500',
     amber:
-      'bg-gradient-to-r from-[#F3B85B] to-[#e0a44a] text-[#0B1020] font-semibold border-[#F3B85B] hover:shadow-glow-amber hover:brightness-105 focus:ring-[#F3B85B]',
+      'bg-gradient-to-r from-[#F3B85B] to-[#e0a44a] text-[#08080C] font-semibold border-[#F3B85B] hover:shadow-glow-amber hover:brightness-105 focus:ring-[#F3B85B]',
   };
 
   const sizes: Record<string, string> = {
