@@ -1,5 +1,8 @@
 import os
 import hashlib
+import socket
+import ipaddress
+from urllib.parse import urlparse
 from typing import Dict, Any, Optional, Tuple
 from pathlib import Path
 import numpy as np
@@ -7,6 +10,57 @@ import requests
 from astropy.io import fits
 from astropy.wcs import WCS
 from app.config import settings
+
+ALLOWED_FITS_DOMAINS = [
+    "irsa.ipac.caltech.edu",
+    "ipac.caltech.edu",
+    "nasa.gov",
+    "stsci.edu",
+]
+
+def is_safe_fits_url(url: str) -> Tuple[bool, str]:
+    """
+    Validate that a given FITS URL strictly adheres to security requirements:
+    1. Scheme must be HTTPS
+    2. Hostname must be in official NASA/IPAC allowlist
+    3. Hostname must NOT resolve to private, loopback, link-local, or cloud metadata IPs (SSRF protection)
+    """
+    if not url or not isinstance(url, str):
+        return False, "Empty or invalid URL"
+    
+    parsed = urlparse(url.strip())
+    if parsed.scheme.lower() != "https":
+        return False, f"Insecure scheme '{parsed.scheme}'. Only HTTPS is permitted."
+
+    hostname = (parsed.hostname or "").lower().strip()
+    if not hostname:
+        return False, "Missing hostname in URL"
+
+    # Cloud metadata / localhost block
+    if hostname in ("169.254.169.254", "metadata.google.internal", "localhost", "127.0.0.1"):
+        return False, f"Prohibited SSRF target host '{hostname}'"
+
+    # Domain allowlist check
+    is_allowed_domain = any(
+        hostname == domain or hostname.endswith("." + domain)
+        for domain in ALLOWED_FITS_DOMAINS
+    )
+    if not is_allowed_domain:
+        return False, f"Domain '{hostname}' is not in the approved NASA/IPAC archive allowlist"
+
+    # DNS resolution and IP verification to defeat DNS rebinding
+    try:
+        addr_infos = socket.getaddrinfo(hostname, 443, proto=socket.IPPROTO_TCP)
+        for family, type_, proto, canonname, sockaddr in addr_infos:
+            ip_str = sockaddr[0]
+            ip_obj = ipaddress.ip_address(ip_str)
+            if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local or ip_obj.is_multicast or ip_obj.is_reserved:
+                return False, f"Resolved IP address '{ip_str}' is private/loopback/link-local."
+    except Exception as e:
+        return False, f"DNS resolution failed for '{hostname}': {str(e)}"
+
+    return True, "URL is safe"
+
 
 class FitsService:
     def __init__(self):
@@ -19,20 +73,56 @@ class FitsService:
             filename = f"{h}.fits"
         return self.fits_cache_dir / filename
 
-    def download_fits(self, fits_url: str, timeout: int = 60) -> Path:
-        """Download FITS file with caching."""
+    def download_fits(
+        self,
+        fits_url: str,
+        timeout: int = 45,
+        max_bytes: int = 150 * 1024 * 1024
+    ) -> Path:
+        """
+        Download FITS file with strict SSRF validation, size bounds,
+        atomic file writes, and FITS magic header verification.
+        """
+        is_safe, reason = is_safe_fits_url(fits_url)
+        if not is_safe:
+            raise ValueError(f"Security validation rejected FITS URL: {reason}")
+
         local_path = self.get_local_path_for_url(fits_url)
         if local_path.exists() and local_path.stat().st_size > 10000:
             return local_path
 
-        temp_path = local_path.with_suffix('.tmp')
-        with requests.get(fits_url, stream=True, timeout=timeout) as r:
-            r.raise_for_status()
-            with open(temp_path, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=65536):
-                    f.write(chunk)
-        temp_path.rename(local_path)
-        return local_path
+        temp_path = local_path.with_suffix(f".tmp_{os.getpid()}_{hashlib.md5(fits_url.encode()).hexdigest()[:8]}")
+        try:
+            with requests.get(fits_url, stream=True, timeout=timeout, headers={"User-Agent": "SPHEREx-Platform/1.0"}) as r:
+                r.raise_for_status()
+                total_downloaded = 0
+                with open(temp_path, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=65536):
+                        if chunk:
+                            total_downloaded += len(chunk)
+                            if total_downloaded > max_bytes:
+                                raise ValueError(f"Download exceeded maximum safe file size limit ({max_bytes} bytes)")
+                            f.write(chunk)
+
+            # Validate FITS magic header signature
+            if temp_path.stat().st_size < 2880:
+                raise ValueError("Downloaded file is smaller than minimum standard FITS header block (2880 bytes)")
+
+            with open(temp_path, 'rb') as f:
+                header_start = f.read(80)
+                if not header_start.startswith(b"SIMPLE  ="):
+                    raise ValueError("Downloaded content is not a valid FITS file (missing 'SIMPLE  =' header keyword)")
+
+            # Atomic rename
+            temp_path.replace(local_path)
+            return local_path
+        except Exception:
+            if temp_path.exists():
+                try:
+                    temp_path.unlink()
+                except Exception:
+                    pass
+            raise
 
     def inspect_fits(self, file_path: Path) -> Dict[str, Any]:
         """

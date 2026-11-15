@@ -96,7 +96,7 @@ class IrsaService:
                             "live_query_attempted": False,
                             "cached_query": True,
                             "products_found": len(data),
-                            "status": "success",
+                            "status": "CACHED_SUCCESS",
                             "bypass_cache": False
                         }
                         return data
@@ -116,7 +116,7 @@ class IrsaService:
                     "live_query_attempted": False,
                     "cached_inventory_match": True,
                     "products_found": len(cached_inventory),
-                    "status": "success",
+                    "status": "CACHED_SUCCESS",
                     "bypass_cache": False
                 }
                 return cached_inventory
@@ -198,19 +198,20 @@ class IrsaService:
                 "endpoint": self.tap_url,
                 "adql": adql,
                 "products_found": len(records),
-                "status": "success",
+                "status": "LIVE_SUCCESS_WITH_PRODUCTS" if records else "LIVE_SUCCESS_EMPTY",
                 "bypass_cache": bypass_cache
             }
             return records
 
         except Exception as e:
             err_msg = str(e)
+            failure_status = "QUERY_TIMEOUT" if isinstance(e, TimeoutError) else "ARCHIVE_UNAVAILABLE"
             self.last_query_diagnostic = {
                 "live_query_attempted": True,
                 "endpoint": self.tap_url,
                 "adql": adql,
                 "error": err_msg,
-                "status": "failed",
+                "status": failure_status,
                 "bypass_cache": bypass_cache
             }
 
@@ -219,7 +220,10 @@ class IrsaService:
                 if cache_file.exists():
                     try:
                         with open(cache_file, "r") as f:
-                            return json.load(f)
+                            cached_res = json.load(f)
+                            self.last_query_diagnostic["status"] = "CACHED_SUCCESS"
+                            self.last_query_diagnostic["fallback_used"] = True
+                            return cached_res
                     except Exception:
                         pass
 
@@ -234,6 +238,7 @@ class IrsaService:
                 if fallback_records:
                     self.last_query_diagnostic["fallback_used"] = True
                     self.last_query_diagnostic["products_found"] = len(fallback_records)
+                    self.last_query_diagnostic["status"] = "CACHED_SUCCESS"
                     return fallback_records
 
             # If bypass_cache is requested or no fallback inventory covers it:

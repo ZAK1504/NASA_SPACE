@@ -1,0 +1,17 @@
+test_id,feature,input,ref_method,expected,actual,units,absolute_error,relative_error_pct,tolerance,status,notes
+ASTRO-01,Barnard RA Propagation (10 yr),Epoch 2026.0,Independent Spherical CosDec Trig,269.446269,269.446269,degrees,0.0,0.0,1e-5 deg,PASS,
+ASTRO-02,Barnard Dec Propagation (10 yr),Epoch 2026.0,Independent Linear Proper Motion,4.768204,4.768204,degrees,0.0,0.0,1e-5 deg,PASS,
+ASTRO-03,Barnard 10-Yr Displacement,Epoch 2026.0,"Hypot(dRA*cosDec, dDec)",103.933,103.933,arcseconds,0.0,0.0,0.05 arcsec,PASS,
+WCS-01,WCS Roundtrip X-axis,"(1024.0, 1024.0)",Astropy WCS pixel_to_world -> world_to_pixel,1024.0,1024.0,pixels,0.0,0.0,1e-4 px,PASS,
+WCS-02,WCS Roundtrip Y-axis,"(1024.0, 1024.0)",Astropy WCS pixel_to_world -> world_to_pixel,1024.0,1024.0,pixels,0.0,0.0,1e-4 px,PASS,
+TARGET-01,Eps Indi A/B Separation,ICRS Catalogue Coords,SkyCoord.separation,402.4,402.31,arcseconds,0.08999999999997499,0.0224,1.0 arcsec,PASS,Confirms Epsilon Indi B (~6.7 arcmin away) is accurately distinguished from saturated primary star Epsilon Indi A
+DIFF-01,Difference of Identical Images,Constant 50.0 arrays,Difference = Later - Earlier,0.0,0.0,flux units,0.0,0.0,1e-5,PASS,
+DIFF-02,Positive Brightness Transient,Later += 25.0,Difference = Later - Earlier,25.0,25.0,flux units,0.0,0.0,0.5,PASS,
+DIFF-03,Negative Dimming Transient,Later -= 15.0,Difference = Later - Earlier,-15.0,-15.0,flux units,0.0,0.0,0.5,PASS,
+STACK-01,Stack S/N Improvement (N=4),4 Gaussian Noise Arrays,Theoretical sqrt(N),2.0,1.979,ratio,0.020999999999999908,1.05,0.2,PASS,
+PHOT-01,Aperture Photometry (r=5 px),Synthetic Gaussian Star,Photutils CircularAperture Sum,996.1,995.3,counts,0.8000000000000682,0.0803,5.0 counts,PASS,
+SPEC-01,Total Nominal Spectral Channels,SPHEREx 6 Detector Arrays,17 channels * 6 arrays,102,102,channels,0.0,0.0,0,PASS,
+SPEC-02,Channel 1 Wavelength (Array 1),First Channel,0.75 μm lower limit,0.75,0.75,micrometers,0.0,0.0,0.01 μm,PASS,
+SPEC-03,Channel 102 Wavelength (Array 6),Final Channel,5.00 μm upper limit,5.0,5.0,micrometers,0.0,0.0,0.01 μm,PASS,
+SPEC-04,Dichroic Gap Identification,Channels 51 & 52,Beam Splitter Boundary D3/D4,True,True,boolean,0.0,0.0,0,PASS,
+ARBIT-01,Unsurveyed Coordinate Honesty,"RA=180.0, Dec=0.0",Live/Bypass TAP Spatial Cone Search,0,0,records,0.0,0.0,0,PASS,Verifies application returns honest empty dataset rather than substituting unrelated sky region
