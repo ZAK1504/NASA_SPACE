@@ -59,6 +59,9 @@ def test_copilot_streaming_sse():
 
 def test_copilot_rate_limiting():
     """Verify session rate limiting rejects excessive queries."""
+    with copilot_budget_service._get_connection() as conn:
+        conn.execute("DELETE FROM rolling_limits")
+        conn.commit()
     unique_session = "abuse-test-session-999"
     # Make multiple requests rapidly to trip session RPM
     rejected = False
