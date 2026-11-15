@@ -200,6 +200,7 @@ export function useSmoothScroll(enabled = true) {
       smoothWheel: true,
       autoRaf: false,
       prevent: (node: HTMLElement) => {
+        if ((window as any).__isJourneyScrollLocked) return true;
         return (
           node.closest('.aladin-container') !== null ||
           node.closest('.aladin-box') !== null ||

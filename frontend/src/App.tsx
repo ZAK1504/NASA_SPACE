@@ -10,6 +10,8 @@ import MyDiscoveriesWorkspace from "./pages/workspaces/MyDiscoveriesWorkspace";
 import LightCurvesWorkspace from "./pages/workspaces/LightCurvesWorkspace";
 import MissionsWorkspace from "./pages/workspaces/MissionsWorkspace";
 import TrainingGameWorkspace from "./pages/workspaces/TrainingGameWorkspace";
+import StorybookWorkspace from "./pages/workspaces/StorybookWorkspace";
+import AboutWorkspace from "./pages/workspaces/AboutWorkspace";
 import WorkspaceTransitionOverlay from "./components/navigation/WorkspaceTransitionOverlay";
 
 export function App() {
@@ -64,6 +66,16 @@ export function App() {
         {/* 9. Training Simulation Mini-Game */}
         <Route path="/mission/training" element={<TrainingGameWorkspace />} />
         <Route path="/game" element={<TrainingGameWorkspace />} />
+
+        {/* 10. The Cosmic Chronicle (Info Book) */}
+        <Route path="/story" element={<StorybookWorkspace />} />
+        <Route path="/storybook" element={<StorybookWorkspace />} />
+        <Route path="/chronicle" element={<Navigate to="/story" replace />} />
+        <Route path="/info-book" element={<Navigate to="/story" replace />} />
+        <Route path="/infobook" element={<Navigate to="/story" replace />} />
+
+        {/* 11. About sphereXplorer (Full Dedicated Animated Team Workspace) */}
+        <Route path="/about" element={<AboutWorkspace />} />
 
         {/* Fallback to Journey */}
         <Route path="*" element={<JourneyPage />} />

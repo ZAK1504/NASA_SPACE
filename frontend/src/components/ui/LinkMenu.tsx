@@ -42,7 +42,7 @@ export const LinkMenu: React.FC<LinkMenuProps> = ({ title = "Where to next?" }) 
         ))}
       </ul>
       <footer className="foot mono">
-        <span>SPHEREx HORIZON · Cosmic Discovery Platform</span>
+        <span>sphereXplorer · Cosmic Discovery Platform</span>
         <span>Data: NASA / IPAC IRSA · DR1 & QR3</span>
       </footer>
     </section>

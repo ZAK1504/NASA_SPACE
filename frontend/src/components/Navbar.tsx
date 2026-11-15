@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { HelpCircle, Compass, Menu, X } from "lucide-react";
+import { HelpCircle, Compass, Menu, X, Users, BookOpen } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { travelToWorkspace } from "../lib/journeyState";
+import BrandWordmark from "./brand/BrandWordmark";
 
 export interface NavDestination {
   id: string;
@@ -14,6 +17,7 @@ export const NAV_DESTINATIONS: NavDestination[] = [
   { id: "time-machine", label: "Time Machine", targetId: "time-machine", dataTour: "nav-timemachine" },
   { id: "labs", label: "Labs", targetId: "labs", dataTour: "nav-discovery" },
   { id: "mission", label: "Mission", targetId: "mission", dataTour: "nav-mission" },
+  { id: "about", label: "About", targetId: "about", dataTour: "nav-about" },
 ];
 
 interface NavbarProps {
@@ -27,6 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
   onStartTour,
 }) => {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [solid, setSolid] = useState(false);
 
@@ -40,16 +45,23 @@ export const Navbar: React.FC<NavbarProps> = ({
   const handleNavClick = (targetId: string) => (e: React.MouseEvent) => {
     e.preventDefault();
     setOpen(false);
+
     if (onNavigate) {
       onNavigate(targetId);
     } else {
       const el = document.getElementById(targetId);
       if (el) {
+        const targetY = targetId === "home" ? 0 : Math.max(0, el.offsetTop - 70);
         if (window.__lenis) {
-          window.__lenis.scrollTo(el, { offset: -70, duration: 1.2 });
+          window.__lenis.scrollTo(targetY, {
+            duration: 1.15,
+            easing: (t: number) => 1 - Math.pow(1 - t, 3.5),
+          });
         } else {
-          el.scrollIntoView({ behavior: "smooth" });
+          window.scrollTo({ top: targetY, behavior: "smooth" });
         }
+      } else {
+        window.location.href = `/#${targetId}`;
       }
     }
   };
@@ -59,26 +71,12 @@ export const Navbar: React.FC<NavbarProps> = ({
       <header className={`nav ${solid ? "solid" : ""}`} data-tour="navigation-header">
         {/* Brand / Logo */}
         <a
-          className="brand"
+          className="brand flex items-center gap-2"
           href="#home"
           onClick={handleNavClick("home")}
-          aria-label="SPHEREx HORIZON home"
+          aria-label="sphereXplorer home"
         >
-          <svg viewBox="-12 -12 24 24" width="22" height="22" aria-hidden="true">
-            <circle r="9" fill="none" stroke="currentColor" strokeWidth="1.2" />
-            <ellipse
-              rx="11"
-              ry="3.6"
-              fill="none"
-              stroke="var(--accent)"
-              strokeWidth="1.2"
-              transform="rotate(-24)"
-            />
-            <circle r="2.2" fill="currentColor" />
-          </svg>
-          <span className="font-semibold tracking-tight">
-            SPHEREx <span className="text-[var(--accent)] font-light">HORIZON</span>
-          </span>
+          <BrandWordmark size="md" />
         </a>
 
         {/* Desktop Persistent Top Navigation (Exact 5 Destinations) */}
@@ -116,13 +114,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          <a
-            className="cta cursor-pointer"
-            href="#mission"
-            onClick={handleNavClick("mission")}
+          {/* Info Book (Far Right) */}
+          <button
+            onClick={() => travelToWorkspace(navigate, "/story", activeSection)}
+            className="cta cursor-pointer flex items-center gap-1.5"
+            data-tour="nav-infobook"
+            title="Read The Cosmic Chronicle Illustrated Storybook"
           >
-            Play mission
-          </a>
+            <BookOpen className="w-3.5 h-3.5 text-black" />
+            <span>Info Book</span>
+          </button>
 
           {/* Mobile hamburger button */}
           <button
@@ -179,6 +180,22 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Start Guided Tour</span>
             </button>
           )}
+
+          <div className="pt-2 border-t border-white/10 flex flex-col gap-2 mt-2">
+            <button
+              onClick={() => {
+                setOpen(false);
+                travelToWorkspace(navigate, "/story", activeSection);
+              }}
+              className="flex items-center justify-between p-3 rounded-lg border border-[var(--accent)]/40 bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20 text-base font-semibold transition-all cursor-pointer text-left"
+            >
+              <div className="flex items-center gap-3">
+                <BookOpen className="w-4 h-4 text-[var(--accent)]" />
+                <span>Info Book · The Cosmic Chronicle</span>
+              </div>
+              <span>↗</span>
+            </button>
+          </div>
         </div>
       </div>
     </>

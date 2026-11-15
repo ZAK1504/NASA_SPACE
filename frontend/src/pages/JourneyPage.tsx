@@ -9,21 +9,13 @@ import ChapterExplorer from "../components/showcase/ChapterExplorer";
 import ChapterTimeMachine from "../components/showcase/ChapterTimeMachine";
 import ChapterLabs from "../components/showcase/ChapterLabs";
 import ChapterMission from "../components/showcase/ChapterMission";
-import {
-  HomeToExplorerRibbon,
-  ExplorerToTimeMachineRibbon,
-  TimeMachineToLabsRibbon,
-  LabsToMissionRibbon,
-} from "../components/ui/SnakeRibbon";
-import {
-  HomeToExplorerTransition,
-  TimeMachineToLabsTransition,
-} from "../components/sections/ChapterTransition";
+import ChapterAbout from "../components/showcase/ChapterAbout";
 import { CommandPalette } from "../components/navigation/CommandPalette";
 import { CosmicCopilot } from "../components/assistant/CosmicCopilot";
 import { useGuidedTour } from "../hooks/useGuidedTour";
 import { useSmoothScroll, useReveal, useScrollVars } from "../lib/hooks";
-import { getJourneyReturnState, clearJourneyReturnState } from "../lib/journeyState";
+import { useSectionScrollLock } from "../hooks/useSectionScrollLock";
+import { getJourneyReturnState, clearJourneyReturnState, travelToWorkspace } from "../lib/journeyState";
 
 declare global {
   interface Window {
@@ -31,7 +23,7 @@ declare global {
   }
 }
 
-const CHAPTER_IDS = ["home", "explorer", "time-machine", "labs", "mission"];
+const CHAPTER_IDS = ["home", "explorer", "time-machine", "labs", "mission", "about"];
 
 export const JourneyPage: React.FC = () => {
   const location = useLocation();
@@ -46,6 +38,11 @@ export const JourneyPage: React.FC = () => {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { startTour } = useGuidedTour();
 
+  // Authoritative document title
+  useEffect(() => {
+    document.title = "sphereXplorer — Explore the Changing Universe";
+  }, []);
+
   // Scroll smoothly to a specific chapter
   const scrollToChapter = (chapterId: string) => {
     const el = document.getElementById(chapterId);
@@ -59,12 +56,39 @@ export const JourneyPage: React.FC = () => {
       window.history.replaceState(null, "", newHash);
     }
 
+    if (typeof (window as any).__journeyNavigateToChapter === "function") {
+      (window as any).__journeyNavigateToChapter(chapterId);
+      return;
+    }
+
+    const targetY = chapterId === "home" ? 0 : Math.max(0, el.offsetTop - 70);
+
     if (window.__lenis) {
-      window.__lenis.scrollTo(el, { offset: -70, duration: 1.2 });
+      window.__lenis.scrollTo(targetY, {
+        duration: 1.15,
+        easing: (t: number) => 1 - Math.pow(1 - t, 3.5),
+      });
     } else {
-      el.scrollIntoView({ behavior: "smooth" });
+      window.scrollTo({
+        top: targetY,
+        behavior: "smooth",
+      });
     }
   };
+
+  // High-Precision Section Scroll Lock Engine ("scroll a bit to other page, full page comes")
+  useSectionScrollLock({
+    chapters: CHAPTER_IDS,
+    activeChapter,
+    onChapterChange: (chapterId) => {
+      setActiveChapter(chapterId);
+      const newHash = `#${chapterId}`;
+      if (window.location.hash !== newHash) {
+        window.history.replaceState(null, "", newHash);
+      }
+    },
+    enabled: true,
+  });
 
   // Authoritative synchronous scroll restoration: runs BEFORE browser paint to prevent any visible scroll jumps
   useLayoutEffect(() => {
@@ -75,6 +99,9 @@ export const JourneyPage: React.FC = () => {
     const targetScrollY = location.state?.targetScrollY ?? savedState?.scrollY;
 
     if (restoreTarget) {
+      if (typeof (window as any).__resetJourneyScrollState === "function") {
+        (window as any).__resetJourneyScrollState();
+      }
       setActiveChapter(restoreTarget);
 
       let finalScroll = 0;
@@ -196,7 +223,23 @@ export const JourneyPage: React.FC = () => {
       if (el) observer.observe(el);
     });
 
-    return () => observer.disconnect();
+    const handleBottomScroll = () => {
+      const scrollY = window.scrollY;
+      const vh = window.innerHeight;
+      const totalH = document.documentElement.scrollHeight;
+      if (scrollY + vh >= totalH - 120) {
+        setActiveChapter("about");
+        if (window.location.hash !== "#about") {
+          window.history.replaceState(null, "", "#about");
+        }
+      }
+    };
+    window.addEventListener("scroll", handleBottomScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", handleBottomScroll);
+    };
   }, []);
 
   return (
@@ -218,40 +261,28 @@ export const JourneyPage: React.FC = () => {
         onSelectChapter={scrollToChapter}
       />
 
-      {/* 4. Continuous Storytelling Journey */}
+      {/* 4. Continuous Storytelling Journey (Zero Separators — Seamless Flow) */}
       <main className="flex-1 w-full relative z-10 flex flex-col">
         {/* Chapter 01 — Home: Meet SPHEREx */}
         <ChapterHome onScrollToExplorer={() => scrollToChapter("explorer")} />
 
-        {/* Ribbon 01 — Home to Explorer: Animated Snake Text Ribbon */}
-        <HomeToExplorerRibbon />
-
-        {/* Transition 01 — Home to Explorer: Departure into the Infrared */}
-        <HomeToExplorerTransition />
-
         {/* Chapter 02 — Explorer: See Beyond the Visible */}
         <ChapterExplorer onScrollToNext={() => scrollToChapter("time-machine")} />
-
-        {/* Ribbon 02 — Explorer to Time Machine: Animated Snake Text Ribbon */}
-        <ExplorerToTimeMachineRibbon />
 
         {/* Chapter 03 — Time Machine: Travel Through the Changing Sky */}
         <ChapterTimeMachine onScrollToNext={() => scrollToChapter("labs")} />
 
-        {/* Ribbon 03 — Time Machine to Labs: Animated Snake Text Ribbon */}
-        <TimeMachineToLabsRibbon />
-
-        {/* Transition 03 — Time Machine to Labs: Deceleration into Scientific Investigation */}
-        <TimeMachineToLabsTransition />
-
         {/* Chapter 04 — Labs: The Science of Discovery */}
         <ChapterLabs onScrollToNext={() => scrollToChapter("mission")} />
 
-        {/* Ribbon 04 — Labs to Mission: Animated Snake Text Ribbon */}
-        <LabsToMissionRibbon />
-
         {/* Chapter 05 — Mission: Your Discovery Begins */}
-        <ChapterMission onScrollToTop={() => scrollToChapter("home")} />
+        <ChapterMission
+          onScrollToTop={() => scrollToChapter("home")}
+          onScrollToNext={() => scrollToChapter("about")}
+        />
+
+        {/* Chapter 06 — About: Behind the Horizon */}
+        <ChapterAbout onScrollToTop={() => scrollToChapter("home")} />
       </main>
 
       {/* 5. Global Quick Command Palette (Ctrl+K / ⌘K) */}

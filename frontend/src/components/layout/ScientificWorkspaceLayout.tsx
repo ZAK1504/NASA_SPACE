@@ -4,6 +4,7 @@ import { ArrowLeft, Compass, Eye, Layers, FlaskConical, TrendingUp, Sparkles, Bo
 import { returnToJourney, travelBackToJourney } from "../../lib/journeyState";
 import { CosmicCopilot } from "../assistant/CosmicCopilot";
 import { useGuidedTour } from "../../hooks/useGuidedTour";
+import BrandWordmark from "../brand/BrandWordmark";
 
 export interface ScientificWorkspaceLayoutProps {
   title: string;
@@ -13,6 +14,7 @@ export interface ScientificWorkspaceLayoutProps {
   activeTool?: string;
   onSwitchTool?: (toolId: string) => void;
   tourId?: string;
+  showTour?: boolean;
   children: React.ReactNode;
 }
 
@@ -35,11 +37,21 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
   activeTool,
   onSwitchTool,
   tourId,
+  showTour = true,
   children,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { startTour, shouldAutoStart } = useGuidedTour();
+
+  // Set clean, professional document title for the workspace
+  React.useEffect(() => {
+    if (title) {
+      document.title = `sphereXplorer — ${title}`;
+    } else {
+      document.title = "sphereXplorer — Explore the Changing Universe";
+    }
+  }, [title]);
 
   // CRITICAL: Ensure every newly opened dedicated workspace always starts at the top
   React.useEffect(() => {
@@ -107,10 +119,9 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
 
           <div className="h-4 w-[1px] bg-white/10 hidden sm:block" />
 
-          {/* HORIZON Branding */}
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[var(--accent)]" />
-            <span className="font-medium text-xs sm:text-sm tracking-tight text-white">SPHEREx HORIZON</span>
+          {/* sphereXPLORER Continuous Wordmark with Original Symbol */}
+          <div className="flex items-center">
+            <BrandWordmark size="sm" />
           </div>
 
           {/* Workspace Title Badge */}
@@ -190,16 +201,18 @@ export const ScientificWorkspaceLayout: React.FC<ScientificWorkspaceLayoutProps>
           </div>
         )}
 
-        {/* Right: Page-Specific Tour Button (Manual replay always launches) */}
+        {/* Right: Actions */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => startTour(getResolvedTourId(), true)}
-            className="text-xs font-mono text-white/80 hover:text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full border border-white/10 hover:border-[var(--accent)] transition-all flex items-center gap-1.5 cursor-pointer"
-            title={`Start ${title} guided tour`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
-            <span>Tour</span>
-          </button>
+          {showTour && (
+            <button
+              onClick={() => startTour(getResolvedTourId(), true)}
+              className="text-xs font-mono text-white/80 hover:text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full border border-white/10 hover:border-[var(--accent)] transition-all flex items-center gap-1.5 cursor-pointer"
+              title={`Start ${title} guided tour`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <span>Tour</span>
+            </button>
+          )}
         </div>
       </header>
 

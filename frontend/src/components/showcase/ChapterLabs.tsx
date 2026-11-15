@@ -1,7 +1,7 @@
 import React from "react";
 import ChapterShowcase from "./ChapterShowcase";
 import LabsShowcaseVisual from "./LabsShowcaseVisual";
-import { FlaskConical, TrendingUp, ArrowRight, BookOpen, Layers } from "lucide-react";
+import { FlaskConical, TrendingUp, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { travelToWorkspace } from "../../lib/journeyState";
 
@@ -13,15 +13,15 @@ export const ChapterLabs: React.FC<ChapterLabsProps> = ({ onScrollToNext }) => {
   const navigate = useNavigate();
 
   const actions = (
-    <div data-tour="journey-labs-actions" className="flex flex-col gap-3.5 w-full">
+    <div data-tour="journey-labs-actions" className="flex flex-col gap-3 w-full">
       {/* Action 1: Discovery Lab */}
       <button
         onClick={() => travelToWorkspace(navigate, "/discovery-lab", "labs")}
-        className="group p-4 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
+        className="group p-3.5 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
       >
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-400/30 flex items-center justify-center text-purple-300 group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm">
-            <FlaskConical className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-400/30 flex items-center justify-center text-purple-300 group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm">
+            <FlaskConical className="w-4 h-4 group-hover:rotate-12 transition-transform" />
           </div>
           <div>
             <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
@@ -38,11 +38,11 @@ export const ChapterLabs: React.FC<ChapterLabsProps> = ({ onScrollToNext }) => {
       {/* Action 2: Light Curves */}
       <button
         onClick={() => travelToWorkspace(navigate, "/light-curves", "labs")}
-        className="group p-4 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
+        className="group p-3.5 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
       >
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-orange-500/15 border border-orange-400/30 flex items-center justify-center text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm">
-            <TrendingUp className="w-5 h-5 group-hover:scale-110 transition-transform" />
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-orange-500/15 border border-orange-400/30 flex items-center justify-center text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm">
+            <TrendingUp className="w-4 h-4 group-hover:scale-110 transition-transform" />
           </div>
           <div>
             <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors">

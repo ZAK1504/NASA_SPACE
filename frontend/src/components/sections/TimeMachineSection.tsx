@@ -1,5 +1,4 @@
 import React from "react";
-import Ribbon from "../ui/Ribbon";
 import { ClockCard, StatCard } from "../ui/Glass";
 import Icon from "../ui/Icon";
 import { TimeMachine } from "../../pages/TimeMachine";
@@ -41,8 +40,8 @@ export const TimeMachineSection: React.FC<TimeMachineSectionProps> = ({
         </div>
       </header>
 
-      {/* Decorative Ribbon Divider */}
-      <Ribbon className="stage-ribbon my-4" amp={22} />
+      {/* Hairline Divider (Zero Curly Waves) */}
+      <div className="w-full my-4 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
       {/* Genuine Time Machine Workspace */}
       <div className="time-machine-workspace w-full min-h-[620px] relative" data-lenis-prevent>

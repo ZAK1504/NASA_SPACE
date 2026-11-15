@@ -20,7 +20,7 @@ export const ChapterExplorer: React.FC<ChapterExplorerProps> = ({ onScrollToNext
   };
 
   const actions = (
-    <div data-tour="journey-explorer-actions" className="flex flex-col gap-3 w-full">
+    <div data-tour="journey-explorer-actions" className="flex flex-col gap-2.5 w-full">
       {/* Action 1: Sky Explorer */}
       <button
         onClick={() => handleOpenWorkspace("sky")}
@@ -28,11 +28,11 @@ export const ChapterExplorer: React.FC<ChapterExplorerProps> = ({ onScrollToNext
         onFocus={() => setHoveredMode("sky")}
         onMouseLeave={() => setHoveredMode(null)}
         onBlur={() => setHoveredMode(null)}
-        className="group p-4 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
+        className="group p-3.5 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
       >
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-400/30 flex items-center justify-center text-indigo-300 group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm">
-            <Compass className="w-5 h-5 group-hover:rotate-45 transition-transform" />
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-400/30 flex items-center justify-center text-indigo-300 group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm">
+            <Compass className="w-4 h-4 group-hover:rotate-45 transition-transform" />
           </div>
           <div>
             <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
@@ -51,11 +51,11 @@ export const ChapterExplorer: React.FC<ChapterExplorerProps> = ({ onScrollToNext
         onFocus={() => setHoveredMode("object")}
         onMouseLeave={() => setHoveredMode(null)}
         onBlur={() => setHoveredMode(null)}
-        className="group p-4 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
+        className="group p-3.5 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
       >
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-orange-500/15 border border-orange-400/30 flex items-center justify-center text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm">
-            <Eye className="w-5 h-5 group-hover:scale-110 transition-transform" />
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-orange-500/15 border border-orange-400/30 flex items-center justify-center text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm">
+            <Eye className="w-4 h-4 group-hover:scale-110 transition-transform" />
           </div>
           <div>
             <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors">
@@ -74,11 +74,11 @@ export const ChapterExplorer: React.FC<ChapterExplorerProps> = ({ onScrollToNext
         onFocus={() => setHoveredMode("spectral")}
         onMouseLeave={() => setHoveredMode(null)}
         onBlur={() => setHoveredMode(null)}
-        className="group p-4 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
+        className="group p-3.5 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-[var(--accent)] hover:shadow-[0_0_25px_rgba(244,162,114,0.18)] transition-all flex items-center justify-between cursor-pointer text-left w-full hover:-translate-y-0.5"
       >
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-400/30 flex items-center justify-center text-purple-300 group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm">
-            <Layers className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-400/30 flex items-center justify-center text-purple-300 group-hover:bg-[var(--accent)] group-hover:text-black group-hover:border-[var(--accent)] transition-all shadow-sm">
+            <Layers className="w-4 h-4 group-hover:rotate-12 transition-transform" />
           </div>
           <div>
             <div className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors">

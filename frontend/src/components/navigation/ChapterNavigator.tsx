@@ -12,6 +12,7 @@ export const CHAPTERS: ChapterDef[] = [
   { id: "time-machine", num: "03", label: "TIME" },
   { id: "labs", num: "04", label: "LABS" },
   { id: "mission", num: "05", label: "MISSION" },
+  { id: "about", num: "06", label: "ABOUT" },
 ];
 
 interface ChapterNavigatorProps {

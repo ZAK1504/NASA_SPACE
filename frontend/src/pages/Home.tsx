@@ -1,6 +1,5 @@
 import React from "react";
 import Satellite3D from "../components/ui/Satellite3D";
-import Ribbon from "../components/ui/Ribbon";
 import Pic from "../components/ui/Pic";
 import { ClockCard, ChannelsCard, StatCard } from "../components/ui/Glass";
 import { useScrollVars, useCountUp, useReveal } from "../lib/hooks";
@@ -135,9 +134,11 @@ export const Home: React.FC<HomeProps> = ({ onNavigateSection }) => {
           </div>
         </div>
 
-        {/* Visual Connector: The "LET'S EXPLORE" Animated Ribbon flowing through the scene */}
-        <div className="mission-ribbon-wrap w-full my-6 overflow-hidden">
-          <Ribbon className="mission-ribbon" amp={22} />
+        {/* Sleek Aerospace Divider (Zero Curly Waves) */}
+        <div className="w-full my-6 flex items-center justify-center gap-4">
+          <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)]" />
+          <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
         </div>
 
         {/* Cohesive Centered Mission HUD Grid (Zero Empty Space) */}

@@ -28,7 +28,6 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
 
     let destroyed = false;
     let cleanupRenderer: (() => void) | null = null;
-    let initIo: IntersectionObserver | null = null;
 
     const initRenderer = () => {
       if (destroyed || cleanupRenderer) return;
@@ -63,13 +62,57 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
       controls.dampingFactor = 0.05;
       controls.target.set(0, -0.12, 0);
 
+      // Support mobile touch scrolling vertically while rotating horizontally
+      renderer.domElement.style.touchAction = "pan-y";
+
       let isUserInteracting = false;
+      let lastInteractionEndTime = performance.now();
+
       controls.addEventListener("start", () => {
         isUserInteracting = true;
       });
       controls.addEventListener("end", () => {
         isUserInteracting = false;
+        lastInteractionEndTime = performance.now();
       });
+
+      // Robust interaction recovery: Handle interrupted drags, pointer leaves, window blurs, and pointer cancellation
+      const resetInteractionState = () => {
+        if (isUserInteracting) {
+          isUserInteracting = false;
+          lastInteractionEndTime = performance.now();
+        }
+        // Safely clear any stuck internal pointers in OrbitControls
+        try {
+          if ((controls as any)._pointers && (controls as any)._pointers.length > 0) {
+            (controls as any)._pointers.length = 0;
+            (controls as any)._pointerPositions = {};
+          }
+        } catch {
+          // ignore
+        }
+      };
+
+      window.addEventListener("pointerup", resetInteractionState, { capture: true });
+      window.addEventListener("pointercancel", resetInteractionState, { capture: true });
+      window.addEventListener("blur", resetInteractionState);
+      renderer.domElement.addEventListener("lostpointercapture", resetInteractionState);
+
+      // WebGL Context Loss & Restoration Listeners
+      const onContextLost = (e: Event) => {
+        e.preventDefault();
+        console.warn("Satellite3D: WebGL context lost");
+        cancelAnimationFrame(rafId);
+      };
+      const onContextRestored = () => {
+        console.log("Satellite3D: WebGL context restored");
+        const w = container.clientWidth || 600;
+        const h = container.clientHeight || 500;
+        renderer.setSize(w, h);
+        animate();
+      };
+      renderer.domElement.addEventListener("webglcontextlost", onContextLost, false);
+      renderer.domElement.addEventListener("webglcontextrestored", onContextRestored, false);
 
       // 4. Calibrated aerospace lighting
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
@@ -238,8 +281,10 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
         lastTime = now;
         const elapsed = (now - startTime) / 1000;
 
-        if (!isUserInteracting) {
-          idleYaw += delta * 0.15;
+        const timeSinceInteraction = (now - lastInteractionEndTime) / 1000;
+        if (!isUserInteracting && timeSinceInteraction > 0.15) {
+          const blend = Math.min(1, (timeSinceInteraction - 0.15) / 0.4);
+          idleYaw += delta * 0.15 * blend;
         }
 
         const targetYaw = yawRef.current;
@@ -266,10 +311,30 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
 
       window.addEventListener("resize", handleResize);
 
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const w = Math.round(entry.contentRect.width);
+          const h = Math.round(entry.contentRect.height);
+          if (w > 0 && h > 0 && !destroyed) {
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+          }
+        }
+      });
+      resizeObserver.observe(container);
+
       cleanupRenderer = () => {
         io.disconnect();
+        resizeObserver.disconnect();
         cancelAnimationFrame(rafId);
         window.removeEventListener("resize", handleResize);
+        window.removeEventListener("pointerup", resetInteractionState, { capture: true });
+        window.removeEventListener("pointercancel", resetInteractionState, { capture: true });
+        window.removeEventListener("blur", resetInteractionState);
+        renderer.domElement.removeEventListener("lostpointercapture", resetInteractionState);
+        renderer.domElement.removeEventListener("webglcontextlost", onContextLost);
+        renderer.domElement.removeEventListener("webglcontextrestored", onContextRestored);
         controls.dispose();
         renderer.dispose();
         if (renderer.domElement && renderer.domElement.parentNode) {
@@ -278,29 +343,16 @@ export const Satellite3D: React.FC<Satellite3DProps> = ({
       };
     };
 
-    // Viewport-deferred initialization: Use IntersectionObserver so offscreen mounts
-    // (e.g. returning to Explorer, Time Machine, Labs, or Mission) never instantiate
-    // heavy WebGL contexts or compile shaders until actually nearing the viewport!
-    initIo = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          initIo?.disconnect();
-          initIo = null;
-          initRenderer();
-        }
-      },
-      { rootMargin: "200px" }
-    );
-    initIo.observe(container);
+    // Initialize renderer reliably on mount: internal io pauses rendering when offscreen
+    initRenderer();
 
     return () => {
       destroyed = true;
-      if (initIo) initIo.disconnect();
       if (cleanupRenderer) cleanupRenderer();
     };
   }, [glbUrl]);
 
-  return <div ref={containerRef} className={`sat ${className}`} />;
+  return <div ref={containerRef} className={`satellite-canvas relative w-full h-full ${className}`} />;
 };
 
 export default Satellite3D;
