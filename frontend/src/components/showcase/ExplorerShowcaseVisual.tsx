@@ -740,7 +740,7 @@ export const ExplorerShowcaseVisual: React.FC<ExplorerShowcaseVisualProps> = ({
 
       {/* 4. Minimal Discreet Status Caption with generous clear space below the picture */}
       {activeMode === "sky" && !selectedTarget && (
-        <div className="mt-5 flex items-center gap-2 text-[10.5px] font-mono text-white/70 bg-black/75 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15 pointer-events-none whitespace-nowrap shadow-[0_0_20px_rgba(0,0,0,0.6)]">
+        <div className="mt-7 flex items-center gap-2 text-[10.5px] font-mono text-white/70 bg-black/75 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15 pointer-events-none whitespace-nowrap shadow-[0_0_20px_rgba(0,0,0,0.6)]">
           <Activity className="w-3.5 h-3.5 text-[#F4A272] animate-pulse" />
           <span>CELESTIAL DISCOVERY PATH · 5 Connected Infrared Science Targets</span>
         </div>
