@@ -85,30 +85,27 @@ export const About: React.FC<AboutProps> = ({ defaultReturnChapter = "mission" }
           </motion.div>
 
           <h1 className="about-hero-title">
-            <TextType text="Behind the Horizon" typingSpeed={70} delay={400} />
-            <br />
-            <span className="gradient-text">
-              <TextType text="From Curiosity to Discovery" typingSpeed={70} delay={1800} />
+            <span className="hero-headline-line block text-white font-extralight">
+              Behind the Horizon<span className="text-[var(--accent)] font-normal">.</span>
+            </span>
+            <span className="hero-headline-line block text-[var(--accent)] font-light mt-1 text-2xl sm:text-4xl lg:text-5xl">
+              From Curiosity to Discovery<span className="text-white font-extralight">.</span>
             </span>
           </h1>
 
           <AnimatedText
             text="We are Meteor Rizzlers, a student-led team from Kerala, India, building interactive experiences that bring real astronomical data closer to everyone."
             className="about-hero-description"
-            delay={0.8}
+            delay={0.4}
           />
 
-          {/* Hero Stats Grid */}
+          {/* Hero Stats Grid (Humble, balanced 3-stat scientific summary) */}
           <motion.div
             className="hero-stats-grid"
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.1 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
           >
-            <div className="hero-stat-card">
-              <div className="stat-number">TOP 45</div>
-              <div className="stat-label">2025 Global Finalist</div>
-            </div>
             <div className="hero-stat-card">
               <div className="stat-number">102</div>
               <div className="stat-label">Infrared Channels</div>
@@ -375,67 +372,81 @@ export const About: React.FC<AboutProps> = ({ defaultReturnChapter = "mission" }
         </div>
       </section>
 
-      {/* Earth from Space / Cosmic Infrared Panorama Section */}
-      <section className="earth-from-space">
+      {/* Full-Screen Edge-to-Edge Astronomical Panorama Finale */}
+      <section className="about-finale relative w-full min-h-[calc(100vh-64px)] flex items-center justify-center overflow-hidden border-t border-white/10">
         <motion.div
-          className="earth-container"
-          initial={{ opacity: 0, scale: 0.85 }}
+          className="absolute inset-0 w-full h-full"
+          initial={{ opacity: 0, scale: 1.08 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 1.2 }}
+          transition={{ duration: 1.3, ease: "easeOut" }}
         >
-          <div className="earth-image-wrapper">
-            <img
-              src="/spherex_dr1_allsky_rgb.png"
-              alt="Authentic NASA SPHEREx All-Sky Infrared Panorama"
-              className="earth-image"
-            />
-            <div className="earth-overlay">
-              <motion.h2
-                className="earth-title"
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-              >
-                Beyond the Horizon Lies Discovery
-              </motion.h2>
-              <motion.p
-                className="earth-description"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: 0.5 }}
-              >
-                The data is real. The questions are yours. The next discovery is waiting.
-              </motion.p>
+          <img
+            src="/spherex_dr1_allsky_rgb.png"
+            alt="Authentic NASA SPHEREx All-Sky Infrared Panorama"
+            className="w-full h-full object-cover object-center filter brightness-[0.55] contrast-[1.15]"
+          />
+          {/* Subtle gradient vignette for readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/70 pointer-events-none" />
+        </motion.div>
 
-              {/* Dual Action CTAs */}
-              <motion.div
-                className="flex flex-col sm:flex-row items-center justify-center gap-4"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: 0.7 }}
-              >
-                <button
-                  onClick={handleReturnToJourney}
-                  className="h-12 px-6 rounded-2xl bg-gradient-to-r from-[#f4a272] to-[#ff7b3d] text-black font-semibold text-sm hover:brightness-110 transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(244,162,114,0.3)] hover:shadow-[0_0_35px_rgba(244,162,114,0.5)] hover:-translate-y-0.5"
-                >
-                  <ArrowLeft className="w-4 h-4 text-black" />
-                  <span>Return to Journey</span>
-                </button>
-                <button
-                  onClick={handleOpenExplorer}
-                  className="h-12 px-6 rounded-2xl border border-white/20 bg-white/[0.08] hover:bg-white/[0.15] hover:border-[var(--accent)] text-white font-semibold text-sm transition-all inline-flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-0.5 shadow-sm"
-                >
-                  <Compass className="w-4 h-4 text-[var(--accent)]" />
-                  <span>Explore the Sky</span>
-                  <ArrowRight className="w-4 h-4 text-white/50" />
-                </button>
-              </motion.div>
-            </div>
-          </div>
+        <motion.div
+          className="relative z-10 max-w-3xl mx-auto px-6 py-20 text-center flex flex-col items-center"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-60px" }}
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.22, delayChildren: 0.2 },
+            },
+          }}
+        >
+          <motion.h2
+            variants={{
+              hidden: { opacity: 0, y: 35 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
+            }}
+            className="text-4xl sm:text-6xl lg:text-7xl font-extralight tracking-tight text-white mb-6 leading-tight"
+          >
+            Beyond the Horizon <span className="text-[var(--accent)] font-normal">Lies Discovery.</span>
+          </motion.h2>
+
+          <motion.p
+            variants={{
+              hidden: { opacity: 0, y: 25 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
+            }}
+            className="text-base sm:text-xl text-white/80 font-light max-w-xl mx-auto mb-10 leading-relaxed drop-shadow"
+          >
+            The data is real. The questions are yours. The next discovery is waiting.
+          </motion.p>
+
+          {/* Staggered Dual Action CTAs */}
+          <motion.div
+            variants={{
+              hidden: { opacity: 0, y: 20 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
+            }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto"
+          >
+            <button
+              onClick={handleReturnToJourney}
+              className="w-full sm:w-auto h-12 px-7 rounded-2xl bg-gradient-to-r from-[#f4a272] to-[#ff7b3d] text-black font-semibold text-sm hover:brightness-110 transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(244,162,114,0.35)] hover:shadow-[0_0_35px_rgba(244,162,114,0.55)] hover:-translate-y-0.5"
+            >
+              <ArrowLeft className="w-4 h-4 text-black" />
+              <span>Return to Journey</span>
+            </button>
+            <button
+              onClick={handleOpenExplorer}
+              className="w-full sm:w-auto h-12 px-7 rounded-2xl border border-white/25 bg-white/[0.08] hover:bg-white/[0.15] hover:border-[var(--accent)] text-white font-semibold text-sm transition-all inline-flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-0.5 shadow-sm backdrop-blur-md"
+            >
+              <Compass className="w-4 h-4 text-[var(--accent)]" />
+              <span>Explore the Sky</span>
+              <ArrowRight className="w-4 h-4 text-white/50" />
+            </button>
+          </motion.div>
         </motion.div>
       </section>
 

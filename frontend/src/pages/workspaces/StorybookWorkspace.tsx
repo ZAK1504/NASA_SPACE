@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import { travelBackToJourney, travelToWorkspace } from "../../lib/journeyState";
+import BrandWordmark from "../../components/brand/BrandWordmark";
 
 export const StorybookWorkspace: React.FC = () => {
   const navigate = useNavigate();
@@ -24,9 +25,9 @@ export const StorybookWorkspace: React.FC = () => {
   };
 
   return (
-    <div className="storybook-workspace min-h-screen bg-[#08080C] text-[#f3efe8] flex flex-col relative selection:bg-[#f4a272] selection:text-black">
+    <div className="story-workspace w-full h-[100dvh] h-screen min-h-0 bg-[#08080C] text-[#f3efe8] flex flex-col relative selection:bg-[#f4a272] selection:text-black overflow-hidden">
       {/* 1. Dedicated Scientific Top Bar */}
-      <header className="sticky top-0 z-50 w-full h-16 border-b border-white/10 bg-black/90 backdrop-blur-xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <header className="story-workspace-header flex-none w-full h-16 border-b border-white/10 bg-black/95 backdrop-blur-xl px-4 sm:px-6 lg:px-8 flex items-center justify-between z-50">
         {/* Left: Back to Journey & Brand */}
         <div className="flex items-center gap-3 sm:gap-4">
           <button
@@ -43,7 +44,7 @@ export const StorybookWorkspace: React.FC = () => {
 
           <div className="h-4 w-[1px] bg-white/10 hidden sm:block" />
 
-          {/* sphereXplorer Wordmark */}
+          {/* sphereXPLORER Wordmark */}
           <div className="flex items-center gap-2">
             <svg viewBox="-12 -12 24 24" width="20" height="20" aria-hidden="true">
               <circle r="9" fill="none" stroke="currentColor" strokeWidth="1.2" />
@@ -57,11 +58,7 @@ export const StorybookWorkspace: React.FC = () => {
               />
               <circle r="2.2" fill="currentColor" />
             </svg>
-            <span className="font-semibold text-xs sm:text-sm tracking-tight text-white inline-flex items-baseline">
-              <span className="text-[#f3efe8]">sphere</span>
-              <span className="text-[1.35em] font-extrabold leading-none inline-block mx-0.5 text-[var(--accent)] drop-shadow-[0_0_8px_rgba(244,162,114,0.5)]">X</span>
-              <span className="text-[#f3efe8]">plorer</span>
-            </span>
+            <BrandWordmark size="sm" />
           </div>
 
           {/* Storybook Title Badge */}
@@ -85,12 +82,12 @@ export const StorybookWorkspace: React.FC = () => {
         </div>
       </header>
 
-      {/* 2. Embedded Authoritative Illustrated Storybook */}
-      <main className="flex-1 w-full h-[calc(100vh-64px)] relative bg-[#070910]">
+      {/* 2. Embedded Authoritative Illustrated Storybook - Full Viewport Filling */}
+      <main className="story-workspace-content flex-1 w-full min-h-0 min-w-0 relative bg-[#070910] overflow-hidden">
         <iframe
           src="/storybook/index.html"
           title="SPHEREx · The Universe in 102 Colours"
-          className="w-full h-full border-0 block"
+          className="storybook-frame absolute inset-0 w-full h-full border-0 block"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         />
       </main>

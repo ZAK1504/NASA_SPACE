@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { HelpCircle, Compass, Menu, X, Users, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { travelToWorkspace } from "../lib/journeyState";
+import BrandWordmark from "./brand/BrandWordmark";
 
 export interface NavDestination {
   id: string;
@@ -70,7 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <header className={`nav ${solid ? "solid" : ""}`} data-tour="navigation-header">
         {/* Brand / Logo */}
         <a
-          className="brand"
+          className="brand flex items-center gap-2"
           href="#home"
           onClick={handleNavClick("home")}
           aria-label="sphereXplorer home"
@@ -87,11 +88,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             />
             <circle r="2.2" fill="currentColor" />
           </svg>
-          <span className="font-semibold tracking-tight inline-flex items-baseline text-base sm:text-lg">
-            <span className="text-[#f3efe8]">sphere</span>
-            <span className="text-[1.35em] font-extrabold leading-none inline-block mx-0.5 text-[var(--accent)] drop-shadow-[0_0_10px_rgba(244,162,114,0.5)]">X</span>
-            <span className="text-[#f3efe8]">plorer</span>
-          </span>
+          <BrandWordmark size="md" />
         </a>
 
         {/* Desktop Persistent Top Navigation (Exact 5 Destinations) */}

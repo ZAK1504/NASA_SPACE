@@ -131,19 +131,6 @@ export const JOURNEY_MILESTONES: Milestone[] = [
     ],
   },
   {
-    year: "2025",
-    badge: "GLOBAL HONORS",
-    title: "NASA Space Apps Global Finalist",
-    subtitle: "Selected Among the Top 45 Finalist Teams Worldwide",
-    description:
-      "Out of thousands of projects submitted globally by participants from over 150 countries, Meteor Rizzlers was selected as an official NASA Space Apps 2025 Global Finalist — one of only 45 teams globally recognized for scientific merit, design excellence, and educational impact.",
-    highlights: [
-      "Official Global Finalist distinction from NASA Space Apps Challenge",
-      "Recognized for scientific accuracy and accessible simulation design",
-      "Strengthened our conviction that open science should belong to everyone",
-    ],
-  },
-  {
     year: "2026",
     badge: "THE NEW FRONTIER",
     title: "sphereXplorer",

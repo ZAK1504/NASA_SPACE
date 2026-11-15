@@ -93,7 +93,7 @@ export const TOURS: Record<string, TourDefinition> = {
         element: '[data-tour="journey-about-section"]',
         popover: {
           title: '👥 Chapter 06: Behind the Horizon',
-          description: 'Meet the team behind sphereXplorer—Meteor Rizzlers from Kerala, India. Explore verified creator profiles, our 2025 NASA Space Apps Global Finalist journey, why we built the platform, and the open-science tech stack.',
+          description: 'Meet the team behind sphereXplorer—Meteor Rizzlers from Kerala, India. Explore creator profiles, our open-science journey from NEO Tracker to sphereXplorer, why we built the platform, and the full technology stack.',
           side: 'top',
           align: 'center',
         },

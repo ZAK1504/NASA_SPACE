@@ -8,10 +8,13 @@ export interface UseSectionScrollLockOptions {
 }
 
 /**
- * Intelligent Section Scroll Lock Engine with Halfway Auto-Scroll.
- * 1. If user scrolls a bit, it smoothly drives to the next/prev full chapter page.
- * 2. If the user stops halfway between chapters (>= 45%), it automatically scrolls down to lock the next chapter in view.
- * 3. Eliminates intermediate drift so every page rests centrally locked and completely in view.
+ * Controlled Chapter-by-Chapter Journey Scroll Lock.
+ *
+ * Requirements:
+ * 1. Single deliberate scroll moves strictly to adjacent chapter (no multi-chapter skipping).
+ * 2. Momentum / inertia rejection: after initiating transition, ignore residual wheel/trackpad events until quiet.
+ * 3. Taller sections (e.g., About) scroll naturally until reaching the boundary before triggering chapter change.
+ * 4. No intermediate halfway auto-scroll timers causing uncontrolled skips.
  */
 export function useSectionScrollLock({
   chapters,
@@ -19,7 +22,7 @@ export function useSectionScrollLock({
   onChapterChange,
   enabled = true,
 }: UseSectionScrollLockOptions) {
-  const isLockedRef = useRef(false);
+  const isTransitioningRef = useRef(false);
   const activeChapterRef = useRef(activeChapter);
   activeChapterRef.current = activeChapter;
 
@@ -28,11 +31,8 @@ export function useSectionScrollLock({
 
   const accumulatedDeltaRef = useRef(0);
   const clearDeltaTimerRef = useRef<number | null>(null);
-  const scrollSettleTimerRef = useRef<number | null>(null);
-  const unlockTimerRef = useRef<number | null>(null);
-
-  const lastScrollYRef = useRef(0);
-  const scrollingDownRef = useRef(true);
+  const transitionCooldownTimerRef = useRef<number | null>(null);
+  const lastWheelTimeRef = useRef(0);
 
   useEffect(() => {
     if (!enabled) return;
@@ -45,43 +45,15 @@ export function useSectionScrollLock({
       return Math.max(0, el.offsetTop - 70);
     };
 
-    // Helper: navigate to chapter with Lenis or native smooth scroll
-    const scrollToChapterIndex = (targetIdx: number) => {
-      const targetId = chaptersRef.current[targetIdx];
-      if (!targetId) return;
-
-      isLockedRef.current = true;
-      activeChapterRef.current = targetId;
-      onChapterChange?.(targetId);
-
-      const targetY = getChapterScrollTarget(targetId);
-
-      if (window.__lenis) {
-        window.__lenis.scrollTo(targetY, {
-          duration: 1.15,
-          lock: true,
-          easing: (t: number) => 1 - Math.pow(1 - t, 3.5),
-          onComplete: () => {
-            isLockedRef.current = false;
-            accumulatedDeltaRef.current = 0;
-          },
-        });
-      } else {
-        window.scrollTo({
-          top: targetY,
-          behavior: "smooth",
-        });
-      }
-
-      // Safety fallback unlock in case onComplete isn't called or Lenis is disabled
-      if (unlockTimerRef.current) window.clearTimeout(unlockTimerRef.current);
-      unlockTimerRef.current = window.setTimeout(() => {
-        isLockedRef.current = false;
-        accumulatedDeltaRef.current = 0;
-      }, 1200);
+    // Helper: get bounding info for chapter (top, height, bottom)
+    const getChapterBounds = (chapterId: string) => {
+      const top = getChapterScrollTarget(chapterId);
+      const el = document.getElementById(chapterId);
+      const height = el ? el.offsetHeight : window.innerHeight;
+      return { top, height, bottom: top + height };
     };
 
-    // Helper: get current chapter index from actual scroll position
+    // Helper: find current chapter based on scroll position
     const getCurrentChapterIndex = (): number => {
       const chs = chaptersRef.current;
       const scrollY = window.scrollY;
@@ -89,8 +61,8 @@ export function useSectionScrollLock({
       let minDistance = Infinity;
 
       for (let i = 0; i < chs.length; i++) {
-        const targetY = getChapterScrollTarget(chs[i]);
-        const dist = Math.abs(scrollY - targetY);
+        const { top } = getChapterBounds(chs[i]);
+        const dist = Math.abs(scrollY - top);
         if (dist < minDistance) {
           minDistance = dist;
           closestIdx = i;
@@ -99,60 +71,53 @@ export function useSectionScrollLock({
       return closestIdx;
     };
 
-    // 1. Halfway Auto-Scroll Detection on Scroll Settle:
-    // If user opens halfway to the next page, or scrolls a bit forward, automatically scroll to lock the chapter in view!
-    const handleScrollSettle = () => {
-      if (isLockedRef.current) return;
-
-      const scrollY = window.scrollY;
+    // Helper: navigate strictly to adjacent chapter
+    const transitionToChapter = (targetIdx: number) => {
       const chs = chaptersRef.current;
-      const targets = chs.map((id) => getChapterScrollTarget(id));
+      const safeIdx = Math.max(0, Math.min(chs.length - 1, targetIdx));
+      const targetId = chs[safeIdx];
+      if (!targetId) return;
 
-      // If user is already deep inside the final tall section (About), allow natural browsing without settle interruption
-      if (targets.length > 0 && scrollY >= targets[targets.length - 1] - 20) {
-        return;
-      }
+      isTransitioningRef.current = true;
+      activeChapterRef.current = targetId;
+      onChapterChange?.(targetId);
 
-      // Find the pair of chapters [i, i+1] current scroll is between
-      for (let i = 0; i < targets.length - 1; i++) {
-        const yTop = targets[i];
-        const yBottom = targets[i + 1];
+      const targetY = getChapterScrollTarget(targetId);
 
-        if (scrollY > yTop + 10 && scrollY < yBottom - 10) {
-          const span = yBottom - yTop;
-          const progress = (scrollY - yTop) / span;
-
-          // User intent: "if i scroll a bit to other page the full page comes"
-          // "if i open half way it should automatically scroll down"
-          if (progress >= 0.45 || (scrollingDownRef.current && progress >= 0.18)) {
-            scrollToChapterIndex(i + 1);
-          } else if (!scrollingDownRef.current && progress <= 0.82) {
-            scrollToChapterIndex(i);
-          } else if (progress >= 0.5) {
-            scrollToChapterIndex(i + 1);
-          } else {
-            scrollToChapterIndex(i);
-          }
-          break;
+      if (window.__lenis) {
+        window.__lenis.scrollTo(targetY, {
+          duration: 0.85,
+          lock: true,
+          easing: (t: number) => 1 - Math.pow(1 - t, 3),
+          onComplete: () => {
+            // Keep locked for short post-transition quiet period to consume residual inertia
+            if (transitionCooldownTimerRef.current) {
+              window.clearTimeout(transitionCooldownTimerRef.current);
+            }
+            transitionCooldownTimerRef.current = window.setTimeout(() => {
+              isTransitioningRef.current = false;
+              accumulatedDeltaRef.current = 0;
+            }, 250);
+          },
+        });
+      } else {
+        window.scrollTo({
+          top: targetY,
+          behavior: "smooth",
+        });
+        if (transitionCooldownTimerRef.current) {
+          window.clearTimeout(transitionCooldownTimerRef.current);
         }
+        transitionCooldownTimerRef.current = window.setTimeout(() => {
+          isTransitioningRef.current = false;
+          accumulatedDeltaRef.current = 0;
+        }, 900);
       }
     };
 
-    const onScroll = () => {
-      const currentY = window.scrollY;
-      scrollingDownRef.current = currentY >= lastScrollYRef.current;
-      lastScrollYRef.current = currentY;
-
-      if (isLockedRef.current) return;
-      if (scrollSettleTimerRef.current) {
-        window.clearTimeout(scrollSettleTimerRef.current);
-      }
-      scrollSettleTimerRef.current = window.setTimeout(handleScrollSettle, 120);
-    };
-
-    // 2. Wheel Event Listener (Mouse Wheel & Trackpad)
+    // Wheel Event Listener (Precision Trackpads & Mouse Wheels)
     const handleWheel = (e: WheelEvent) => {
-      // Allow native scrolling inside interactive canvas, tour popovers, or copilot chat
+      // Allow internal scrolling in interactive canvas, modal popovers, copilot chat, storybook, etc.
       const target = e.target as HTMLElement | null;
       if (
         target &&
@@ -160,17 +125,32 @@ export function useSectionScrollLock({
           target.closest(".satellite-canvas") ||
           target.closest(".driver-popover") ||
           target.closest(".cosmic-copilot") ||
+          target.closest(".story-workspace") ||
+          target.closest("iframe") ||
           target.closest('input:not([type="range"]), select, textarea'))
       ) {
         return;
       }
 
-      if (isLockedRef.current) {
+      const now = performance.now();
+      lastWheelTimeRef.current = now;
+
+      // If already transitioning, consume wheel event to avoid browser native jumping
+      if (isTransitioningRef.current) {
         e.preventDefault();
         return;
       }
 
-      accumulatedDeltaRef.current += e.deltaY;
+      // Normalize delta across modes (pixels vs lines vs pages)
+      const delta =
+        e.deltaMode === 1
+          ? e.deltaY * 18
+          : e.deltaMode === 2
+          ? e.deltaY * window.innerHeight
+          : e.deltaY;
+
+      // Accumulate delta
+      accumulatedDeltaRef.current += delta;
 
       if (clearDeltaTimerRef.current) {
         window.clearTimeout(clearDeltaTimerRef.current);
@@ -179,31 +159,47 @@ export function useSectionScrollLock({
         accumulatedDeltaRef.current = 0;
       }, 180);
 
-      // Trigger threshold: subtle wheel flick or notch initiates smooth page lock
-      const THRESHOLD = 35;
+      // Threshold to detect deliberate swipe/scroll gesture (reject micro-jitters)
+      const WHEEL_THRESHOLD = 50;
 
-      if (Math.abs(accumulatedDeltaRef.current) >= THRESHOLD) {
-        const dir = accumulatedDeltaRef.current > 0 ? 1 : -1;
+      if (Math.abs(accumulatedDeltaRef.current) >= WHEEL_THRESHOLD) {
+        const direction = accumulatedDeltaRef.current > 0 ? 1 : -1;
         const currentIdx = getCurrentChapterIndex();
+        const currentChapterId = chaptersRef.current[currentIdx];
+        const { top, height } = getChapterBounds(currentChapterId);
+        const viewportHeight = window.innerHeight;
+        const scrollY = window.scrollY;
 
-        // If scrolling up while deep inside a tall section like About, allow free native scroll up until reaching the top of that section
-        if (dir < 0) {
-          const currentTargetY = getChapterScrollTarget(chaptersRef.current[currentIdx]);
-          if (window.scrollY > currentTargetY + 120) {
-            return;
+        // Check if current chapter is taller than viewport (e.g. About or expanded sections)
+        const isTallChapter = height > viewportHeight + 40;
+
+        if (isTallChapter) {
+          const maxScrollInChapter = top + height - viewportHeight;
+          if (direction > 0) {
+            // Scrolling down: only advance if user has scrolled to the bottom of the tall chapter
+            if (scrollY < maxScrollInChapter - 30) {
+              // Allow natural scrolling down inside the chapter
+              return;
+            }
+          } else {
+            // Scrolling up: only retreat if user has scrolled back to the top of the tall chapter
+            if (scrollY > top + 30) {
+              // Allow natural scrolling up inside the chapter
+              return;
+            }
           }
         }
 
-        const nextIdx = Math.max(0, Math.min(chaptersRef.current.length - 1, currentIdx + dir));
-
-        if (nextIdx !== currentIdx) {
+        const nextIdx = currentIdx + direction;
+        if (nextIdx >= 0 && nextIdx < chaptersRef.current.length) {
           e.preventDefault();
-          scrollToChapterIndex(nextIdx);
+          accumulatedDeltaRef.current = 0;
+          transitionToChapter(nextIdx);
         }
       }
     };
 
-    // 3. Touch Gesture Listener (Mobile & Tablet Swipes)
+    // Touch Gesture Listener (Mobile Swipes)
     let touchStartY = 0;
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 1) {
@@ -212,35 +208,47 @@ export function useSectionScrollLock({
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (isLockedRef.current) return;
+      if (isTransitioningRef.current) return;
       const target = e.target as HTMLElement | null;
       if (
         target &&
         (target.closest("[data-lenis-prevent]") ||
           target.closest(".satellite-canvas") ||
-          target.closest(".cosmic-copilot"))
+          target.closest(".cosmic-copilot") ||
+          target.closest("iframe"))
       ) {
         return;
       }
 
       const touchEndY = e.changedTouches[0]?.clientY ?? touchStartY;
       const deltaY = touchStartY - touchEndY;
-      const TOUCH_THRESHOLD = 32;
+      const TOUCH_THRESHOLD = 45;
 
       if (Math.abs(deltaY) >= TOUCH_THRESHOLD) {
-        const dir = deltaY > 0 ? 1 : -1;
+        const direction = deltaY > 0 ? 1 : -1;
         const currentIdx = getCurrentChapterIndex();
-        const nextIdx = Math.max(0, Math.min(chaptersRef.current.length - 1, currentIdx + dir));
+        const currentChapterId = chaptersRef.current[currentIdx];
+        const { top, height } = getChapterBounds(currentChapterId);
+        const viewportHeight = window.innerHeight;
+        const scrollY = window.scrollY;
 
-        if (nextIdx !== currentIdx) {
-          scrollToChapterIndex(nextIdx);
+        const isTallChapter = height > viewportHeight + 40;
+        if (isTallChapter) {
+          const maxScrollInChapter = top + height - viewportHeight;
+          if (direction > 0 && scrollY < maxScrollInChapter - 30) return;
+          if (direction < 0 && scrollY > top + 30) return;
+        }
+
+        const nextIdx = currentIdx + direction;
+        if (nextIdx >= 0 && nextIdx < chaptersRef.current.length) {
+          transitionToChapter(nextIdx);
         }
       }
     };
 
-    // 4. Keyboard Arrow & Page Navigation
+    // Keyboard Arrow & Page Navigation
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isLockedRef.current) return;
+      if (isTransitioningRef.current) return;
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
 
@@ -248,29 +256,27 @@ export function useSectionScrollLock({
         e.preventDefault();
         const currentIdx = getCurrentChapterIndex();
         const nextIdx = Math.min(chaptersRef.current.length - 1, currentIdx + 1);
-        if (nextIdx !== currentIdx) scrollToChapterIndex(nextIdx);
+        if (nextIdx !== currentIdx) transitionToChapter(nextIdx);
       } else if (e.key === "ArrowUp" || e.key === "PageUp") {
         e.preventDefault();
         const currentIdx = getCurrentChapterIndex();
         const nextIdx = Math.max(0, currentIdx - 1);
-        if (nextIdx !== currentIdx) scrollToChapterIndex(nextIdx);
+        if (nextIdx !== currentIdx) transitionToChapter(nextIdx);
       }
     };
 
-    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("wheel", handleWheel, { passive: false });
     window.addEventListener("touchstart", handleTouchStart, { passive: true });
     window.addEventListener("touchend", handleTouchEnd, { passive: true });
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("wheel", handleWheel);
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchend", handleTouchEnd);
       window.removeEventListener("keydown", handleKeyDown);
       if (clearDeltaTimerRef.current) window.clearTimeout(clearDeltaTimerRef.current);
-      if (scrollSettleTimerRef.current) window.clearTimeout(scrollSettleTimerRef.current);
+      if (transitionCooldownTimerRef.current) window.clearTimeout(transitionCooldownTimerRef.current);
     };
   }, [enabled, onChapterChange]);
 }

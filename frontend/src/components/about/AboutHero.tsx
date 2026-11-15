@@ -61,12 +61,8 @@ export const AboutHero: React.FC<AboutHeroProps> = ({ onScrollToTeam }) => {
           Built on curiosity. Powered by open science.
         </p>
 
-        {/* Key Metrics Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 w-full max-w-3xl mb-12">
-          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-sm text-center">
-            <span className="text-2xl sm:text-3xl font-light text-white font-mono block">TOP 45</span>
-            <span className="text-[10px] sm:text-xs font-mono text-white/50 tracking-wider uppercase">2025 Global Finalist</span>
-          </div>
+        {/* Key Metrics Strip (Humble, balanced 3-stat scientific summary) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full max-w-2xl mb-12">
           <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-sm text-center">
             <span className="text-2xl sm:text-3xl font-light text-[var(--accent)] font-mono block">102</span>
             <span className="text-[10px] sm:text-xs font-mono text-white/50 tracking-wider uppercase">Infrared Channels</span>
