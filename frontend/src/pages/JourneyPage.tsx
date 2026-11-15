@@ -9,8 +9,6 @@ import ChapterExplorer from "../components/showcase/ChapterExplorer";
 import ChapterTimeMachine from "../components/showcase/ChapterTimeMachine";
 import ChapterLabs from "../components/showcase/ChapterLabs";
 import ChapterMission from "../components/showcase/ChapterMission";
-import HomeToExplorerParallaxTransition from "../components/transitions/HomeToExplorerParallaxTransition";
-import ChapterAtmosphericSeparator from "../components/transitions/ChapterAtmosphericSeparator";
 import { CommandPalette } from "../components/navigation/CommandPalette";
 import { CosmicCopilot } from "../components/assistant/CosmicCopilot";
 import { useGuidedTour } from "../hooks/useGuidedTour";
@@ -225,52 +223,19 @@ export const JourneyPage: React.FC = () => {
         onSelectChapter={scrollToChapter}
       />
 
-      {/* 4. Continuous Storytelling Journey */}
+      {/* 4. Continuous Storytelling Journey (Zero Separators — Seamless Flow) */}
       <main className="flex-1 w-full relative z-10 flex flex-col">
         {/* Chapter 01 — Home: Meet SPHEREx */}
         <ChapterHome onScrollToExplorer={() => scrollToChapter("explorer")} />
 
-        {/* Transition 01 — Home to Explorer: Cinematic Parallax Cosmic Transition (Zero Curly Waves) */}
-        <HomeToExplorerParallaxTransition />
-
         {/* Chapter 02 — Explorer: See Beyond the Visible */}
         <ChapterExplorer onScrollToNext={() => scrollToChapter("time-machine")} />
-
-        {/* Transition 02 — Explorer to Time Machine: Atmospheric Transit Separator */}
-        <ChapterAtmosphericSeparator
-          fromChapter="explorer"
-          toChapter="time-machine"
-          fromNumber="02"
-          toNumber="03"
-          label="TRANSIT TO TIME DOMAIN · 2-YEAR BASELINE"
-          accentColor="#38bdf8"
-        />
 
         {/* Chapter 03 — Time Machine: Travel Through the Changing Sky */}
         <ChapterTimeMachine onScrollToNext={() => scrollToChapter("labs")} />
 
-        {/* Transition 03 — Time Machine to Labs: Atmospheric Transit Separator */}
-        <ChapterAtmosphericSeparator
-          fromChapter="time-machine"
-          toChapter="labs"
-          fromNumber="03"
-          toNumber="04"
-          label="DECELERATION INTO DISCOVERY LAB · DIFFERENCE IMAGING"
-          accentColor="#a855f7"
-        />
-
         {/* Chapter 04 — Labs: The Science of Discovery */}
         <ChapterLabs onScrollToNext={() => scrollToChapter("mission")} />
-
-        {/* Transition 04 — Labs to Mission: Atmospheric Transit Separator */}
-        <ChapterAtmosphericSeparator
-          fromChapter="labs"
-          toChapter="mission"
-          fromNumber="04"
-          toNumber="05"
-          label="ALL-SKY CITIZEN SCIENCE · HORIZON MISSION"
-          accentColor="#f4a272"
-        />
 
         {/* Chapter 05 — Mission: Your Discovery Begins */}
         <ChapterMission onScrollToTop={() => scrollToChapter("home")} />

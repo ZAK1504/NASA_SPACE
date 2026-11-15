@@ -13,12 +13,13 @@ export interface ChapterShowcaseProps {
   dataTour?: string;
   nextChapterCue?: { id: string; label: string; number: string };
   onScrollToNext?: (id: string) => void;
+  isActive?: boolean;
 }
 
 /**
- * Reusable two-column product showcase section inspired by ZENVYX service showcase pattern.
- * Features massive display typography, small numbered label, concise narrative, prominent CTAs,
- * an interactive visual centerpiece on the opposite side, and subtle next-chapter scroll cues.
+ * Centrally Aligned Cinematic Chapter Showcase.
+ * All typography (headlines, numbers, subtitles, narratives), visual centerpieces,
+ * and action CTA buttons are symmetrically, centrally aligned with smooth page-to-page transitions.
  */
 export const ChapterShowcase: React.FC<ChapterShowcaseProps> = ({
   id,
@@ -37,61 +38,58 @@ export const ChapterShowcase: React.FC<ChapterShowcaseProps> = ({
     <section
       id={id}
       data-tour={dataTour}
-      className={`chapter-showcase w-full min-h-[calc(100vh-76px)] py-8 sm:py-12 lg:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center relative z-10 ${className}`}
+      className={`chapter-showcase w-full min-h-[calc(100vh-70px)] py-10 sm:py-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col justify-center items-center text-center relative z-10 transition-all duration-700 ease-out select-none ${className}`}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center w-full my-auto">
-        {/* Left Side: Numbered Label, Massive Typography, Subtitle, Narrative, CTAs */}
-        <div className="lg:col-span-5 flex flex-col justify-center">
-          {/* Chapter Number & Label */}
-          <div className="flex items-center gap-2 mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)]" />
-            <p className="font-mono text-xs text-[var(--accent)] tracking-widest uppercase">
-              {numberLabel}
-            </p>
-          </div>
-
-          {/* Massive Expressive Display Headline */}
-          <h2 className="text-5xl sm:text-7xl lg:text-8xl font-extralight tracking-tighter text-white uppercase leading-none mb-4">
-            {displayTitle}
-          </h2>
-
-          {/* Subtitle */}
-          <h3 className="text-xl sm:text-2xl font-light text-[var(--ink)] tracking-tight mb-4">
-            {subtitle}
-          </h3>
-
-          {/* Narrative Supporting Story */}
-          <div className="text-sm sm:text-base text-[var(--mut)] leading-relaxed mb-8 max-w-lg">
-            {narrative}
-          </div>
-
-          {/* Feature Actions / CTAs */}
-          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
-            {actions}
-          </div>
+      <div className="flex flex-col items-center justify-center w-full max-w-5xl mx-auto text-center my-auto">
+        {/* 1. Centered Numbered Badge */}
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)]" />
+          <p className="font-mono text-xs text-[var(--accent)] tracking-widest uppercase text-center">
+            {numberLabel}
+          </p>
         </div>
 
-        {/* Right Side: Interactive Visual Centerpiece */}
-        <div className="lg:col-span-7 flex items-center justify-center w-full">
+        {/* 2. Centered Massive Headline */}
+        <h2 className="text-5xl sm:text-7xl lg:text-8xl font-extralight tracking-tighter text-white uppercase leading-none mb-3 text-center">
+          {displayTitle}
+        </h2>
+
+        {/* 3. Centered Subtitle */}
+        <h3 className="text-xl sm:text-2xl font-light text-[var(--ink)] tracking-tight mb-3 text-center">
+          {subtitle}
+        </h3>
+
+        {/* 4. Centered Narrative Description */}
+        <div className="text-sm sm:text-base text-[var(--mut)] leading-relaxed mb-6 max-w-2xl mx-auto text-center">
+          {narrative}
+        </div>
+
+        {/* 5. Centered Interactive Visual Centerpiece */}
+        <div className="w-full flex items-center justify-center my-2 max-w-2xl mx-auto">
           {visual}
         </div>
-      </div>
 
-      {/* Subtle, elegant Next-Chapter Cue to make the next chapter feel inevitable */}
-      {nextChapterCue && (
-        <div className="w-full flex justify-center pt-8 mt-4">
-          <button
-            onClick={() => onScrollToNext?.(nextChapterCue.id)}
-            className="group flex flex-col items-center gap-1.5 text-white/40 hover:text-[var(--accent)] transition-all cursor-pointer select-none"
-            title={`Scroll to Chapter ${nextChapterCue.number}: ${nextChapterCue.label}`}
-          >
-            <span className="font-mono text-[10px] tracking-widest uppercase">
-              NEXT — {nextChapterCue.number} / {nextChapterCue.label}
-            </span>
-            <ArrowDown className="w-3.5 h-3.5 group-hover:translate-y-1 transition-transform" />
-          </button>
+        {/* 6. Centered Feature Actions / CTAs */}
+        <div className="w-full max-w-3xl mx-auto flex items-center justify-center gap-3 mt-4">
+          {actions}
         </div>
-      )}
+
+        {/* 7. Centered Next-Chapter Scroll Cue */}
+        {nextChapterCue && (
+          <div className="w-full flex justify-center pt-6 mt-2">
+            <button
+              onClick={() => onScrollToNext?.(nextChapterCue.id)}
+              className="group flex flex-col items-center gap-1.5 text-white/40 hover:text-[var(--accent)] transition-all cursor-pointer select-none"
+              title={`Scroll to Chapter ${nextChapterCue.number}: ${nextChapterCue.label}`}
+            >
+              <span className="font-mono text-[10px] tracking-widest uppercase">
+                NEXT — {nextChapterCue.number} / {nextChapterCue.label}
+              </span>
+              <ArrowDown className="w-3.5 h-3.5 group-hover:translate-y-1 transition-transform" />
+            </button>
+          </div>
+        )}
+      </div>
     </section>
   );
 };

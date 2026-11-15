@@ -13,8 +13,8 @@ export const ChapterMission: React.FC<ChapterMissionProps> = ({ onScrollToTop })
   const navigate = useNavigate();
 
   const actions = (
-    <div data-tour="journey-mission-actions" className="flex flex-col gap-4 w-full">
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full">
+    <div data-tour="journey-mission-actions" className="flex flex-col items-center gap-5 w-full max-w-xl mx-auto">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3.5 w-full">
         {/* Action 1: Guided Missions (Primary Accent) */}
         <button
           onClick={() => travelToWorkspace(navigate, "/missions", "mission")}
@@ -36,8 +36,8 @@ export const ChapterMission: React.FC<ChapterMissionProps> = ({ onScrollToTop })
         </button>
       </div>
 
-      {/* Final Return Action */}
-      <div className="pt-4 border-t border-white/10 flex items-center justify-between text-xs font-mono text-white/50">
+      {/* Final Return Action (Centrally Aligned) */}
+      <div className="pt-4 border-t border-white/10 flex items-center justify-center gap-6 text-xs font-mono text-white/50 w-full text-center">
         <span>Reached the Cosmic Horizon</span>
         <button
           onClick={onScrollToTop}

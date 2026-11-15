@@ -8,10 +8,10 @@ export interface UseSectionScrollLockOptions {
 }
 
 /**
- * High-Precision Section Scroll Lock (Snap-to-Chapter Engine).
- * When the user scrolls even slightly towards another chapter, the engine intercepts the gesture
- * and smoothly drives the scroll to center/snap the full target chapter page into the viewport,
- * providing the exact "scroll lock where full page comes" storytelling experience.
+ * Intelligent Section Scroll Lock Engine with Halfway Auto-Scroll.
+ * 1. If user scrolls a bit, it smoothly drives to the next/prev full chapter page.
+ * 2. If the user stops halfway between chapters (>= 45%), it automatically scrolls down to lock the next chapter in view.
+ * 3. Eliminates intermediate drift so every page rests centrally locked and completely in view.
  */
 export function useSectionScrollLock({
   chapters,
@@ -28,6 +28,7 @@ export function useSectionScrollLock({
 
   const accumulatedDeltaRef = useRef(0);
   const clearDeltaTimerRef = useRef<number | null>(null);
+  const scrollSettleTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
@@ -54,7 +55,8 @@ export function useSectionScrollLock({
         if (window.__lenis) {
           window.__lenis.scrollTo(el, {
             offset: -70,
-            duration: 1.2,
+            duration: 1.15,
+            lock: true,
             easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
           });
         } else {
@@ -66,21 +68,16 @@ export function useSectionScrollLock({
         }
       }
 
-      // Keep locked for the duration of the transition to prevent multi-skipping
+      // Unlock after the transition completes smoothly
       setTimeout(() => {
         isLockedRef.current = false;
         accumulatedDeltaRef.current = 0;
       }, 1050);
     };
 
-    // Helper: find current chapter index based on active chapter or scroll position
+    // Helper: get current chapter index from actual scroll position
     const getCurrentChapterIndex = (): number => {
       const chs = chaptersRef.current;
-      const namedIdx = chs.indexOf(activeChapterRef.current);
-      if (namedIdx >= 0) {
-        return namedIdx;
-      }
-
       const scrollY = window.scrollY;
       let closestIdx = 0;
       let minDistance = Infinity;
@@ -96,9 +93,47 @@ export function useSectionScrollLock({
       return closestIdx;
     };
 
-    // 1. Wheel Event Listener (Desktop Mouse Wheel & Trackpad)
+    // 1. Halfway Auto-Scroll Detection on Scroll Settle:
+    // If user opens halfway to the next page, automatically scroll down to complete the page arrival!
+    const handleScrollSettle = () => {
+      if (isLockedRef.current) return;
+
+      const scrollY = window.scrollY;
+      const chs = chaptersRef.current;
+      const targets = chs.map((id) => getChapterScrollTarget(id));
+
+      // Find the pair of chapters [i, i+1] current scroll is between
+      for (let i = 0; i < targets.length - 1; i++) {
+        const yTop = targets[i];
+        const yBottom = targets[i + 1];
+
+        if (scrollY > yTop + 10 && scrollY < yBottom - 10) {
+          const span = yBottom - yTop;
+          const progress = (scrollY - yTop) / span;
+
+          // If opened halfway (>= 45%), automatically scroll DOWN to lock the next chapter!
+          if (progress >= 0.45) {
+            scrollToChapterIndex(i + 1);
+          } else {
+            // If less than halfway, snap back to lock current chapter
+            scrollToChapterIndex(i);
+          }
+          break;
+        }
+      }
+    };
+
+    const onScroll = () => {
+      if (isLockedRef.current) return;
+      if (scrollSettleTimerRef.current) {
+        window.clearTimeout(scrollSettleTimerRef.current);
+      }
+      scrollSettleTimerRef.current = window.setTimeout(handleScrollSettle, 110);
+    };
+
+    // 2. Wheel Event Listener (Mouse Wheel & Trackpad)
     const handleWheel = (e: WheelEvent) => {
-      // Allow native scrolling inside interactive widgets, canvas, or tour popovers
+      // Allow native scrolling inside interactive canvas, tour popovers, or copilot chat
       const target = e.target as HTMLElement | null;
       if (
         target &&
@@ -106,18 +141,16 @@ export function useSectionScrollLock({
           target.closest(".satellite-canvas") ||
           target.closest(".driver-popover") ||
           target.closest(".cosmic-copilot") ||
-          target.closest("input, select, textarea"))
+          target.closest('input:not([type="range"]), select, textarea'))
       ) {
         return;
       }
 
-      // If already transitioning, prevent native scroll fighting
       if (isLockedRef.current) {
         e.preventDefault();
         return;
       }
 
-      // Accumulate wheel delta (supports subtle trackpad scrolls and discrete mouse wheel notches)
       accumulatedDeltaRef.current += e.deltaY;
 
       if (clearDeltaTimerRef.current) {
@@ -125,10 +158,10 @@ export function useSectionScrollLock({
       }
       clearDeltaTimerRef.current = window.setTimeout(() => {
         accumulatedDeltaRef.current = 0;
-      }, 180);
+      }, 160);
 
-      // Trigger threshold: "if I scroll a bit to other page the full page comes"
-      const THRESHOLD = 24;
+      // Trigger threshold: subtle wheel flick or notch initiates smooth page lock
+      const THRESHOLD = 20;
 
       if (Math.abs(accumulatedDeltaRef.current) >= THRESHOLD) {
         const dir = accumulatedDeltaRef.current > 0 ? 1 : -1;
@@ -142,7 +175,7 @@ export function useSectionScrollLock({
       }
     };
 
-    // 2. Touch Gesture Listener (Mobile & Tablet Swipes)
+    // 3. Touch Gesture Listener (Mobile & Tablet Swipes)
     let touchStartY = 0;
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 1) {
@@ -164,7 +197,7 @@ export function useSectionScrollLock({
 
       const touchEndY = e.changedTouches[0]?.clientY ?? touchStartY;
       const deltaY = touchStartY - touchEndY;
-      const TOUCH_THRESHOLD = 38;
+      const TOUCH_THRESHOLD = 32;
 
       if (Math.abs(deltaY) >= TOUCH_THRESHOLD) {
         const dir = deltaY > 0 ? 1 : -1;
@@ -177,7 +210,7 @@ export function useSectionScrollLock({
       }
     };
 
-    // 3. Keyboard Arrow & Page Navigation
+    // 4. Keyboard Arrow & Page Navigation
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isLockedRef.current) return;
       const target = e.target as HTMLElement | null;
@@ -196,19 +229,20 @@ export function useSectionScrollLock({
       }
     };
 
+    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("wheel", handleWheel, { passive: false });
     window.addEventListener("touchstart", handleTouchStart, { passive: true });
     window.addEventListener("touchend", handleTouchEnd, { passive: true });
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("wheel", handleWheel);
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchend", handleTouchEnd);
       window.removeEventListener("keydown", handleKeyDown);
-      if (clearDeltaTimerRef.current) {
-        window.clearTimeout(clearDeltaTimerRef.current);
-      }
+      if (clearDeltaTimerRef.current) window.clearTimeout(clearDeltaTimerRef.current);
+      if (scrollSettleTimerRef.current) window.clearTimeout(scrollSettleTimerRef.current);
     };
   }, [enabled, onChapterChange]);
 }
