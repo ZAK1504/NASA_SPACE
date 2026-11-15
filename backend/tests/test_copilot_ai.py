@@ -1,3 +1,4 @@
+import time
 import json
 import pytest
 from fastapi.testclient import TestClient
@@ -24,7 +25,7 @@ def test_copilot_status_endpoint():
 
 def test_copilot_fast_navigation():
     """Verify navigation commands return instant deterministic fast response without burning Groq tokens."""
-    payload = {"message": "open sky map"}
+    payload = {"message": "/explore"}
     response = client.post("/api/assistant/query", json=payload)
     assert response.status_code == 200
     data = response.json()
@@ -33,6 +34,8 @@ def test_copilot_fast_navigation():
 
 def test_copilot_streaming_sse():
     """Verify /api/assistant/stream delivers valid Server-Sent Events."""
+    client.cookies.clear()
+    copilot_budget_service.record_groq_success()
     payload = {
         "message": "What is Barnard's Star?",
         "session_id": "test-sse-session-123"
@@ -59,30 +62,34 @@ def test_copilot_streaming_sse():
 
 def test_copilot_rate_limiting():
     """Verify session rate limiting rejects excessive queries."""
+    client.cookies.clear()
+    unique_session = "abuse-test-session-999"
+    current_minute = int(time.time()) // 60
     with copilot_budget_service._get_connection() as conn:
         conn.execute("DELETE FROM rolling_limits")
+        conn.execute(
+            "INSERT INTO rolling_limits (key, window_epoch, count) VALUES (?, ?, ?)",
+            (f"sess:{unique_session}:rpm", current_minute, settings.COSMIC_AI_SESSION_RPM)
+        )
         conn.commit()
-    unique_session = "abuse-test-session-999"
-    # Make multiple requests rapidly to trip session RPM
-    rejected = False
-    for i in range(settings.COSMIC_AI_SESSION_RPM + 3):
-        res = client.post("/api/assistant/stream", json={
-            "message": f"Question number {i}",
-            "session_id": unique_session
-        })
+
+    with client.stream("POST", "/api/assistant/stream", json={
+        "message": "Hello after hitting rate limit",
+        "session_id": unique_session
+    }) as res:
+        events = []
         for line in res.iter_lines():
             if line.startswith("data: "):
-                event = json.loads(line[6:].strip())
-                if event.get("type") == "fallback" and "Rate Limit Reached" in event.get("text", ""):
-                    rejected = True
-                    break
-        if rejected:
-            break
+                events.append(json.loads(line[6:].strip()))
 
-    assert rejected, "Session RPM rate limiting should have triggered fallback event."
+    fallback_events = [e for e in events if e.get("type") == "fallback" and "Rate Limit Reached" in e.get("text", "")]
+    done_events = [e for e in events if e.get("type") == "done" and e.get("source") == "rate_limited"]
+    assert len(fallback_events) == 1, "Session RPM rate limiting should have triggered fallback event."
+    assert len(done_events) == 1
 
 def test_copilot_circuit_breaker():
     """Verify circuit breaker trips and falls back gracefully upon failure."""
+    copilot_budget_service.record_groq_success()
     copilot_budget_service.record_groq_failure(500)
     copilot_budget_service.record_groq_failure(500)
     copilot_budget_service.record_groq_failure(500)

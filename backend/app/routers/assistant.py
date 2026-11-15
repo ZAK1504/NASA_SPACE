@@ -14,6 +14,7 @@ from app.services.copilot_ai_service import (
     copilot_ai_service,
     DETERMINISTIC_RESPONSES,
     copilot_in_scope,
+    get_scope_refusal,
     COPILOT_SCOPE_REFUSAL,
     COPILOT_SCOPE_ACTIONS,
     COPILOT_SCOPE_QUESTIONS,
@@ -242,25 +243,13 @@ async def ask_assistant(
     # 1.5. Server-Side Scientific Scope Guard (Defense in Depth before burning tokens or falling back)
     if not copilot_in_scope(raw_message, req.history):
         return {
-            "response": COPILOT_SCOPE_REFUSAL,
+            "response": get_scope_refusal(raw_message),
             "actions": COPILOT_SCOPE_ACTIONS,
             "suggested_questions": COPILOT_SCOPE_QUESTIONS,
             "source": "scope_restricted"
         }
 
-    # 2. Check deterministic knowledge base responses (only for terse 1-2 word glossary lookups)
-    # When natural language questions arrive, Groq AI takes over dynamically.
-    if len(q.split()) <= 2:
-        for key, entry in DETERMINISTIC_RESPONSES.items():
-            if key == q or (key in q and len(q.split()) <= 2):
-                return {
-                    "response": entry["text"],
-                    "actions": entry["actions"],
-                    "suggested_questions": copilot_ai_service.generate_suggested_questions(entry["text"], raw_message),
-                    "source": "scientific_knowledge_base"
-                }
-
-    # 3. If AI is enabled and within budget, gather stream into single response
+    # 2. If AI is enabled and within budget, gather dynamic Groq response
     if copilot_budget_service.is_ai_enabled() and not copilot_budget_service.is_circuit_open():
         tokens = []
         actions = []
@@ -300,6 +289,16 @@ async def ask_assistant(
                 }
         except Exception as e:
             logger.error("Synchronous query error: %s", str(e))
+
+    # 3. Deterministic Knowledge Base fallback (when AI is disabled, circuit is open, or out of budget)
+    for key, entry in DETERMINISTIC_RESPONSES.items():
+        if key in q:
+            return {
+                "response": entry["text"],
+                "actions": entry["actions"],
+                "suggested_questions": copilot_ai_service.generate_suggested_questions(entry["text"], raw_message),
+                "source": "scientific_knowledge_base"
+            }
 
     # 4. Fallback response
     default_text = (
