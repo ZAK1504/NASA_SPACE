@@ -55,7 +55,7 @@ const INITIAL_MESSAGES: CopilotMessage[] = [
   {
     id: 'welcome-1',
     sender: 'copilot',
-    text: "Hello explorer! I am your **SPHEREx Cosmic Copilot**, powered by real astronomical mission science and Groq AI. I can guide you through near-infrared observations, explain cosmic physics (proper motion, Wien's displacement law, and 102-band spectroscopy), and navigate directly to any exploration tool.",
+    text: "Hello explorer! I am your **SPHEREx Cosmic Copilot**, powered by real astronomical mission science and AI. I can guide you through near-infrared observations, explain cosmic physics (proper motion, Wien's displacement law, and 102-band spectroscopy), and navigate directly to any exploration tool.",
     source: 'scientific_knowledge_base',
     actions: [
       { label: "Track moving star (Barnard's Star)", url: "/time-machine?object=barnards-star" },
@@ -116,7 +116,7 @@ function SourceBadge({ source }: { source?: ResponseSource }) {
       return (
         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#1E1E2A] text-[#F4A272] border border-[#F4A272]/30">
           <Sparkles className="w-2.5 h-2.5 text-[#F4A272]" />
-          <span>Groq AI</span>
+          <span>AI</span>
         </span>
       );
     case 'deterministic_navigation':
@@ -694,7 +694,7 @@ export const CosmicCopilot: React.FC = () => {
             Cosmic Copilot
           </span>
           <span className="text-[10px] bg-[#F4A272]/15 text-[#F4A272] px-1.5 py-0.5 rounded border border-[#F4A272]/30 hidden sm:inline-block font-mono">
-            {status?.ai_enabled ? 'Groq AI' : 'Guide'}
+            {status?.ai_enabled ? 'AI' : 'Guide'}
           </span>
         </button>
       )}
@@ -718,7 +718,7 @@ export const CosmicCopilot: React.FC = () => {
                   <span className="text-xs font-bold text-[#F3EFE8]">Cosmic Copilot</span>
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-mono bg-[#1E1E2A] text-[#F4A272] border border-[#F4A272]/30">
                     <span className={`w-1.5 h-1.5 rounded-full ${status?.ai_enabled ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-                    {status?.ai_enabled ? 'Groq AI Active' : 'Scientific Guide'}
+                    {status?.ai_enabled ? 'AI Active' : 'Scientific Guide'}
                   </span>
                 </div>
                 <div className="text-[10px] text-[#9E9AA7]">

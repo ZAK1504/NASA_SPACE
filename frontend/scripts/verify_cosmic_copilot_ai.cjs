@@ -137,10 +137,10 @@ async function run() {
     // Verify response badge is present
     const hasSourceBadge = await page.evaluate(() => {
       const text = document.body.innerText;
-      return text.includes('Groq AI') || text.includes('Scientific Guide');
+      return text.includes('AI') || text.includes('Scientific Guide');
     });
     if (!hasSourceBadge) {
-      throw new Error('Response source badge (Groq AI / Scientific Guide) was not rendered');
+      throw new Error('Response source badge (AI / Scientific Guide) was not rendered');
     }
     console.log('    [PASS] Honest response-source badge verified in UI.');
 
