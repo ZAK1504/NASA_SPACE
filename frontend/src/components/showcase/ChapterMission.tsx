@@ -1,7 +1,7 @@
 import React from "react";
 import ChapterShowcase from "./ChapterShowcase";
 import MissionShowcaseVisual from "./MissionShowcaseVisual";
-import { Compass, Gamepad2, ArrowRight, ArrowUp } from "lucide-react";
+import { Compass, Users, ArrowRight, ArrowUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { travelToWorkspace } from "../../lib/journeyState";
 
@@ -25,13 +25,13 @@ export const ChapterMission: React.FC<ChapterMissionProps> = ({ onScrollToTop })
           <ArrowRight className="w-4 h-4 text-black group-hover:translate-x-1 transition-transform" />
         </button>
 
-        {/* Action 2: Mini Game */}
+        {/* Action 2: Meet the Team */}
         <button
-          onClick={() => travelToWorkspace(navigate, "/mission/training", "mission")}
+          onClick={() => travelToWorkspace(navigate, "/about", "mission")}
           className="group h-12 px-5 rounded-2xl border border-white/20 bg-white/[0.08] hover:bg-white/[0.15] hover:border-[var(--accent)] text-white font-semibold text-sm transition-all inline-flex items-center justify-center gap-2 cursor-pointer flex-1 hover:-translate-y-0.5 shadow-sm"
         >
-          <Gamepad2 className="w-4 h-4 text-[var(--accent)] group-hover:scale-110 transition-transform" />
-          <span>Play Mini Game</span>
+          <Users className="w-4 h-4 text-[var(--accent)] group-hover:scale-110 transition-transform" />
+          <span>Meet the Team</span>
           <ArrowRight className="w-4 h-4 text-white/50 group-hover:text-[var(--accent)] group-hover:translate-x-1 transition-all" />
         </button>
       </div>
