@@ -219,6 +219,9 @@
   margin-bottom: 16px;
   letter-spacing: -0.02em;
   color: #ffffff;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
 }
 
 .section-subtitle {

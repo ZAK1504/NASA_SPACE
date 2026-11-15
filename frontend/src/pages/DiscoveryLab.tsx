@@ -20,6 +20,8 @@ export const DiscoveryLab: React.FC = () => {
 
   const [comparison, setComparison] = useState<ComparisonResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [comparisonError, setComparisonError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState<number>(0);
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateDetection | null>(null);
 
   // Scientific FOV & Display Preferences (matching Time Machine)
@@ -64,7 +66,9 @@ export const DiscoveryLab: React.FC = () => {
   }, [selectedObject, activeMode, comparison]);
 
   useEffect(() => {
+    let isCancelled = false;
     setLoading(true);
+    setComparisonError(null);
     setSavedSuccess(false);
     setComparison(null);
     setSelectedCandidate(null);
@@ -72,6 +76,13 @@ export const DiscoveryLab: React.FC = () => {
     setDiscoveryNotes('');
     setCandidateClassification('exploratory_investigation');
     setConfidence('not_assessed');
+
+    // Safety timeout: ensure loading state never hangs indefinitely under adverse network conditions
+    const safetyTimer = setTimeout(() => {
+      if (!isCancelled) {
+        setLoading(false);
+      }
+    }, 15000);
 
     // Target-specific authentic SPHEREx observation pairs
     const targetObsPairs: Record<string, { obs1: string; obs2?: string }> = {
@@ -95,6 +106,7 @@ export const DiscoveryLab: React.FC = () => {
       smooth: smooth,
     })
       .then((data) => {
+        if (isCancelled) return;
         setComparison(data);
         if (data.candidates && data.candidates.length > 0) {
           setSelectedCandidate(data.candidates[0]);
@@ -120,11 +132,23 @@ export const DiscoveryLab: React.FC = () => {
         }
       })
       .catch((err) => {
+        if (isCancelled) return;
         console.error('Comparison fetch error:', err);
+        setComparisonError(err instanceof Error ? err.message : 'Observation comparison could not be loaded');
         setComparison(null);
       })
-      .finally(() => setLoading(false));
-  }, [selectedObject, fovArcsec, stretch, colormap, smooth]);
+      .finally(() => {
+        if (!isCancelled) {
+          clearTimeout(safetyTimer);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(safetyTimer);
+    };
+  }, [selectedObject, fovArcsec, stretch, colormap, smooth, retryKey]);
 
   const handleRunStacking = () => {
     setLoadingStack(true);
@@ -477,7 +501,7 @@ export const DiscoveryLab: React.FC = () => {
                   <RefreshCw className="w-8 h-8 text-[var(--accent)] animate-spin mb-2" />
                   <p className="text-xs text-white/50">Aligning FITS cutouts &amp; computing signed difference map…</p>
                 </div>
-              ) : (
+              ) : comparison ? (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full max-w-[1440px] mx-auto">
 
                   {/* Panel 1: Epoch 1 (Earlier) */}
@@ -578,6 +602,23 @@ export const DiscoveryLab: React.FC = () => {
                     </div>
                   </div>
 
+                </div>
+              ) : (
+                <div className="h-64 flex flex-col items-center justify-center bg-black/30 rounded-xl border border-white/10 space-y-3 p-6 text-center">
+                  <AlertTriangle className="w-8 h-8 text-amber-400" />
+                  <p className="text-sm font-semibold text-[#F3EFE8]">Observation Comparison Temporarily Unavailable</p>
+                  <p className="text-xs text-white/50 max-w-md">
+                    {comparisonError || 'The difference mapping service encountered a connection issue or timeout. Click below to retry FITS alignment.'}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setRetryKey((k) => k + 1)}
+                    className="mt-2"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                    Retry Alignment
+                  </Button>
                 </div>
               )}
 

@@ -113,6 +113,10 @@ export const TimeMachine: React.FC = () => {
     let isCancelled = false;
     setLoadingManifest(true);
 
+    const safetyTimer = setTimeout(() => {
+      if (!isCancelled) setLoadingManifest(false);
+    }, 15000);
+
     api.getTimeMachineManifest({
       ra: customRa,
       dec: customDec,
@@ -134,11 +138,15 @@ export const TimeMachine: React.FC = () => {
       })
       .catch((err) => console.error('Manifest fetch error:', err))
       .finally(() => {
-        if (!isCancelled) setLoadingManifest(false);
+        if (!isCancelled) {
+          clearTimeout(safetyTimer);
+          setLoadingManifest(false);
+        }
       });
 
     return () => {
       isCancelled = true;
+      clearTimeout(safetyTimer);
     };
   }, [customRa, customDec, fovArcsec, stretch, colormap, smooth, selectedObject, isCustomMode]);
 
@@ -146,6 +154,10 @@ export const TimeMachine: React.FC = () => {
   useEffect(() => {
     let isCancelled = false;
     setLoadingComparison(true);
+
+    const safetyTimer = setTimeout(() => {
+      if (!isCancelled) setLoadingComparison(false);
+    }, 15000);
 
     api.compareObservations({
       obsId1: epoch1Id,
@@ -163,11 +175,15 @@ export const TimeMachine: React.FC = () => {
       })
       .catch((err) => console.error('Comparison error:', err))
       .finally(() => {
-        if (!isCancelled) setLoadingComparison(false);
+        if (!isCancelled) {
+          clearTimeout(safetyTimer);
+          setLoadingComparison(false);
+        }
       });
 
     return () => {
       isCancelled = true;
+      clearTimeout(safetyTimer);
     };
   }, [epoch1Id, epoch2Id, customRa, customDec, fovArcsec, stretch, colormap, smooth, selectedObject, isCustomMode]);
 
